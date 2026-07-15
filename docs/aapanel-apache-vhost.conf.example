@@ -1,0 +1,24 @@
+# aaPanel Apache 站点配置示例。
+# 请把域名、项目目录和 PHP-FPM 处理器替换为服务器实际值。
+# aaPanel 生成的 PHP 版本配置通常已包含 PHP-FPM handler，不要重复添加。
+
+<VirtualHost *:80>
+    ServerName example.com
+    ServerAlias www.example.com
+    DocumentRoot /www/wwwroot/yuejing/public
+
+    <Directory /www/wwwroot/yuejing/public>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+        DirectoryIndex index.php index.html
+    </Directory>
+
+    # 如果 aaPanel 没有自动生成 PHP 8.5 handler，可按服务器实际 socket 启用：
+    # <FilesMatch \.php$>
+    #     SetHandler "proxy:unix:/tmp/php-cgi-85.sock|fcgi://localhost/"
+    # </FilesMatch>
+
+    ErrorLog ${APACHE_LOG_DIR}/yuejing-error.log
+    CustomLog ${APACHE_LOG_DIR}/yuejing-access.log combined
+</VirtualHost>

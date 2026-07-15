@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\AuditLog;
+use App\Models\User;
+use App\Services\TwoFactorService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+
+class TwoFactorController extends Controller
+{
+    public function show(Request $request)
+    {
+        if (! $this->wantsJson($request)) {
+            return view('pages.auth.two-factor', ['setting' => $request->user()->twoFactorSetting]);
+        }
+
+        return response()->json(['two_factor' => $request->user()->twoFactorSetting]);
+    }
+
+    public function enable(Request $request, TwoFactorService $service)
+    {
+        $user = $request->user();
+        $setting = $user->twoFactorSetting()->first();
+
+        if ($setting?->enabled) {
+            return $this->failure($request, '二步验证已经启用。', 'Two-factor authentication is already enabled.', 422);
+        }
+
+        $code = $request->input('code');
+        if ($setting?->secret && $code !== null) {
+            $valid = $service->confirmEnable($user, (string) $code);
+            if (! $valid) {
+                $this->audit($request, $user, 'auth.two_factor_enable_failed');
+                throw ValidationException::withMessages(['code' => '验证码不正确或已过期。']);
+            }
+
+            $this->audit($request, $user, 'auth.two_factor_enabled');
+            return $this->success($request, ['message' => '二步验证已启用。'], 200);
+        }
+
+        $result = $service->enable($user);
+        $this->audit($request, $user, 'auth.two_factor_setup_started');
+
+        if (! $this->wantsJson($request)) {
+            return back()->with('two_factor_setup', $result)->with('status', '请使用验证器生成验证码后确认启用。');
+        }
+
+        return response()->json([
+            'message' => 'Setup generated. Confirm with a valid TOTP code to enable two-factor authentication.',
+            'enabled' => false,
+            ...$result,
+        ], 201);
+    }
+
+    public function disable(Request $request, TwoFactorService $service)
+    {
+        $data = $request->validate([
+            'current_password' => ['nullable', 'string'],
+            'code' => ['nullable', 'string'],
+        ]);
+
+        $user = $request->user();
+        $passwordValid = filled($data['current_password'] ?? null)
+            && Hash::check($data['current_password'], $user->getAuthPassword());
+        $codeValid = filled($data['code'] ?? null) && $service->verifyTotp($user, $data['code']);
+
+        if (! $passwordValid && ! $codeValid) {
+            $this->audit($request, $user, 'auth.two_factor_disable_failed');
+            throw ValidationException::withMessages([
+                'current_password' => '请输入当前密码或有效的 TOTP 验证码。',
+            ]);
+        }
+
+        $service->disable($user);
+        $this->audit($request, $user, 'auth.two_factor_disabled');
+
+        return $this->success($request, ['message' => '二步验证已禁用。']);
+    }
+
+    public function challenge(Request $request, TwoFactorService $service)
+    {
+        $pending = $request->session()->get('pending_two_factor');
+        if (! is_array($pending) || ! isset($pending['user_id'], $pending['expires_at'])) {
+            return $this->noPendingChallenge($request);
+        }
+
+        if ((int) $pending['expires_at'] < now()->timestamp) {
+            $this->forgetPendingChallenge($request);
+            return $this->failure($request, '登录状态已失效，请重新登录。', 'The login challenge has expired.', 419);
+        }
+
+        if ($request->isMethod('get')) {
+            if ($this->wantsJson($request)) {
+                return response()->json(['message' => 'Two-factor authentication is required.']);
+            }
+            return view('pages.auth.two-factor-challenge');
+        }
+
+        $data = $request->validate([
+            'code' => ['nullable', 'string', 'max:64'],
+            'recovery_code' => ['nullable', 'string', 'max:64'],
+        ]);
+        $hasCode = filled($data['code'] ?? null);
+        $hasRecoveryCode = filled($data['recovery_code'] ?? null);
+        if (($hasCode && $hasRecoveryCode) || (! $hasCode && ! $hasRecoveryCode)) {
+            throw ValidationException::withMessages(['code' => '请输入验证码或恢复码。']);
+        }
+        $code = $hasCode ? $data['code'] : $data['recovery_code'];
+
+        $user = User::query()->find($pending['user_id']);
+        if (! $user) {
+            $this->forgetPendingChallenge($request);
+            return $this->failure($request, '登录状态已失效，请重新登录。', 'The login challenge has expired.', 404);
+        }
+
+        $result = $service->verifyCode($user, (string) $code);
+        if (! $result['valid']) {
+            $attempts = ((int) ($pending['attempts'] ?? 0)) + 1;
+            if ($attempts >= (int) config('yuejing.two_factor.max_attempts', 5)) {
+                $this->forgetPendingChallenge($request);
+                $this->audit($request, $user, 'auth.two_factor_challenge_locked');
+                return $this->failure($request, '验证失败次数过多，请重新登录。', 'Too many invalid two-factor attempts.', 429);
+            }
+
+            $pending['attempts'] = $attempts;
+            $request->session()->put('pending_two_factor', $pending);
+            $this->audit($request, $user, 'auth.two_factor_challenge_failed');
+            throw ValidationException::withMessages(['code' => '验证码或恢复码不正确。']);
+        }
+
+        $remember = (bool) ($pending['remember'] ?? false);
+        $this->forgetPendingChallenge($request);
+        auth()->login($user, $remember);
+        $request->session()->regenerate();
+        $this->audit($request, $user, $result['recovery_code'] ? 'auth.two_factor_recovery_used' : 'auth.two_factor_verified');
+        $this->audit($request, $user, 'auth.logged_in');
+
+        if (! $this->wantsJson($request)) {
+            return redirect()->intended(route('dashboard'))->with('status', '登录成功，欢迎回来。');
+        }
+
+        return response()->json(['message' => 'Logged in successfully.', 'user' => $user]);
+    }
+
+    private function noPendingChallenge(Request $request)
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json(['message' => 'No two-factor authentication challenge is pending.'], 404);
+        }
+
+        return redirect()->route('login');
+    }
+
+    private function forgetPendingChallenge(Request $request): void
+    {
+        $request->session()->forget(['pending_two_factor', 'pending_two_factor_user_id', 'pending_two_factor_remember']);
+    }
+
+    private function success(Request $request, array $payload, int $status = 200)
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json($payload, $status);
+        }
+
+        return back()->with('status', $payload['message'] ?? '操作成功。');
+    }
+
+    private function failure(Request $request, string $htmlMessage, string $jsonMessage, int $status)
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json(['message' => $jsonMessage], $status);
+        }
+
+        return back()->withErrors(['two_factor' => $htmlMessage]);
+    }
+
+    private function audit(Request $request, ?User $user, string $action): void
+    {
+        AuditLog::create([
+            'user_id' => $user?->id,
+            'action' => $action,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+    }
+}

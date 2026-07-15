@@ -1,0 +1,39 @@
+# aaPanel Nginx 站点配置示例。
+# 请把域名、项目目录和 PHP-FPM socket 替换为服务器实际值。
+# HTTPS 证书和 80 -> 443 跳转建议在 aaPanel 面板中配置。
+
+server {
+    listen 80;
+    server_name example.com www.example.com;
+
+    root /www/wwwroot/yuejing/public;
+    index index.php index.html;
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico {
+        access_log off;
+        log_not_found off;
+    }
+
+    location = /robots.txt {
+        access_log off;
+        log_not_found off;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $document_root;
+        fastcgi_pass unix:/tmp/php-cgi-85.sock;
+    }
+
+    # 阻止隐藏文件访问，保留 ACME 验证目录。
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
