@@ -1,6 +1,6 @@
+@props(['book' => [], 'size' => 'small'])
+
 @php
-    $book = $book ?? [];
-    $size = $size ?? 'small';
     $title = $book['title'] ?? '未命名作品';
     $author = $book['author'] ?? '匿名作者';
     $coverA = $book['cover_a'] ?? '#355c5d';
