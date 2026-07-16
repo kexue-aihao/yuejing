@@ -38,23 +38,30 @@
     --c-bg-status-pending: #f4ead7;
     --c-bg-status-reject: #f6e4df;
     --c-bg-alert: #f6e4df;
+    --c-bg-info: #e4eef0;
     --c-bg-reader: #f2eddf;
 
     --c-text: #1f2a2b;
     --c-text-heading: #244644;
     --c-text-heading-soft: #294c49;
     --c-text-heading-warm: #263f3d;
-    --c-text-muted: #748082;
-    --c-text-muted-soft: #687879;
-    --c-text-muted-warm: #758180;
-    --c-text-link: #3b5553;
-    --c-text-nav: #687476;
-    --c-text-nav-hover: #213f3d;
+    --c-text-muted: #5f706d;
+    --c-text-muted-soft: #596a67;
+    --c-text-muted-warm: #5f706c;
+    --c-text-link: #315653;
+    --c-text-nav: #566561;
+    --c-text-nav-hover: #193836;
     --c-text-brand: #213f3d;
     --c-text-stat: #315250;
     --c-text-stat-alt: #315552;
     --c-text-stat-soft: #536663;
     --c-text-footer-heading: #34524f;
+    --c-text-body: #253536;
+    --c-text-subtle: #596966;
+    --c-text-control: #233c3a;
+    --c-text-disabled: #64736f;
+    --c-text-on-accent: #fffaf0;
+    --c-text-on-dark: #f8f6ed;
 
     --c-border: #e3e3db;
     --c-border-alt: #dce4df;
@@ -63,8 +70,8 @@
     --c-border-form: #d4ddd5;
     --c-border-input: #cfd4cf;
 
-    --c-accent: #c76450;
-    --c-accent-hover: #ad4e3d;
+    --c-accent: #a94f3d;
+    --c-accent-hover: #8f3f31;
     --c-accent-soft: #b37657;
     --c-accent-dark-bg: #8e5b52;
 
@@ -120,6 +127,7 @@
     --c-bg-status-pending: #363021;
     --c-bg-status-reject: #362422;
     --c-bg-alert: #362422;
+    --c-bg-info: #243437;
     --c-bg-reader: #242825;
 
     --c-text: #d9d4c8;
@@ -137,6 +145,12 @@
     --c-text-stat-alt: #b8c4bd;
     --c-text-stat-soft: #9aa59f;
     --c-text-footer-heading: #bcc7c0;
+    --c-text-body: #e4e0d6;
+    --c-text-subtle: #aeb9b3;
+    --c-text-control: #e4e0d6;
+    --c-text-disabled: #a0aaa4;
+    --c-text-on-accent: #1a1f1e;
+    --c-text-on-dark: #f8f6ed;
 
     --c-border: #333a37;
     --c-border-alt: #2f3633;
@@ -184,7 +198,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
+    :root:not([data-theme]) {
         --c-bg: #1a1f1e;
         --c-bg-alt: #1e2624;
         --c-bg-card: #242b29;
@@ -219,6 +233,12 @@
         --c-text-stat-alt: #b8c4bd;
         --c-text-stat-soft: #9aa59f;
         --c-text-footer-heading: #bcc7c0;
+    --c-text-body: #e4e0d6;
+    --c-text-subtle: #aeb9b3;
+    --c-text-control: #e4e0d6;
+    --c-text-disabled: #a0aaa4;
+    --c-text-on-accent: #1a1f1e;
+    --c-text-on-dark: #f8f6ed;
 
         --c-border: #333a37;
         --c-border-alt: #2f3633;
@@ -985,16 +1005,16 @@ a.pagination-item:hover { border-color: var(--c-accent); color: var(--c-accent);
 [data-theme="dark"] .chapter-count { background: var(--c-bg-nav); color: var(--c-text-muted); }
 
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .featured-card h3 a,
-    :root:not([data-theme="light"]) .book-row h3 a,
-    :root:not([data-theme="light"]) .library-card h3 a { color: var(--c-text-heading); }
-    :root:not([data-theme="light"]) .nav-search button { color: var(--c-text-muted); }
-    :root:not([data-theme="light"]) .library-card h3 { color: var(--c-text-heading); }
-    :root:not([data-theme="light"]) .dashboard-head p { color: var(--c-text-muted); }
-    :root:not([data-theme="light"]) .submission-summary div { background: var(--c-bg-card); }
-    :root:not([data-theme="light"]) .detail-aside h3,
-    :root:not([data-theme="light"]) .aside-row strong { color: var(--c-text-heading); }
-    :root:not([data-theme="light"]) .chapter-count { background: var(--c-bg-nav); color: var(--c-text-muted); }
+    :root:not([data-theme]) .featured-card h3 a,
+    :root:not([data-theme]) .book-row h3 a,
+    :root:not([data-theme]) .library-card h3 a { color: var(--c-text-heading); }
+    :root:not([data-theme]) .nav-search button { color: var(--c-text-muted); }
+    :root:not([data-theme]) .library-card h3 { color: var(--c-text-heading); }
+    :root:not([data-theme]) .dashboard-head p { color: var(--c-text-muted); }
+    :root:not([data-theme]) .submission-summary div { background: var(--c-bg-card); }
+    :root:not([data-theme]) .detail-aside h3,
+    :root:not([data-theme]) .aside-row strong { color: var(--c-text-heading); }
+    :root:not([data-theme]) .chapter-count { background: var(--c-bg-nav); color: var(--c-text-muted); }
 }
 
 /* ── Responsive: Tablet ── */
@@ -1077,6 +1097,67 @@ a.pagination-item:hover { border-color: var(--c-accent); color: var(--c-accent);
     .submission-audit-row { grid-template-columns: 1fr; gap: 9px; }
     .submission-audit-side { align-items: flex-start; text-align: left; white-space: normal; }
     .visitor-ip { right: 10px; bottom: 10px; max-width: calc(100vw - 20px); }
+}
+
+/* ── Contrast and Theme Overrides ── */
+.nav-search input::placeholder { color: var(--c-text-disabled); }
+.nav-search button { color: var(--c-text-muted); }
+.button-primary { color: var(--c-text-on-accent); }
+.button-dark { color: var(--c-text-on-dark); }
+.button-outline { border-color: var(--c-border-form); color: var(--c-text-control); }
+.button-outline:hover { background: var(--c-bg-card); }
+.button-small { color: var(--c-text-on-dark); }
+.hero-meta { color: var(--c-text-muted); }
+.section-divider { border-color: var(--c-border); }
+.book-byline { color: var(--c-text-subtle); }
+.muted, .page-intro, .rank-intro > p:not(.eyebrow), .detail-author, .detail-desc { color: var(--c-text-muted); }
+.chapter-count { color: var(--c-text-control); background: var(--c-bg-nav); }
+.ranking-list { border-color: var(--c-border-form); }
+.ranking-item { border-color: var(--c-border-alt); }
+.rank-number { color: var(--c-text-muted); }
+.rank-title strong { color: var(--c-text-heading); }
+.rank-title small, .rank-score small { color: var(--c-text-muted); }
+.category-links { border-color: var(--c-border-alt); }
+.category-links a { border-color: var(--c-border-alt); }
+.category-links span { color: var(--c-text-muted); }
+.footer-copy, .footer-links a, .footer-bottom { color: var(--c-text-muted); }
+.page-band { border-color: var(--c-border); }
+.filter-tabs a { color: var(--c-text-muted); }
+.sort-select { border-color: var(--c-border-input); color: var(--c-text-control); }
+.library-card h3 { color: var(--c-text-heading); }
+.library-card-meta { color: var(--c-text-muted); }
+.empty-state { border-color: var(--c-border-form); color: var(--c-text-muted); }
+.detail-stats { border-color: var(--c-border-form); }
+.detail-stats strong { color: var(--c-text-stat); }
+.detail-stats span { color: var(--c-text-muted); }
+.chapter-item { border-color: var(--c-border-light); color: var(--c-text-stat-soft); }
+.chapter-item small { color: var(--c-text-muted); }
+.detail-aside h3 { color: var(--c-text-heading); }
+.aside-row { border-color: var(--c-border-alt); color: var(--c-text-muted); }
+.aside-row strong { color: var(--c-text-heading); }
+.reader-header { border-color: var(--c-reader-border); background: color-mix(in srgb, var(--c-bg-reader) 96%, transparent); }
+.reader-book, .reader-controls button, .reader-footer a { color: var(--c-reader-text); }
+.reader-book small { color: var(--c-text-muted); }
+.reader-controls button { border-color: var(--c-reader-border); }
+.reader-footer a { color: var(--c-reader-text); }
+.form-field label { color: var(--c-green-text); }
+.form-field input, .form-field textarea, .form-field select { color: var(--c-text-control); }
+.form-field input::placeholder, .form-field textarea::placeholder { color: var(--c-text-disabled); }
+.form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--c-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-accent) 22%, transparent); }
+.form-options { color: var(--c-text-muted); }
+.auth-foot { border-color: var(--c-border); }
+.toast-info { background: var(--c-bg-info); color: var(--c-text-link); }
+.dashboard-head p, .metric-label, .metric-card small, .account-book-meta, .account-book-date, .submission-mini-list small, .settings-hint, .security-row p { color: var(--c-text-muted); }
+.dashboard-nav a { color: var(--c-text-muted); }
+.data-list-row { color: var(--c-text-stat-soft); }
+.submission-summary div { background: var(--c-bg-card-alt); }
+.author-note p, .author-note ul, .check-row { color: var(--c-text-stat-soft); }
+.pagination-item, .pagination-wrap a, .pagination-wrap span { color: var(--c-text-control); }
+
+/* ── Focus States ── */
+:where(a, button, input, textarea, select):focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--c-accent) 72%, transparent);
+    outline-offset: 3px;
 }
 
 /* ── Reduced Motion ── */

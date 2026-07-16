@@ -2,51 +2,67 @@
 class ThemeManager {
     constructor() {
         this.STORAGE_KEY = 'yuejing-theme';
-        this.currentTheme = this.getStoredTheme() || 'system';
+        this.validThemes = ['light', 'dark', 'system'];
+        this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        this.currentTheme = this.getStoredTheme();
         this.applyTheme(this.currentTheme);
         this.initializeToggles();
         this.listenToSystemChanges();
     }
 
-    getStoredTheme() { return localStorage.getItem(this.STORAGE_KEY); }
+    getStoredTheme() {
+        try {
+            const storedTheme = localStorage.getItem(this.STORAGE_KEY);
+            return this.validThemes.includes(storedTheme) ? storedTheme : 'system';
+        } catch {
+            return 'system';
+        }
+    }
 
     getSystemTheme() {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        return this.mediaQuery.matches ? 'dark' : 'light';
     }
 
     applyTheme(theme) {
-        if (theme === 'system') {
+        const nextTheme = this.validThemes.includes(theme) ? theme : 'system';
+
+        if (nextTheme === 'system') {
             document.documentElement.removeAttribute('data-theme');
-            localStorage.removeItem(this.STORAGE_KEY);
+            try {
+                localStorage.removeItem(this.STORAGE_KEY);
+            } catch {
+                // Storage may be unavailable in private browsing contexts.
+            }
         } else {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem(this.STORAGE_KEY, theme);
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            try {
+                localStorage.setItem(this.STORAGE_KEY, nextTheme);
+            } catch {
+                // The current DOM theme still applies without persistent storage.
+            }
         }
-        this.currentTheme = theme;
+
+        this.currentTheme = nextTheme;
         this.updateToggleUI();
     }
 
     initializeToggles() {
         document.querySelectorAll('[data-theme-action]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const theme = btn.dataset.themeAction;
-                this.applyTheme(theme);
-            });
+            btn.addEventListener('click', () => this.applyTheme(btn.dataset.themeAction));
         });
     }
 
     updateToggleUI() {
         document.querySelectorAll('[data-theme-action]').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.themeAction === this.currentTheme);
+            const isActive = btn.dataset.themeAction === this.currentTheme;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-checked', String(isActive));
         });
     }
 
     listenToSystemChanges() {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            if (this.currentTheme === 'system') {
-                // Visual update happens via CSS media query automatically — just refresh toggle UI
-                this.updateToggleUI();
-            }
+        this.mediaQuery.addEventListener('change', () => {
+            if (this.currentTheme === 'system') this.updateToggleUI();
         });
     }
 }

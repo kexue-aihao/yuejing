@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', '阅境 · 在故事里相遇')</title>
+    <script>
+        (() => {
+            try {
+                const theme = localStorage.getItem('yuejing-theme');
+                if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+            } catch (_) {
+                // Use the system theme when storage is unavailable.
+            }
+        })();
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="site-body">

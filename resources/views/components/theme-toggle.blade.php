@@ -5,7 +5,7 @@
     <button class="theme-toggle-btn" data-theme-action="dark" role="radio" aria-checked="false">
         ☾ 暗色
     </button>
-    <button class="theme-toggle-btn active" data-theme-action="system" role="radio" aria-checked="true">
+    <button class="theme-toggle-btn" data-theme-action="system" role="radio" aria-checked="false">
         ◐ 跟随系统
     </button>
 </div>
