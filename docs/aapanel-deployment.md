@@ -55,6 +55,20 @@
 
 > `pdo_mysql` 是最容易被遗漏的。它的名称在 aaPanel 中可能显示为 `pdo_mysql` 或 `MySQL` 或 `mysqlnd`，必须确认已安装并启用。
 
+### 3.1 解除 PHP 禁用函数
+
+aaPanel 默认禁用了 `putenv`、`proc_open`、`exec` 这三个函数，**必须解除**，否则 Laravel 部分核心流程会失败：
+
+| 函数 | 用途 | 禁用后会怎样 |
+|------|------|--------------|
+| `putenv` | 读取 `.env` 环境变量 | Laravel 无法加载配置，直接 500 |
+| `proc_open` | Composer 内部脚本执行、队列 worker 进程管理 | `composer install` 报错中断，队列无法运行 |
+| `exec` | `php artisan storage:link` 创建符号链接、`key:generate` 随机密钥生成 | `storage:link` 报错，但可手动 `ln -s` 绕过 |
+
+**如何解除**：在 aaPanel「软件商城 → 已安装 → PHP-83 → 设置 → 禁用函数」中，把 `putenv,proc_open,exec` 从列表里删掉，然后保存、重启 PHP-FPM。
+
+> 如果你必须保留 `exec` 的禁用（安全基线要求），可以接受手工创建 `ln -sf ../storage/app/public public/storage` 替代 `php artisan storage:link`。但 `putenv` 和 `proc_open` 无论如何不能禁用，否则 Laravel 启动和依赖安装都会失败。
+
 安装完成后在 aaPanel 终端执行：
 
 ```bash
@@ -746,6 +760,9 @@ tail -100 storage/logs/laravel.log
 | `require(vendor/autoload.php): failed to open stream` | 没执行 `composer install` | 第 7.2 节 |
 | `Class "..." not found` | `composer install` 不完整或被 kill | 第 7.2 节，重试 |
 | `open_basedir restriction in effect` | 没关闭防跨站 | 第 4.3 节 |
+| `proc_open() has been disabled` | `proc_open` 被禁用 | 第 3.1 节 |
+| `putenv() has been disabled` | `putenv` 被禁用 | 第 3.1 节 |
+| `exec() has been disabled` (storage:link 报错) | `exec` 被禁用 | 第 3.1 节，或手工 `ln -s` |
 
 ### 14.2 首页 200 但其他页面 404
 
