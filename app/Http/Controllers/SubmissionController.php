@@ -22,6 +22,7 @@ class SubmissionController extends Controller
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'synopsis' => ['nullable', 'string', 'max:5000'],
             'manuscript' => ['nullable', 'string'],
             'summary' => ['nullable', 'string', 'max:5000'],

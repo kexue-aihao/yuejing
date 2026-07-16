@@ -24,6 +24,9 @@
                 </form>
                 @auth
                     <a class="avatar avatar-small" href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}">{{ mb_substr(auth()->user()->name ?? '阅', 0, 1) }}</a>
+                    @if (auth()->user()->isRole('admin') && Route::has('admin.dashboard'))
+                        <a class="login-link" href="{{ route('admin.dashboard') }}">后台</a>
+                    @endif
                     @if (Route::has('logout'))
                         <form method="POST" action="{{ route('logout') }}"><button class="login-link" type="submit">退出</button>@csrf</form>
                     @endif

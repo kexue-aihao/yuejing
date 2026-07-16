@@ -11,10 +11,20 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            ['name' => 'Administrator', 'password' => Hash::make('password'), 'role' => 'admin', 'email_verified_at' => now()],
-        );
+        $adminEmail = strtolower(trim((string) env('YUEJING_ADMIN_EMAIL', '')));
+        $adminPassword = (string) env('YUEJING_ADMIN_PASSWORD', '');
+
+        if ($adminEmail !== '' && filter_var($adminEmail, FILTER_VALIDATE_EMAIL) && strlen($adminPassword) >= 12) {
+            User::firstOrCreate(
+                ['email' => $adminEmail],
+                [
+                    'name' => env('YUEJING_ADMIN_NAME', '网站管理员'),
+                    'password' => Hash::make($adminPassword),
+                    'role' => 'admin',
+                    'email_verified_at' => now(),
+                ],
+            );
+        }
 
         User::firstOrCreate(
             ['email' => 'test@example.com'],

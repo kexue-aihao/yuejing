@@ -47,16 +47,30 @@ class InteractionController extends Controller
 
     public function readings(Request $request)
     {
-        $records = $request->user()->readingRecords()->with(['novel:id,title,slug', 'chapter:id,title,chapter_number'])->latest('last_read_at')->paginate(config('yuejing.pagination'));
+        $records = $request->user()->readingRecords()
+            ->with(['novel:id,title,slug,author_id', 'novel.author:id,name', 'chapter:id,title,chapter_number'])
+            ->latest('last_read_at')
+            ->paginate(config('yuejing.pagination'));
 
-        return $this->wantsJson($request)
-            ? response()->json($records)
-            : view('pages.dashboard', ['reading' => $records->getCollection()->map(fn ($record) => [
-                'title' => $record->novel?->title ?? '未命名作品',
-                'author' => '匿名作者',
-                'progress' => '第 '.($record->chapter?->chapter_number ?? 1).' 章',
-                'status' => '最近阅读',
-                'slug' => $record->novel?->slug,
-            ])]);
+        if ($this->wantsJson($request)) {
+            return response()->json($records);
+        }
+
+        return view('pages.account.reading-records', compact('records'));
+    }
+
+    public function favorites(Request $request)
+    {
+        $favorites = $request->user()->favorites()
+            ->with('novel.author:id,name')
+            ->whereHas('novel', fn ($query) => $query->where('status', 'published'))
+            ->latest()
+            ->paginate(config('yuejing.pagination'));
+
+        if ($this->wantsJson($request)) {
+            return response()->json($favorites);
+        }
+
+        return view('pages.account.favorites', compact('favorites'));
     }
 }

@@ -41,6 +41,7 @@ class PublicController extends Controller
         if (! $this->wantsJson($request)) {
             return view('pages.novels.show', [
                 'novel' => $this->novelArray($novel),
+                'isFavorited' => auth()->check() && $novel->favorites()->where('user_id', auth()->id())->exists(),
                 'chapters' => $novel->chapters
                     ->where('status', 'published')
                     ->map(fn (Chapter $chapter) => [

@@ -16,6 +16,11 @@ class AuthenticationTest extends TestCase
     public function test_registration_creates_and_logs_in_a_user_without_external_mail_delivery(): void
     {
         Notification::fake();
+        Setting::create([
+            'key' => 'email_verification_required',
+            'value' => '1',
+            'type' => 'boolean',
+        ]);
 
         $response = $this->postWithCsrf(route('register'), [
             'name' => '新读者',
@@ -33,6 +38,45 @@ class AuthenticationTest extends TestCase
             'role' => 'user',
         ]);
         Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_registration_without_email_verification_does_not_send_notification(): void
+    {
+        Notification::fake();
+
+        $response = $this->postWithCsrf(route('register'), [
+            'name' => '免验证读者',
+            'email' => 'no-verification@example.test',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertAuthenticated();
+        Notification::assertNothingSent();
+    }
+
+    public function test_registration_email_failure_does_not_return_server_error(): void
+    {
+        Setting::create([
+            'key' => 'email_verification_required',
+            'value' => '1',
+            'type' => 'boolean',
+        ]);
+        config(['mail.default' => 'smtp']);
+        config(['mail.mailers.smtp.host' => '127.0.0.1']);
+        config(['mail.mailers.smtp.port' => 1]);
+
+        $response = $this->postWithCsrf(route('register'), [
+            'name' => '邮件失败读者',
+            'email' => 'mail-failure@example.test',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertDatabaseHas('users', ['email' => 'mail-failure@example.test']);
+        $this->assertAuthenticated();
     }
 
     public function test_login_authenticates_valid_credentials_and_rejects_invalid_credentials(): void

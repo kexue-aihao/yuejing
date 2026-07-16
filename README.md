@@ -1,6 +1,13 @@
 # 阅境
 
-这是基于 Laravel 13 的应用骨架，使用 Composer 管理 PHP 依赖，默认支持 MySQL/MariaDB。Laravel 基础信息与学习资源保留如下。
+这是基于 Laravel 13 的阅境阅读平台，使用 Composer 管理 PHP 依赖，默认支持 MySQL/MariaDB；前端资源由 Vite 构建。Laravel 基础信息与学习资源保留如下。
+
+## 项目文档
+
+- [aaPanel 生产部署](#aapanel-最简生产部署)
+- [API 管理文档](docs/api-management.md)
+- [Nginx 站点配置示例](docs/aapanel-nginx.conf.example)
+- [Apache 虚拟主机配置示例](docs/aapanel-apache-vhost.conf.example)
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
@@ -27,7 +34,7 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 ## aaPanel 最简生产部署
 
-本方案面向一台 aaPanel 服务器，默认不要求 Redis 或 Docker，适用于 PHP 8.5、MySQL/MariaDB，以及 aaPanel 的 Nginx 或 Apache。项目当前 `composer.json` 要求 PHP `^8.3`、Laravel `^13.8`，PHP 8.5 满足该约束。不要把 `.env` 提交到 Git，也不要把站点根目录指向项目根目录。
+本方案面向一台 aaPanel 服务器，默认不要求 Redis 或 Docker，以 PHP 8.5、MySQL/MariaDB，以及 aaPanel 的 Nginx 或 Apache 为示例。项目当前 `composer.json` 要求 PHP `^8.3`、Laravel `^13.8`，因此也可以使用满足 Composer 平台约束的其他 PHP 8.x 版本。不要把 `.env` 提交到 Git，也不要把站点根目录指向项目根目录。
 
 ### 1. aaPanel 准备工作
 
@@ -107,6 +114,26 @@ composer check-platform-reqs
 php artisan key:generate --force
 php artisan migrate --force
 php artisan storage:link
+php artisan yuejing:admin
+```
+
+`yuejing:admin` 会读取 `.env` 中的 `YUEJING_ADMIN_NAME`、`YUEJING_ADMIN_EMAIL` 和 `YUEJING_ADMIN_PASSWORD`：首次创建管理员时密码必填且至少 12 位；已有管理员不会在普通同步时重置密码，确需重置时使用 `php artisan yuejing:admin --reset-password`。不要在生产环境使用 `password` 等弱密码。
+
+`YUEJING_EMAIL_VERIFICATION_REQUIRED=false` 是默认值，只有管理员在“站点设置”中开启后，邮箱验证要求才对新注册和受保护功能生效。
+
+如果 PHP 禁用了 `exec()`，`php artisan storage:link` 可能无法执行，可手动创建链接：
+
+```bash
+ln -s ../storage/app/public public/storage
+chown -h www:www public/storage
+```
+
+然后继续执行：
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 ```
 
 如果项目包含前端源码并且没有可用的构建产物，再执行：
@@ -126,6 +153,15 @@ php artisan about --only=environment
 ```
 
 当前路由均使用控制器，生产部署可执行 `route:cache`；发布后建议按上述顺序重建配置、路由和视图缓存。
+
+如果启用 `QUEUE_CONNECTION=database`，需要让队列消费者持续运行；aaPanel 可使用 Supervisor 或常驻进程运行：
+
+```bash
+cd /www/wwwroot/yuejing
+php artisan queue:work database --sleep=3 --tries=3 --timeout=90
+```
+
+如果业务明确不使用异步队列，可将 `QUEUE_CONNECTION` 改为 `sync`；不要同时把队列设为 `database` 却不运行 worker。
 
 ### 5. 设置权限
 
@@ -162,9 +198,13 @@ MAIL_HOST=smtp.example.com
 MAIL_PORT=587
 MAIL_USERNAME=no-reply@example.com
 MAIL_PASSWORD="SMTP授权码"
-MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=no-reply@example.com
 MAIL_FROM_NAME="${APP_NAME}"
+
+YUEJING_EMAIL_VERIFICATION_REQUIRED=false
+YUEJING_ADMIN_NAME="网站管理员"
+YUEJING_ADMIN_EMAIL=admin@example.com
+YUEJING_ADMIN_PASSWORD="请使用至少12位随机强密码"
 ```
 
 修改 `.env` 后刷新配置缓存：
@@ -186,13 +226,13 @@ php artisan config:cache
 HEALTHCHECK_URL=https://example.com/up /bin/bash /www/wwwroot/yuejing/scripts/aapanel-healthcheck.sh >> /www/server/cron/yuejing-healthcheck.log 2>&1
 ```
 
-数据库和文件备份由 aaPanel「计划任务」或「数据库」备份功能完成，建议至少每日一次，并把备份保留在站点目录之外。更新脚本不要高频自动运行，建议由人工确认后执行：
+数据库和文件备份由 aaPanel「计划任务」或「数据库」备份功能完成，建议至少每日一次，并把备份保留在站点目录之外。`aapanel-update.sh` 还会在更新前备份 `.env`、`storage/` 和数据库；脚本需要 `curl`、`tar` 以及 `mysqldump` 或 `mariadb-dump`。更新脚本不要高频自动运行，建议由人工确认后执行：
 
 ```bash
 DEPLOY_BRANCH=main /bin/bash /www/wwwroot/yuejing/scripts/aapanel-update.sh >> /www/server/cron/yuejing-update.log 2>&1
 ```
 
-更新脚本默认要求 Git 工作区没有已跟踪的本地修改，会在更新前备份 `.env`、`storage` 和数据库，使用 `git pull --ff-only`，执行依赖安装和迁移。失败时只回滚代码提交，不会自动执行 `migrate:rollback`，以避免破坏数据；请根据备份和迁移记录人工处理数据库回退。
+更新脚本默认要求 Git 工作区干净且当前分支为 `main`（可用 `DEPLOY_BRANCH` 覆盖），会在更新前备份 `.env`、`storage` 和数据库，使用 `git pull --ff-only`，执行依赖安装、平台检查、迁移、缓存构建和 `/up` 健康检查。失败时只回滚代码提交，不会自动执行 `migrate:rollback`，以避免破坏数据；请根据备份和迁移记录人工处理数据库回退。只有在已有独立数据库备份并明确接受风险时，才设置 `SKIP_DB_BACKUP=1`。
 
 ### 9. 备份、更新和回滚
 
@@ -254,6 +294,10 @@ HEALTHCHECK_URL=https://example.com/up /bin/bash scripts/aapanel-healthcheck.sh
 4. `storage`、`bootstrap/cache` 是否可写，`public/storage` 是否存在。
 5. `storage/logs/laravel.log`、PHP-FPM、Nginx/Apache 日志是否有权限或扩展错误。
 6. 更新配置后是否重新执行 `php artisan config:cache`。
+
+## API 管理
+
+认证、Session/CSRF 约定、管理端点、请求字段、响应码和投稿审核流程请参阅 [API 管理文档](docs/api-management.md)。当前管理 API 是基于 Session Cookie 的有状态接口，不提供 Bearer Token；接入脚本或前端时不要省略 CSRF Token。
 
 ## Agentic Development
 

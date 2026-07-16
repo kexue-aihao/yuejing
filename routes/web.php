@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\PageController;
@@ -52,10 +54,14 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
+    Route::get('/account/settings', [AccountController::class, 'settings'])->name('account.settings');
+    Route::put('/account/settings', [AccountController::class, 'update'])->name('account.settings.update');
+    Route::get('/account/favorites', [InteractionController::class, 'favorites'])->name('account.favorites');
+    Route::get('/account/reading-records', [InteractionController::class, 'readings'])->name('account.reading-records');
     Route::get('/reading-records', [InteractionController::class, 'readings'])->name('reading-records.index');
     Route::post('/novels/{novel}/rating', [InteractionController::class, 'rate'])->name('novels.rate');
-    Route::post('/novels/{novel}/favorite', [InteractionController::class, 'favorite'])->name('novels.favorite');
-    Route::delete('/novels/{novel}/favorite', [InteractionController::class, 'unfavorite'])->name('novels.unfavorite');
+    Route::post('/novels/{novel:slug}/favorite', [InteractionController::class, 'favorite'])->name('novels.favorite');
+    Route::delete('/novels/{novel:slug}/favorite', [InteractionController::class, 'unfavorite'])->name('novels.unfavorite');
 
     Route::middleware('email.required')->group(function () {
         Route::get('/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
@@ -77,14 +83,18 @@ Route::middleware(['auth', 'email.required', 'role:admin'])->prefix('admin')->gr
     Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::put('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
+    Route::post('/settings/email-test', [AdminController::class, 'testEmail'])->name('admin.settings.email-test');
     Route::get('/categories', [AdminController::class, 'categories'])->name('admin.categories.index');
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('admin.categories.store');
     Route::match(['put', 'patch'], '/categories/{category}', [AdminController::class, 'updateCategory'])->name('admin.categories.update');
-    Route::delete('/categories/{category}', [AdminController::class, 'destroyCategory'])->name('admin.categories.destroy');
     Route::get('/novels', [AdminController::class, 'novels'])->name('admin.novels.index');
     Route::post('/novels', [AdminController::class, 'storeNovel'])->name('admin.novels.store');
     Route::match(['put', 'patch'], '/novels/{novel}', [AdminController::class, 'updateNovel'])->name('admin.novels.update');
     Route::delete('/novels/{novel}', [AdminController::class, 'destroyNovel'])->name('admin.novels.destroy');
+    Route::get('/novels/{novel}/chapters', [ChapterController::class, 'index'])->name('admin.chapters.index');
+    Route::post('/novels/{novel}/chapters', [ChapterController::class, 'store'])->name('admin.chapters.store');
+    Route::match(['put', 'patch'], '/novels/{novel}/chapters/{chapter}', [ChapterController::class, 'update'])->name('admin.chapters.update');
+    Route::delete('/novels/{novel}/chapters/{chapter}', [ChapterController::class, 'destroy'])->name('admin.chapters.destroy');
     Route::get('/submissions', [AdminController::class, 'submissions'])->name('admin.submissions.index');
     Route::put('/submissions/{submission}/review', [AdminController::class, 'reviewSubmission'])->name('admin.submissions.review');
     Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('admin.audit-logs.index');

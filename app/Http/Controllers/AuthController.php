@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Services\AppSettingService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -29,9 +31,9 @@ class AuthController extends Controller
         return view('pages.auth.register');
     }
 
-    public function registerEndpoint(Request $request)
+    public function registerEndpoint(Request $request, AppSettingService $settings)
     {
-        return $request->isMethod('get') ? $this->registerPage() : $this->register($request);
+        return $request->isMethod('get') ? $this->registerPage() : $this->register($request, $settings);
     }
 
     public function forgotPasswordPage()
@@ -58,7 +60,7 @@ class AuthController extends Controller
 HTML);
     }
 
-    public function register(Request $request)
+    public function register(Request $request, AppSettingService $settings)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -69,14 +71,37 @@ HTML);
         $user = User::create([...$data, 'role' => 'user']);
         Auth::login($user);
         $request->session()->regenerate();
-        event(new Registered($user));
+
+        $verificationRequired = filter_var($settings->get(
+            'email_verification_required',
+            config('yuejing.email_verification.required', false),
+        ), FILTER_VALIDATE_BOOLEAN);
+
+        if ($verificationRequired) {
+            try {
+                event(new Registered($user));
+            } catch (\Throwable $exception) {
+                Log::warning('Registration email verification could not be sent.', [
+                    'user_id' => $user->id,
+                    'exception' => $exception::class,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+
         $this->audit($request, $user, 'auth.registered');
 
         if (! $this->wantsJson($request)) {
-            return redirect()->route('dashboard')->with('status', '注册成功，欢迎来到阅境。');
+            return redirect()->route('dashboard')->with('status', $verificationRequired
+                ? '注册成功。请查收验证邮件后继续使用需要验证邮箱的功能。'
+                : '注册成功，欢迎来到阅境。');
         }
 
-        return response()->json(['message' => 'Registered successfully.', 'user' => $user], 201);
+        return response()->json([
+            'message' => 'Registered successfully.',
+            'email_verification_required' => $verificationRequired,
+            'user' => $user,
+        ], 201);
     }
 
     public function login(Request $request)

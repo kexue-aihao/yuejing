@@ -20,6 +20,13 @@ abstract class TestCase extends BaseTestCase
         return $this->withSession(['_token' => $token])->postJson($uri, ['_token' => $token, ...$data]);
     }
 
+    protected function putJsonWithCsrf(string $uri, array $data = [])
+    {
+        $token = bin2hex(random_bytes(16));
+
+        return $this->withSession(['_token' => $token])->putJson($uri, ['_token' => $token, ...$data]);
+    }
+
     protected function deleteJsonWithCsrf(string $uri, array $data = [])
     {
         $token = bin2hex(random_bytes(16));
