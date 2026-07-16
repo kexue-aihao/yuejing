@@ -79,6 +79,120 @@ composer check-platform-reqs --no-dev
    这一步是必须的，项目根目录不能作为 Web 根目录，否则 `.env`、`composer.json` 等文件可能暴露。
 5. Nginx 配置参见 [`docs/aapanel-nginx.conf.example`](docs/aapanel-nginx.conf.example)，Apache 配置参见 [`docs/aapanel-apache-vhost.conf.example`](docs/aapanel-apache-vhost.conf.example)。Apache 需要允许 `public/.htaccess` 生效；Nginx 需要 `try_files` 转发到 `index.php`。
 
+#### aaPanel + Cloudflare HTTPS 参考配置
+
+如果站点通过 Cloudflare 回源，且 HTTPS 证书由 aaPanel 管理，可以使用下面的配置作为参考。请将域名、项目路径、证书路径和 PHP-FPM socket 替换为服务器实际值；不要把 80 和 443 写在同一个未启用 SSL 的 `server` 块中。
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name online.eepzau.org;
+
+    root /www/wwwroot/online.eepzau.org/public;
+
+    location ^~ /.well-known/acme-challenge/ {
+        try_files $uri =404;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name online.eepzau.org;
+
+    root /www/wwwroot/online.eepzau.org/public;
+    index index.php;
+    charset utf-8;
+
+    ssl_certificate     /www/server/panel/vhost/cert/online.eepzau.org/fullchain.pem;
+    ssl_certificate_key /www/server/panel/vhost/cert/online.eepzau.org/privkey.pem;
+
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 104.16.0.0/13;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 131.0.72.0/22;
+
+    set_real_ip_from 2400:cb00::/32;
+    set_real_ip_from 2606:4700::/32;
+    set_real_ip_from 2803:f800::/32;
+    set_real_ip_from 2405:b500::/32;
+    set_real_ip_from 2405:8100::/32;
+    set_real_ip_from 2a06:98c0::/29;
+    set_real_ip_from 2c0f:f248::/32;
+
+    real_ip_header CF-Connecting-IP;
+    real_ip_recursive on;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location /build/assets/ {
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    location = /favicon.ico {
+        access_log off;
+        log_not_found off;
+    }
+
+    location = /robots.txt {
+        access_log off;
+        log_not_found off;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $document_root;
+        fastcgi_pass unix:/tmp/php-cgi-85.sock;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+保存后先检查并重载 Nginx：
+
+```bash
+nginx -t
+nginx -s reload
+```
+
+确认实际生效配置中包含 `listen 443 ssl`、`ssl_certificate` 和 `ssl_certificate_key`：
+
+```bash
+nginx -T 2>&1 | grep -nE \
+  'server_name online.eepzau.org|listen .*443|ssl_certificate|ssl_certificate_key'
+```
+
+Cloudflare 的 SSL/TLS 模式建议使用 `Full (strict)`。如果证书由 aaPanel 自动续期，续期后应确认 Nginx 已重新加载证书。
+
 ### 3. 配置环境变量
 
 在项目根目录执行：
