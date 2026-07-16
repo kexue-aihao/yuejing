@@ -465,7 +465,21 @@ server {
 
 4. **绝对不要**在这份配置之外再嵌套另一个 `server {}` 块。aaPanel 有时会在「配置文件」中把用户内容插入到一个已有的 server 块内——如果发现有两层 `server {}`，把外层删掉。
 
-5. 保存后重载 Nginx：在 aaPanel 中点击「保存」即可自动重载。
+5. **确认 `try_files` 没有被 aaPanel 默认值覆盖。** 这是最常见的 404 原因——aaPanel 默认生成的 `location /` 是：
+   ```nginx
+   location / {
+       try_files $uri $uri/ =404;
+   }
+   ```
+   这个配置会直接返回 404，不会把请求交给 `index.php`。**必须自己改成**：
+   ```nginx
+   location / {
+       try_files $uri $uri/ /index.php?$query_string;
+   }
+   ```
+   如果你粘贴了上面的完整配置却还是 404，检查 aaPanel 是否在更外层还有另一个 `location /` 覆盖了你的。
+
+6. 保存后重载 Nginx：在 aaPanel 中点击「保存」即可自动重载。
 
 ---
 
