@@ -115,7 +115,7 @@
     --c-bg-card: #242b29;
     --c-bg-card-alt: #222927;
     --c-bg-footer: #1c2221;
-    --c-bg-input: #262d2b;
+    --c-bg-input: #2d3633;
     --c-bg-nav: #1e2624;
     --c-bg-nav-active: #2a3834;
     --c-bg-rank: #1e2624;
@@ -130,21 +130,21 @@
     --c-bg-info: #243437;
     --c-bg-reader: #242825;
 
-    --c-text: #d9d4c8;
-    --c-text-heading: #c5cfc9;
-    --c-text-heading-soft: #bcc7c0;
-    --c-text-heading-warm: #bec8c2;
-    --c-text-muted: #8a9590;
-    --c-text-muted-soft: #7f8b86;
-    --c-text-muted-warm: #88938d;
-    --c-text-link: #9bb3ab;
-    --c-text-nav: #8a9590;
-    --c-text-nav-hover: #c5cfc9;
-    --c-text-brand: #bcc7c0;
-    --c-text-stat: #bcc7c0;
-    --c-text-stat-alt: #b8c4bd;
-    --c-text-stat-soft: #9aa59f;
-    --c-text-footer-heading: #bcc7c0;
+    --c-text: #eee9df;
+    --c-text-heading: #e3e9e4;
+    --c-text-heading-soft: #d6e0da;
+    --c-text-heading-warm: #d8ded8;
+    --c-text-muted: #b5c0ba;
+    --c-text-muted-soft: #aab6b0;
+    --c-text-muted-warm: #acb8b2;
+    --c-text-link: #b4d0c5;
+    --c-text-nav: #aebbb5;
+    --c-text-nav-hover: #eef4ef;
+    --c-text-brand: #d6e0da;
+    --c-text-stat: #cfe1d7;
+    --c-text-stat-alt: #c9ddd2;
+    --c-text-stat-soft: #adbbb4;
+    --c-text-footer-heading: #d1ded6;
     --c-text-body: #e4e0d6;
     --c-text-subtle: #aeb9b3;
     --c-text-control: #e4e0d6;
@@ -156,8 +156,8 @@
     --c-border-alt: #2f3633;
     --c-border-card: #333a37;
     --c-border-light: #373e3b;
-    --c-border-form: #3a413e;
-    --c-border-input: #3a413e;
+    --c-border-form: #4c5b55;
+    --c-border-input: #566760;
 
     --c-accent: #d08b6d;
     --c-accent-hover: #e49373;
@@ -171,14 +171,14 @@
     --c-green-text: #bcc7c0;
     --c-green-text-alt: #c5cfc9;
     --c-green-text-soft: #a8b5af;
-    --c-green-text-muted: #7f8b86;
+    --c-green-text-muted: #a7bbb1;
     --c-green-stat: #bcc7c0;
     --c-green-stat-alt: #b8c4bd;
     --c-green-stat-strong: #c5cfc9;
 
-    --c-status-success-text: #7bb382;
-    --c-status-pending-text: #c99c4a;
-    --c-status-reject-text: #c46b5d;
+    --c-status-success-text: #9cdaa5;
+    --c-status-pending-text: #e4bd68;
+    --c-status-reject-text: #e59688;
 
     --c-reader-text: #d9d4c8;
     --c-reader-heading: #d9d4c8;
@@ -204,7 +204,7 @@
         --c-bg-card: #242b29;
         --c-bg-card-alt: #222927;
         --c-bg-footer: #1c2221;
-        --c-bg-input: #262d2b;
+        --c-bg-input: #2d3633;
         --c-bg-nav: #1e2624;
         --c-bg-nav-active: #2a3834;
         --c-bg-rank: #1e2624;
@@ -216,36 +216,37 @@
         --c-bg-status-pending: #363021;
         --c-bg-status-reject: #362422;
         --c-bg-alert: #362422;
+        --c-bg-info: #243437;
         --c-bg-reader: #242825;
 
-        --c-text: #d9d4c8;
-        --c-text-heading: #c5cfc9;
-        --c-text-heading-soft: #bcc7c0;
-        --c-text-heading-warm: #bec8c2;
-        --c-text-muted: #8a9590;
-        --c-text-muted-soft: #7f8b86;
-        --c-text-muted-warm: #88938d;
-        --c-text-link: #9bb3ab;
-        --c-text-nav: #8a9590;
-        --c-text-nav-hover: #c5cfc9;
-        --c-text-brand: #bcc7c0;
-        --c-text-stat: #bcc7c0;
-        --c-text-stat-alt: #b8c4bd;
-        --c-text-stat-soft: #9aa59f;
-        --c-text-footer-heading: #bcc7c0;
-    --c-text-body: #e4e0d6;
-    --c-text-subtle: #aeb9b3;
-    --c-text-control: #e4e0d6;
-    --c-text-disabled: #a0aaa4;
-    --c-text-on-accent: #1a1f1e;
-    --c-text-on-dark: #f8f6ed;
+        --c-text: #eee9df;
+        --c-text-heading: #e3e9e4;
+        --c-text-heading-soft: #d6e0da;
+        --c-text-heading-warm: #d8ded8;
+        --c-text-muted: #b5c0ba;
+        --c-text-muted-soft: #aab6b0;
+        --c-text-muted-warm: #acb8b2;
+        --c-text-link: #b4d0c5;
+        --c-text-nav: #aebbb5;
+        --c-text-nav-hover: #eef4ef;
+        --c-text-brand: #d6e0da;
+        --c-text-stat: #cfe1d7;
+        --c-text-stat-alt: #c9ddd2;
+        --c-text-stat-soft: #adbbb4;
+        --c-text-footer-heading: #d1ded6;
+        --c-text-body: #e4e0d6;
+        --c-text-subtle: #aeb9b3;
+        --c-text-control: #e4e0d6;
+        --c-text-disabled: #a0aaa4;
+        --c-text-on-accent: #1a1f1e;
+        --c-text-on-dark: #f8f6ed;
 
         --c-border: #333a37;
         --c-border-alt: #2f3633;
         --c-border-card: #333a37;
         --c-border-light: #373e3b;
-        --c-border-form: #3a413e;
-        --c-border-input: #3a413e;
+        --c-border-form: #4c5b55;
+        --c-border-input: #566760;
 
         --c-accent: #d08b6d;
         --c-accent-hover: #e49373;
@@ -259,14 +260,14 @@
         --c-green-text: #bcc7c0;
         --c-green-text-alt: #c5cfc9;
         --c-green-text-soft: #a8b5af;
-        --c-green-text-muted: #7f8b86;
+        --c-green-text-muted: #a7bbb1;
         --c-green-stat: #bcc7c0;
         --c-green-stat-alt: #b8c4bd;
         --c-green-stat-strong: #c5cfc9;
 
-        --c-status-success-text: #7bb382;
-        --c-status-pending-text: #c99c4a;
-        --c-status-reject-text: #c46b5d;
+        --c-status-success-text: #9cdaa5;
+        --c-status-pending-text: #e4bd68;
+        --c-status-reject-text: #e59688;
 
         --c-reader-text: #d9d4c8;
         --c-reader-heading: #d9d4c8;
@@ -1153,6 +1154,36 @@ a.pagination-item:hover { border-color: var(--c-accent); color: var(--c-accent);
 .submission-summary div { background: var(--c-bg-card-alt); }
 .author-note p, .author-note ul, .check-row { color: var(--c-text-stat-soft); }
 .pagination-item, .pagination-wrap a, .pagination-wrap span { color: var(--c-text-control); }
+
+/* ── Admin Form Readability ── */
+.panel-description,
+.field-hint,
+.settings-hint,
+.row-subtitle {
+    color: var(--c-text-muted);
+}
+.form-field label:not(.check-row) {
+    color: var(--c-text-heading);
+}
+.form-field input,
+.form-field textarea,
+.form-field select {
+    caret-color: var(--c-accent);
+}
+.form-field select option {
+    color: var(--c-text-control);
+    background: var(--c-bg-input);
+}
+.check-row {
+    color: var(--c-text-body);
+}
+.dashboard-nav a {
+    border-radius: 2px;
+}
+.dashboard-nav a.is-active,
+.dashboard-nav a:hover {
+    color: var(--c-text-nav-hover);
+}
 
 /* ── Focus States ── */
 :where(a, button, input, textarea, select):focus-visible {
