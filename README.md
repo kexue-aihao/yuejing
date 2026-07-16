@@ -5,6 +5,7 @@
 ## 项目文档
 
 - [aaPanel 生产部署](#aapanel-最简生产部署)
+- [aaPanel 部署检查清单](docs/aapanel-deployment-checklist.md)
 - [API 管理文档](docs/api-management.md)
 - [Nginx 站点配置示例](docs/aapanel-nginx.conf.example)
 - [Apache 虚拟主机配置示例](docs/aapanel-apache-vhost.conf.example)
@@ -44,16 +45,24 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 - MySQL 或 MariaDB，创建独立数据库、用户和强密码，字符集使用 `utf8mb4`。
 - Nginx 或 Apache，二选一。
 - Composer 2。
-- PHP 扩展：`bcmath`、`ctype`、`curl`、`dom`、`fileinfo`、`filter`、`mbstring`、`openssl`、`pcre`、`pdo`、`pdo_mysql`、`session`、`tokenizer`、`xml`、`zip`。Laravel 依赖的扩展以 `composer check-platform-reqs` 的结果为准。
+- **生产必需的 PHP 扩展**：Laravel 及其运行时依赖要求 `ctype`、`filter`、`hash`、`mbstring`、`openssl`、`session`、`tokenizer`、`dom`、`libxml`、`fileinfo` 和 `pcre`。`json` 在 PHP 8.3 中属于内置能力；`hash`、`pcre` 等通常随 PHP 发行版提供，但仍应以 `composer check-platform-reqs --no-dev` 的结果为准。
+- **数据库扩展**：本部署示例使用 MySQL/MariaDB，必须启用 `pdo` 和 `pdo_mysql`。如果改用 SQLite、PostgreSQL 或 SQL Server，应分别启用对应的 PDO 驱动，并用实际 `.env` 配置验证；不要只安装 `pdo` 而忽略具体驱动。
+- **部署命令行工具**：`aapanel-healthcheck.sh` 和 `aapanel-update.sh` 需要系统命令 `curl`、`tar`，数据库备份还需要 `mysqldump` 或 `mariadb-dump`；这不是 PHP 的 `ext-curl` 扩展。PHP `ext-curl` 只有在应用或 Composer 包实际选择 cURL 网络处理器时才需要。
+- **按功能启用的扩展**：使用 Redis 缓存、Session 或队列时启用 `redis`（phpredis），使用 Memcached 时启用 `memcached`；本方案默认使用 database 驱动，不要求这两个扩展。`zip` 可帮助 Composer 和发布工具处理压缩包，但不是本项目生产代码的硬性运行时要求。
+- **开发/测试扩展**：`xml`、`xmlwriter`、`phar` 以及 `pcov`/`xdebug` 主要由 PHPUnit、Pint 或其他开发工具使用；`intl`、`gd`、`gmp`、`pcntl`、`posix` 只有在对应功能、开发工具或队列管理方案实际使用时才启用，不要将 Composer 的 `suggest` 项当作生产硬要求。
 - 若要编译前端资源，再安装 Node.js 20 LTS 或更高版本；本最简方案不要求 Node.js，使用仓库中已构建的资源或项目实际构建流程即可。
 
 建议先在 aaPanel 的终端执行：
 
 ```bash
 php -v
+php --ini
 composer --version
 php -m
+composer check-platform-reqs --no-dev
 ```
+
+`php --ini` 和 `php -m` 检查的是 CLI。还必须在 aaPanel 站点使用的 PHP-FPM 版本和 `php.ini` 中启用同一组扩展；如果 CLI 与网站 PHP 版本不同，Composer 检查通过也不能证明浏览器请求可用。可在站点临时放置受保护的 PHP 信息页核对 `PHP_VERSION`、`Loaded Configuration File` 和 `extension_loaded()`，确认后立即删除，不要公开 `phpinfo()`。
 
 ### 2. 创建站点和上传代码
 
@@ -110,7 +119,7 @@ MAIL_FROM_NAME="${APP_NAME}"
 ```bash
 cd /www/wwwroot/yuejing
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-composer check-platform-reqs
+composer check-platform-reqs --no-dev
 php artisan key:generate --force
 php artisan migrate --force
 php artisan storage:link
@@ -128,7 +137,19 @@ ln -s ../storage/app/public public/storage
 chown -h www:www public/storage
 ```
 
-然后继续执行：
+### PHP 函数和 `disable_functions`
+
+源码扫描未发现应用直接调用 `system()`、`shell_exec()`、`passthru()`、`proc_open()`、`popen()`、`pcntl_exec()` 或 PHP 原生 `mail()`。二步验证使用的 `random_bytes()`、`hash_hmac()`、`hash_equals()`，以及 JSON、过滤、字符串和编码函数属于 PHP 核心/标准运行时能力，不是需要在 aaPanel 中额外安装的扩展，也不要把它们加入 `disable_functions`。
+
+`exec()` 只与 Laravel 的 `php artisan storage:link` 创建符号链接有关，不是浏览器请求的业务必需函数。CLI 和 PHP-FPM 可能加载不同的 `php.ini`，请分别检查：
+
+```bash
+php -r 'echo "CLI disable_functions: ", (ini_get("disable_functions") ?: "(none)"), PHP_EOL;'
+```
+
+如果站点 PHP-FPM 禁用了 `exec()`，使用上面的 `ln -s` 手工创建 `public/storage`，不要为了这个命令放开 `system()`、`shell_exec()` 等更高权限的函数。修改 `disable_functions` 前应遵循服务器安全基线，并重启对应的 PHP-FPM 服务。
+
+生产环境优先使用 `smtp` 邮件驱动。项目的密码重置、邮箱验证和后台 SMTP 测试都通过 Laravel/Symfony 邮件抽象发送，不是应用直接调用 `mail()`；如果改用 `sendmail`，还必须确认服务器存在 `MAIL_SENDMAIL_PATH` 指向的 `sendmail` 程序，并验证 PHP-FPM 对该传输方式的实际权限。
 
 ```bash
 php artisan config:cache
@@ -274,7 +295,7 @@ php artisan up
 
 ### 10. 健康检查和故障排查
 
-Laravel 13 骨架已注册 `/up` 健康路由。检查站点：
+完整的上线前和更新后核对项请参阅 [aaPanel 部署检查清单](docs/aapanel-deployment-checklist.md)。Laravel 13 骨架已注册 `/up` 健康路由。检查站点：
 
 ```bash
 curl -fsS -o /dev/null -w '%{http_code}\n' https://example.com/up
@@ -288,7 +309,7 @@ HEALTHCHECK_URL=https://example.com/up /bin/bash scripts/aapanel-healthcheck.sh
 
 常见检查顺序：
 
-1. `php -v`、`php -m` 和 `composer check-platform-reqs` 是否使用 PHP 8.5。
+1. `php -v`、`php -m` 和 `composer check-platform-reqs --no-dev` 是否使用 PHP 8.5。
 2. 站点根目录是否确实为 `public`，Nginx/Apache 是否把请求交给 `public/index.php`。
 3. `.env` 的 `APP_KEY`、数据库连接、`APP_DEBUG=false` 和 `APP_URL` 是否正确。
 4. `storage`、`bootstrap/cache` 是否可写，`public/storage` 是否存在。
