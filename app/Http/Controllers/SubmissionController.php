@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Submission;
 use Illuminate\Http\Request;
 
@@ -45,6 +46,22 @@ class SubmissionController extends Controller
         }
 
         $submission = $request->user()->submissions()->create($data);
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'submission.created',
+            'auditable_type' => $submission::class,
+            'auditable_id' => $submission->id,
+            'metadata' => [
+                'submission_id' => $submission->id,
+                'title' => $submission->title,
+                'author_id' => $submission->user_id,
+                'category_id' => $submission->category_id,
+                'status' => $submission->status,
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         if (! $this->wantsJson($request)) {
             return redirect()->route('author.submissions')->with('status', '投稿已提交，等待审核。');

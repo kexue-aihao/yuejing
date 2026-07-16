@@ -5,5 +5,5 @@
     <a class="{{ $active === 'novels' ? 'is-active' : '' }}" href="{{ route('admin.novels.index') }}">小说管理</a>
     <a class="{{ $active === 'categories' ? 'is-active' : '' }}" href="{{ route('admin.categories.index') }}">分类管理</a>
     <a class="{{ $active === 'settings' ? 'is-active' : '' }}" href="{{ route('admin.settings') }}">站点设置</a>
-    <a class="{{ $active === 'audit-logs' ? 'is-active' : '' }}" href="{{ route('admin.audit-logs.index') }}">审计日志</a>
+    <a class="{{ $active === 'audit-logs' ? 'is-active' : '' }}" href="{{ route('admin.audit-logs.index') }}">投稿审计日志</a>
 </nav>

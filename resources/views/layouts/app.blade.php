@@ -58,6 +58,7 @@
         </div>
     @endif
     <div id="main-content">@yield('content')</div>
+    <x-visitor-ip />
     <footer class="site-footer"><div class="site-shell footer-grid"><div><a class="brand" href="{{ Route::has('home') ? route('home') : url('/') }}"><span class="brand-mark">阅</span><span>阅境</span></a><p class="footer-copy">让每一次打开，都遇见值得读完的故事。</p></div><div class="footer-links"><div><strong>探索</strong><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">全部作品</a><a href="#categories">作品分类</a></div><div><strong>加入我们</strong><a href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">作者投稿</a><a href="#">关于阅境</a></div><div><strong>帮助</strong><a href="#">阅读指南</a><a href="#">联系我们</a></div></div></div><div class="site-shell footer-bottom"><span>© {{ date('Y') }} 阅境阅读</span><span>把时间留给好故事</span></div></footer>
 </body>
 </html>

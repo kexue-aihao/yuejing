@@ -63,6 +63,9 @@ chown -h www:www public/storage
 curl -fsS -o /dev/null -w '%{http_code}\n' https://example.com/up
 ```
 
+- [ ] 如果网站右下角显示访问 IP，直连源站时确认是客户端 IP；使用 Cloudflare 时已配置官方网段 `set_real_ip_from`、`real_ip_header CF-Connecting-IP`，且源站只允许 Cloudflare 网段回源。
+- [ ] 使用自有反向代理时，`.env` 的 `TRUSTED_PROXIES` 只填写精确代理 IP/CIDR，不使用 `*`、`0.0.0.0/0` 或 `::/0`。
+
 ## 4. 环境变量、数据库和存储
 
 - [ ] `.env` 存在且未提交到 Git，`APP_KEY` 已生成，生产环境 `APP_DEBUG=false`，`APP_URL` 使用最终 HTTPS 地址。
@@ -87,6 +90,8 @@ php artisan about --only=environment
 
 - [ ] 生产环境没有使用 `MAIL_MAILER=log`；SMTP 主机、端口、TLS/SSL、账号、授权码和发件人已配置。
 - [ ] 已通过“站点设置”的 SMTP 测试或实际业务流程验证密码重置、邮箱验证邮件能够送达。
+- [ ] 投稿审计页只显示 `submission.*` 事件，不混入登录、二步验证、设置或管理员初始化日志。
+- [ ] 投稿批准/拒绝只能处理 `pending` 状态；已处理投稿重复请求会被拒绝。
 - [ ] 项目优先使用 `smtp`。如果使用 `sendmail`，已确认 `MAIL_SENDMAIL_PATH` 指向的程序存在，并验证 PHP-FPM 权限和邮件投递。
 - [ ] 没有 Redis 时，保持 `SESSION_DRIVER=database`、`CACHE_STORE=database`、`QUEUE_CONNECTION=database`，并确认对应表已迁移。
 - [ ] 使用 `QUEUE_CONNECTION=database` 时，已在 aaPanel 计划任务中运行 worker（注意用 aaPanel PHP 的绝对路径，如 `/www/server/php/83/bin/php`）：

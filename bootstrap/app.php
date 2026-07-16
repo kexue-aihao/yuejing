@@ -7,6 +7,11 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
+$trustedProxies = array_values(array_filter(array_map(
+    'trim',
+    explode(',', (string) env('TRUSTED_PROXIES', '')),
+)));
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -14,7 +19,17 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
+    ->withMiddleware(function (Middleware $middleware) use ($trustedProxies): void {
+        $middleware->trustProxies(
+            $trustedProxies ?: null,
+            (int) (env('TRUSTED_PROXY_HEADERS') ?: (
+                Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_PREFIX
+            )),
+        );
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'email.required' => EnsureEmailVerifiedIfRequired::class,

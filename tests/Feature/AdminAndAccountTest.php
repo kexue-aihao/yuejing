@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\AuditLog;
 use App\Models\Novel;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Tests\Feature\Concerns\CreatesYuejingData;
 use Tests\TestCase;
 
@@ -51,6 +53,114 @@ class AdminAndAccountTest extends TestCase
         $this->assertNotNull($novel->published_at);
         $this->assertSame($novel->id, $submission->fresh()->novel_id);
         $this->assertDatabaseHas('chapters', ['novel_id' => $novel->id, 'chapter_number' => 1, 'status' => 'published']);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'submission.approved',
+            'auditable_type' => Submission::class,
+            'auditable_id' => $submission->id,
+            'ip_address' => '127.0.0.1',
+        ]);
+    }
+
+    public function test_submission_audit_page_only_shows_submission_events(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $author = User::factory()->create();
+        $submission = Submission::create([
+            'user_id' => $author->id,
+            'title' => '投稿审计展示',
+            'manuscript' => '正文',
+            'status' => 'pending',
+        ]);
+        AuditLog::create(['user_id' => $admin->id, 'action' => 'auth.logged_in', 'metadata' => [], 'ip_address' => '10.0.0.1']);
+        AuditLog::create(['user_id' => $admin->id, 'action' => 'submission.created', 'auditable_type' => Submission::class, 'auditable_id' => $submission->id, 'metadata' => ['title' => $submission->title], 'ip_address' => '127.0.0.1']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.audit-logs.index'))
+            ->assertOk()
+            ->assertSee('投稿审计日志')
+            ->assertSee('投稿审计展示')
+            ->assertDontSee('auth.logged_in');
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/audit-logs')
+            ->assertOk()
+            ->assertJsonPath('data.0.action', 'submission.created');
+    }
+
+    public function test_rejected_submission_writes_audit_and_does_not_create_novel(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $author = User::factory()->create();
+        $submission = Submission::create([
+            'user_id' => $author->id,
+            'title' => '被拒绝的投稿',
+            'manuscript' => '正文',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->putJsonWithCsrf('/api/admin/submissions/'.$submission->id.'/review', [
+                'status' => 'rejected',
+                'review_note' => '请补充完整的章节内容。',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseMissing('novels', ['title' => '被拒绝的投稿']);
+        $audit = AuditLog::where('action', 'submission.rejected')->where('auditable_id', $submission->id)->firstOrFail();
+        $this->assertSame('rejected', $audit->metadata['status']);
+        $this->assertSame('请补充完整的章节内容。', $audit->metadata['review_note']);
+        $this->assertSame($admin->id, $audit->metadata['reviewer_id']);
+    }
+
+    public function test_already_reviewed_submission_cannot_be_reviewed_again(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $author = User::factory()->create();
+        $submission = Submission::create([
+            'user_id' => $author->id,
+            'title' => '不能重复审核',
+            'manuscript' => '正文',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)->putJsonWithCsrf('/api/admin/submissions/'.$submission->id.'/review', ['status' => 'rejected'])->assertOk();
+        $this->actingAs($admin)->putJsonWithCsrf('/api/admin/submissions/'.$submission->id.'/review', ['status' => 'approved'])->assertStatus(409);
+        $this->assertSame(1, AuditLog::where('auditable_id', $submission->id)->where('action', 'like', 'submission.%')->count());
+    }
+
+    public function test_public_layout_shows_current_request_ip(): void
+    {
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('203.0.113.10');
+    }
+
+    public function test_public_layout_ignores_forwarded_ip_from_untrusted_proxy(): void
+    {
+        Config::set('trustedproxy.proxies', null);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
+            ->withHeader('X-Forwarded-For', '198.51.100.42')
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('127.0.0.1')
+            ->assertDontSee('198.51.100.42');
+    }
+
+    public function test_public_layout_uses_forwarded_ip_from_configured_proxy(): void
+    {
+        Config::set('trustedproxy.proxies', ['127.0.0.1']);
+
+        try {
+            $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
+                ->withHeader('X-Forwarded-For', '198.51.100.42')
+                ->get(route('home'))
+                ->assertOk()
+                ->assertSee('198.51.100.42');
+        } finally {
+            Config::set('trustedproxy.proxies', null);
+        }
     }
 
     public function test_account_pages_render_and_two_factor_entry_is_available(): void

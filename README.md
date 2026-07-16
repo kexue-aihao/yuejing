@@ -246,6 +246,57 @@ php artisan config:cache
 
 在 aaPanel「计划任务」中添加 Shell 脚本任务。建议将任务用户设置为站点运行用户，任务命令使用绝对路径，并将输出写入站点外的日志目录。
 
+### 9. 从 GitHub 更新 aaPanel 站点
+
+站点已经通过 Git 克隆后，后续更新应在**原项目目录**执行 `git pull`，不要重新克隆，也不要用文件管理器覆盖项目目录。当前仓库线上分支是 `master`，不是 `main`。
+
+更新前必须备份数据库、`.env` 和 `storage/`，并确认工作区没有 aaPanel 上的手工修改：
+
+```bash
+cd /www/wwwroot/你的域名
+
+git status --short
+test -z "$(git status --porcelain)" || { echo "工作区有未提交修改，停止更新"; exit 1; }
+test "$(git branch --show-current)" = master || { echo "当前不是 master 分支，停止更新"; exit 1; }
+
+php artisan down --retry=60 --secret="临时维护口令"
+git fetch origin master
+git pull --ff-only origin master
+
+composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+npm ci
+npm run build
+php artisan migrate --force
+php artisan storage:link
+php artisan config:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan queue:restart || true
+php artisan up
+```
+
+更新后确认以下文件存在，否则新页面可能 500：
+
+```bash
+test -f vendor/autoload.php
+test -f public/build/manifest.json
+test -f resources/views/components/theme-toggle.blade.php
+test -f resources/views/components/visitor-ip.blade.php
+```
+
+如果前端样式异常，先对比 manifest 和首页 HTML 中的资源哈希；使用 Cloudflare 时清除「缓存 → 配置 → 清除所有内容（Purge Everything）」，再访问带随机参数的 `https://你的域名/?v=1`。如果更新中途失败，先查看 `storage/logs/laravel.log`，修复后再执行 `php artisan up`，不要让站点长期停留在维护模式。
+
+**不要执行以下危险操作：**
+
+```bash
+git reset --hard origin/master  # 会删除服务器未提交修改
+composer update                 # 会改变锁定依赖版本
+php artisan migrate:rollback    # 未确认迁移影响和备份前不要回滚数据库
+```
+
+完整的备份、固定 PHP/Node 路径、回滚和 Cloudflare 处理步骤见 [aaPanel 完整部署教程第 13 节](docs/aapanel-deployment.md#13-更新和维护)。
+
 健康检查每 5 分钟：
 
 ```bash
@@ -255,12 +306,12 @@ HEALTHCHECK_URL=https://example.com/up /bin/bash /www/wwwroot/yuejing/scripts/aa
 数据库和文件备份由 aaPanel「计划任务」或「数据库」备份功能完成，建议至少每日一次，并把备份保留在站点目录之外。`aapanel-update.sh` 还会在更新前备份 `.env`、`storage/` 和数据库；脚本需要 `curl`、`tar` 以及 `mysqldump` 或 `mariadb-dump`。更新脚本不要高频自动运行，建议由人工确认后执行：
 
 ```bash
-DEPLOY_BRANCH=main /bin/bash /www/wwwroot/yuejing/scripts/aapanel-update.sh >> /www/server/cron/yuejing-update.log 2>&1
+DEPLOY_BRANCH=master /bin/bash /www/wwwroot/yuejing/scripts/aapanel-update.sh >> /www/server/cron/yuejing-update.log 2>&1
 ```
 
-更新脚本默认要求 Git 工作区干净且当前分支为 `main`（可用 `DEPLOY_BRANCH` 覆盖），会在更新前备份 `.env`、`storage` 和数据库，使用 `git pull --ff-only`，执行依赖安装、平台检查、迁移、缓存构建和 `/up` 健康检查。失败时只回滚代码提交，不会自动执行 `migrate:rollback`，以避免破坏数据；请根据备份和迁移记录人工处理数据库回退。只有在已有独立数据库备份并明确接受风险时，才设置 `SKIP_DB_BACKUP=1`。
+更新脚本默认要求 Git 工作区干净且当前分支为 `master`（可用 `DEPLOY_BRANCH` 覆盖），会在更新前备份 `.env`、`storage` 和数据库，使用 `git pull --ff-only`，执行依赖安装、平台检查、迁移、缓存构建和 `/up` 健康检查。**它不会执行 `npm ci` 或 `npm run build`**；如果本次更新包含 CSS、JS 或 Blade 组件，使用上面的完整更新流程，或手动补做前端构建和视图缓存。失败时只回滚代码提交，不会自动执行 `migrate:rollback`，以避免破坏数据；请根据备份和迁移记录人工处理数据库回退。只有在已有独立数据库备份并明确接受风险时，才设置 `SKIP_DB_BACKUP=1`。
 
-### 9. 备份、更新和回滚
+### 10. 备份、更新和回滚
 
 至少保留以下备份：
 
@@ -298,7 +349,7 @@ php artisan up
 
 代码回滚不等于数据库回滚。不要直接运行 `php artisan migrate:rollback`，除非已确认迁移影响、完成数据库备份并有明确的人工回退方案。
 
-### 10. 健康检查和故障排查
+### 11. 健康检查和故障排查
 
 完整的上线前和更新后核对项请参阅 [aaPanel 部署检查清单](docs/aapanel-deployment-checklist.md)。Laravel 13 骨架已注册 `/up` 健康路由。检查站点：
 

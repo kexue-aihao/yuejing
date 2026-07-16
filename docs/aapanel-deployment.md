@@ -207,6 +207,9 @@ SESSION_ENCRYPT=true
 SESSION_SECURE_COOKIE=true
 SESSION_SAME_SITE=lax
 
+# 只有使用自有固定反向代理时才填写，写精确 IP/CIDR；直连或 Cloudflare 经 Nginx real_ip 处理时保持注释
+# TRUSTED_PROXIES=10.0.0.10,192.0.2.0/24
+
 CACHE_STORE=database
 QUEUE_CONNECTION=database
 ```
@@ -495,9 +498,49 @@ server {
 
 6. 保存后重载 Nginx：在 aaPanel 中点击「保存」即可自动重载。
 
----
+### 8.1 真实访问 IP（Cloudflare/反向代理）
 
-## 9. 设置权限
+网站右下角的「当前访问 IP」和投稿审计中的「投稿来源 IP」都来自 Laravel 的 `$request->ip()`。**不要用 JavaScript、第三方 IP 查询接口或客户端提交的 `X-Forwarded-For` 获取 IP。**
+
+如果用户直接访问源站，`$request->ip()` 就是客户端地址。如果链路是 Cloudflare → aaPanel Nginx → PHP，必须先让 Nginx 验证 Cloudflare 来源并把 `CF-Connecting-IP` 写入真实客户端地址；否则显示的会是 Cloudflare 节点 IP。
+
+在 Nginx `server` 块中加入下面配置。Cloudflare 官方 IP 网段会更新，部署时请以 [Cloudflare 官方 IP 列表](https://www.cloudflare.com/ips/) 为准，下面只放格式示例，**不要把示例网段当成完整列表**：
+
+```nginx
+# 只信任 Cloudflare 官方网段，下面网段请替换/补全为官方列表
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 103.21.244.0/22;
+set_real_ip_from 103.22.200.0/22;
+set_real_ip_from 103.31.4.0/22;
+set_real_ip_from 141.101.64.0/18;
+set_real_ip_from 108.162.192.0/18;
+set_real_ip_from 190.93.240.0/20;
+set_real_ip_from 188.114.96.0/20;
+set_real_ip_from 197.234.240.0/22;
+set_real_ip_from 162.158.0.0/15;
+set_real_ip_from 104.16.0.0/13;
+set_real_ip_from 172.64.0.0/13;
+set_real_ip_from 131.0.72.0/22;
+# IPv6 官方网段也必须配置（从 Cloudflare 官方列表复制）
+# set_real_ip_from xxxx::/xx;
+
+real_ip_header CF-Connecting-IP;
+real_ip_recursive on;
+```
+
+同时，源站防火墙只允许 Cloudflare 官方 IP 访问 `80/443`，否则公网客户端可以绕过 Cloudflare 直接伪造 `CF-Connecting-IP`。确认生效：
+
+```bash
+curl -sk https://your-domain.com/ | grep -o '当前访问 IP[^<]*'
+```
+
+如果使用自有固定反代而不是 Cloudflare，在 `.env` 中填写反代的**精确 IP/CIDR**：
+
+```dotenv
+TRUSTED_PROXIES=10.0.0.10,192.0.2.0/24
+```
+
+不要写 `*`、`0.0.0.0/0` 或 `::/0`。项目会在 Laravel 中只对这些受信代理解析标准 `X-Forwarded-*` 头。
 
 aaPanel 的 PHP-FPM 和 Nginx 通常以 `www` 用户运行。执行以下命令（把 `www` 换成你实际的运行用户，可在 aaPanel「网站设置」中查看）：
 
@@ -676,67 +719,192 @@ curl -fsS -o /dev/null -w '%{http_code}' https://your-domain.com/up | grep -q 20
 
 ## 13. 更新和维护
 
-### 13.1 正常更新流程
+### 13.1 从 GitHub 更新已部署站点（推荐）
+
+如果站点最初是用 Git 克隆的，后续更新**不要重新 `git clone`，也不要在网站目录里解压覆盖**。使用 aaPanel 终端进入原项目目录，按下面顺序更新。本文仓库的线上分支是 `master`，不是 `main`。
+
+> 更新前先确认当前站点可以访问，并确认你有数据库、`.env`、`storage/` 和当前提交的备份。更新命令会修改线上代码、依赖、缓存和数据库，不能在未备份的情况下直接执行。
+
+#### 第一步：定义路径和 PHP/Node 路径
+
+将路径替换为实际站点路径。PHP 版本必须和 aaPanel 网站设置中的版本一致：
+
+```bash
+export APP_DIR="/www/wwwroot/your-domain.com"
+export PHP_BIN="/www/server/php/83/bin/php"
+export NODE_BIN="/www/server/nodejs/v22.12.0/bin"
+export COMPOSER_BIN="composer"
+export BRANCH="master"
+
+cd "$APP_DIR"
+```
+
+检查路径，不要跳过：
+
+```bash
+test -f artisan || { echo "错误：APP_DIR 不是 Laravel 项目根目录" >&2; exit 1; }
+test -d .git || { echo "错误：该目录不是 Git 工作区，不能执行 git pull" >&2; exit 1; }
+test -x "$PHP_BIN" || { echo "错误：PHP_BIN 不存在，请按 aaPanel 实际版本修改" >&2; exit 1; }
+test -x "$NODE_BIN/node" || { echo "错误：NODE_BIN 不存在，请按 aaPanel 实际 Node 版本修改" >&2; exit 1; }
+"$PHP_BIN" -v
+"$NODE_BIN/node" -v
+"$NODE_BIN/npm" -v
+git branch --show-current
+git status --short
+```
+
+当前分支必须是 `master`，工作区必须没有输出。若 `git status --short` 有输出，先保存或处理这些修改，不要用 `git reset --hard` 强行覆盖，因为那会删除服务器上的本地改动：
+
+```bash
+test "$(git branch --show-current)" = "$BRANCH" || { echo "错误：当前分支不是 $BRANCH" >&2; exit 1; }
+test -z "$(git status --porcelain)" || { echo "错误：Git 工作区不干净，请先处理修改" >&2; exit 1; }
+```
+
+#### 第二步：备份数据库、环境和运行数据
+
+备份目录必须放在 `public` 目录之外：
+
+```bash
+export BACKUP_DIR="/www/backup/yuejing/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR"
+
+cp -p .env "$BACKUP_DIR/.env"
+tar -czf "$BACKUP_DIR/storage.tar.gz" storage
+
+# 从 .env 读取数据库配置并执行备份；不要把密码写入命令行历史
+set -a
+. ./.env
+set +a
+MYSQL_PWD="$DB_PASSWORD" mysqldump --single-transaction --quick --routines --triggers \
+    --host="${DB_HOST:-127.0.0.1}" --port="${DB_PORT:-3306}" \
+    --user="$DB_USERNAME" --databases "$DB_DATABASE" > "$BACKUP_DIR/database.sql"
+chmod 600 "$BACKUP_DIR/.env" "$BACKUP_DIR/database.sql"
+printf '%s
+' "$(git rev-parse HEAD)" > "$BACKUP_DIR/previous-commit.txt"
+```
+
+如果服务器没有 `mysqldump`，先在 aaPanel 安装对应 MySQL/MariaDB 客户端，或使用 aaPanel「数据库 → 备份」完成备份。没有可恢复的数据库备份时不要继续。
+
+#### 第三步：进入维护模式并拉取 GitHub 代码
+
+```bash
+"$PHP_BIN" artisan down --retry=60 --secret="临时维护口令"
+
+# 只允许快进更新，避免服务器自动产生合并提交
+git fetch origin "$BRANCH"
+git pull --ff-only origin "$BRANCH"
+```
+
+如果 `git pull` 提示本地有修改、分支不一致或需要合并，停止操作，先保留日志并人工处理。不要执行：
+
+```bash
+git reset --hard origin/master
+```
+
+这会永久删除服务器上的未提交文件。更新失败时，使用备份的提交号和人工确认后的回滚流程。
+
+#### 第四步：安装后端依赖和构建前端
+
+```bash
+"$COMPOSER_BIN" --working-dir="$APP_DIR" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+"$COMPOSER_BIN" --working-dir="$APP_DIR" check-platform-reqs --no-dev
+
+export PATH="$NODE_BIN:$PATH"
+npm ci
+npm run build
+
+test -f vendor/autoload.php || { echo "错误：vendor/autoload.php 不存在" >&2; exit 1; }
+test -f public/build/manifest.json || { echo "错误：Vite manifest 不存在" >&2; exit 1; }
+```
+
+这一步不能省略：
+
+- `public/build` 被 `.gitignore` 忽略，GitHub 更新不会携带构建产物。
+- 本次 UI 使用的 Blade 组件必须位于 `resources/views/components/`，确认组件文件随 Git 拉取：
+
+```bash
+for file in \
+    resources/views/components/theme-toggle.blade.php \
+    resources/views/components/visitor-ip.blade.php \
+    resources/views/components/book-cover.blade.php; do
+    test -f "$file" || { echo "错误：缺少 Blade 组件 $file" >&2; exit 1; }
+done
+```
+
+#### 第五步：迁移数据库、重建缓存和恢复服务
+
+```bash
+"$PHP_BIN" artisan migrate --force
+"$PHP_BIN" artisan storage:link
+"$PHP_BIN" artisan config:clear
+"$PHP_BIN" artisan config:cache
+"$PHP_BIN" artisan route:cache
+"$PHP_BIN" artisan view:cache
+
+# 让常驻队列 worker 在处理完当前任务后加载新代码
+"$PHP_BIN" artisan queue:restart || true
+"$PHP_BIN" artisan up
+```
+
+如果 `storage:link` 因 `exec` 被禁用失败，确认目标后手动创建：
+
+```bash
+test -e public/storage && test ! -L public/storage && { echo "错误：public/storage 已存在但不是软链接" >&2; exit 1; }
+ln -sfn ../storage/app/public public/storage
+```
+
+如果中途失败，先查看日志；确认问题处理完并完成缓存后再执行 `php artisan up`。不要让站点长期停留在维护模式。
+
+#### 第六步：验证更新结果
+
+```bash
+"$PHP_BIN" artisan about --only=environment
+"$PHP_BIN" artisan migrate:status
+curl -fsS -o /dev/null -w '%{http_code}
+' https://your-domain.com/up
+curl -fsS -o /dev/null -w '%{http_code}
+' https://your-domain.com/
+curl -fsS -o /dev/null -w '%{http_code}
+' https://your-domain.com/login
+```
+
+浏览器还要实际验证：登录、后台、投稿审核、书库、阅读器、右下角当前 IP。确认首页 HTML 引用的 CSS/JS 与服务器上的 manifest 一致：
+
+```bash
+curl -sk https://your-domain.com/build/manifest.json | grep '"file"'
+curl -sk https://your-domain.com/ | grep -o 'build/assets/[^" ]*'
+```
+
+如果使用 Cloudflare，更新并构建后进入 Cloudflare「缓存 → 配置 → 清除所有内容（Purge Everything）」，再使用 `https://your-domain.com/?v=$(date +%s)` 强制验证。否则可能出现 HTML 仍引用旧哈希资源、页面无样式的问题。
+
+### 13.2 通过 aaPanel 计划任务使用更新脚本
+
+仓库中的 `scripts/aapanel-update.sh` 会备份 `.env`、`storage/` 和数据库，并在失败时尝试回滚代码。使用前必须显式指定当前分支 `master`、正确的 PHP/Composer 路径和 HTTPS 健康检查地址：
 
 ```bash
 cd /www/wwwroot/your-domain.com
-
-# 拉取代码
-git pull --ff-only origin master
-
-# 安装依赖
-composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-npm ci && npm run build
-
-# 数据库迁移
-php artisan migrate --force
-
-# 重建所有缓存
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+DEPLOY_ROOT=/www/wwwroot/your-domain.com \
+DEPLOY_BRANCH=master \
+PHP_BIN=/www/server/php/83/bin/php \
+COMPOSER_BIN=/usr/local/bin/composer \
+HEALTHCHECK_URL=https://your-domain.com/up \
+/bin/bash scripts/aapanel-update.sh \
+>> /www/server/cron/yuejing-update.log 2>&1
 ```
 
-### 13.2 更新前备份
+> 当前脚本适合人工确认后执行，不建议直接设置为高频自动任务。它只负责 Composer，不会替你执行 `npm ci`/`npm run build`；只要 GitHub 更新了 CSS、JS 或 Blade，优先使用 13.1 的完整流程，或在脚本后手工构建前端并重建视图缓存。
+
+### 13.3 更新前备份
 
 ```bash
 mkdir -p /www/backup/yuejing
-
-# 数据库备份
-mysqldump -u用户名 -p密码 数据库名 --single-transaction --routines --triggers \
+mysqldump -u用户名 -p 数据库名 --single-transaction --routines --triggers \
   | gzip > /www/backup/yuejing/db-$(date +%F-%H%M).sql.gz
-
-# .env 备份
 cp .env /www/backup/yuejing/env-$(date +%F-%H%M)
 ```
 
-### 13.3 带维护模式的更新（推荐）
-
-如果更新涉及数据库结构变更或多人访问的站点：
-
-```bash
-php artisan down --retry=60 --secret="临时访问令牌"
-
-# 执行更新步骤...
-# git pull, composer install, npm ci && npm run build, php artisan migrate, 重建缓存
-
-php artisan up
-```
-
-`--secret` 参数允许你用 `https://your-domain.com/临时访问令牌` 访问站点进行验证，其他用户看到的是维护页面。
-
-### 13.4 回滚
-
-```bash
-git log --oneline -5
-git reset --hard <上一个正常工作的提交哈希>
-composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-> 代码回滚不等于数据库回滚。除非你有独立的数据库备份并清楚迁移内容，否则**不要**执行 `php artisan migrate:rollback`。
+### 13.4 带维护模式的更新（推荐）
 
 ---
 

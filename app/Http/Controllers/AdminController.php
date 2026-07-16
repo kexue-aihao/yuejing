@@ -256,6 +256,9 @@ class AdminController extends Controller
         $reviewedAt = now();
         $reviewerId = $request->user()->id;
         $submission = DB::transaction(function () use ($data, $submission, $reviewedAt, $reviewerId, $request): Submission {
+            $submission = Submission::query()->lockForUpdate()->findOrFail($submission->id);
+            abort_if($submission->status !== 'pending', 409, '该投稿已经处理，不能重复审核。');
+
             $novel = null;
             if ($data['status'] === 'approved') {
                 $novel = $submission->novel_id
@@ -292,7 +295,12 @@ class AdminController extends Controller
             ]);
 
             $this->audit($request, 'submission.'.$data['status'], $submission, [
+                'submission_id' => $submission->id,
+                'title' => $submission->title,
+                'author_id' => $submission->user_id,
+                'reviewer_id' => $reviewerId,
                 'status' => $data['status'],
+                'review_note' => $data['review_note'] ?? null,
                 'novel_id' => $novel?->id,
             ]);
 
@@ -308,7 +316,20 @@ class AdminController extends Controller
 
     public function auditLogs(Request $request)
     {
-        $logs = AuditLog::with('user:id,name')->latest()->paginate(config('yuejing.pagination'));
+        $logs = AuditLog::query()
+            ->where('action', 'like', 'submission.%')
+            ->with('user:id,name')
+            ->latest()
+            ->paginate(config('yuejing.pagination'))
+            ->withQueryString();
+
+        $logs->getCollection()->loadMorph('auditable', [
+            Submission::class => [
+                'user:id,name,email',
+                'category:id,name',
+                'reviewer:id,name',
+            ],
+        ]);
 
         if (! $this->wantsJson($request)) {
             return view('pages.admin.audit-logs', compact('logs'));

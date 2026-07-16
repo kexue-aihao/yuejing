@@ -10,6 +10,12 @@ server {
     index index.php index.html;
     charset utf-8;
 
+    # 如果站点通过 Cloudflare 回源，需在源站防火墙只允许 Cloudflare 网段访问，
+    # 并按 https://www.cloudflare.com/ips/ 配置完整 set_real_ip_from 列表：
+    # set_real_ip_from <Cloudflare 官方 IPv4/IPv6 CIDR>;
+    # real_ip_header CF-Connecting-IP;
+    # real_ip_recursive on;
+
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }

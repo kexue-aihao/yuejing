@@ -220,7 +220,7 @@ DELETE /auth/two-factor
 GET /api/admin/audit-logs?page=1
 ```
 
-返回分页审计日志，包含关联用户名称。日志记录登录、注册、二步验证、分类/小说/投稿管理、设置修改等重要操作。日志查询接口只读，不提供删除或修改接口。
+返回分页投稿审计日志，包含投稿标题、投稿作者、审核人、审核结果、投稿来源 IP 和时间。接口只返回 `submission.created`、`submission.approved`、`submission.rejected` 等 `submission.*` 事件，不再混入登录、二步验证、设置或管理员初始化日志。日志查询接口只读，不提供删除或修改接口。
 
 ## 5. 常用管理流程
 

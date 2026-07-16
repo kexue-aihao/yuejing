@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Favorite;
+use App\Models\AuditLog;
 use App\Models\Rating;
 use App\Models\Submission;
 use App\Models\User;
@@ -74,7 +75,8 @@ class InteractionsAndSubmissionTest extends TestCase
             ->assertSee('新建投稿')
             ->assertSee(route('author.submissions.store'));
 
-        $response = $this->actingAs($author)->postWithCsrf(route('author.submissions.store'), [
+        $response = $this->withHeader('User-Agent', 'Yuejing-Test/1.0')
+            ->actingAs($author)->postWithCsrf(route('author.submissions.store'), [
             'title' => '潮声之后',
             'genre' => '都市情感',
             'summary' => '一封信带来的重逢。',
@@ -89,6 +91,15 @@ class InteractionsAndSubmissionTest extends TestCase
             'manuscript' => '第一章从旧书店开始。',
             'status' => 'pending',
         ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'submission.created',
+            'auditable_type' => Submission::class,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'Yuejing-Test/1.0',
+        ]);
+        $audit = AuditLog::where('action', 'submission.created')->where('auditable_id', $author->submissions()->first()->id)->firstOrFail();
+        $this->assertSame('潮声之后', $audit->metadata['title']);
+        $this->assertSame($author->id, $audit->metadata['author_id']);
     }
 
     public function test_submission_requires_manuscript_and_does_not_create_partial_data(): void
