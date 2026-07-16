@@ -4,6 +4,7 @@
 
 ## 项目文档
 
+- [标准 Linux 生产部署](docs/linux-deployment.md)
 - [aaPanel 生产部署](#aapanel-最简生产部署)
 - [aaPanel 部署检查清单](docs/aapanel-deployment-checklist.md)
 - [API 管理文档](docs/api-management.md)
@@ -37,6 +38,8 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 本方案面向一台 aaPanel 服务器，默认不要求 Redis 或 Docker，以 PHP 8.5、MySQL/MariaDB，以及 aaPanel 的 Nginx 或 Apache 为示例。项目当前 `composer.json` 要求 PHP `^8.3`、Laravel `^13.8`，因此也可以使用满足 Composer 平台约束的其他 PHP 8.x 版本。不要把 `.env` 提交到 Git，也不要把站点根目录指向项目根目录。
 
+如果服务器没有 aaPanel，请使用[标准 Linux 生产部署文档](docs/linux-deployment.md)。该文档按 Ubuntu/Debian + Nginx + PHP-FPM + MySQL 写成，包含系统依赖安装、Node/Vite 构建、Composer、数据库、HTTPS 和 systemd 配置；不要把 aaPanel 专用的 `/tmp/php-cgi-85.sock` 直接用于标准 Linux。
+
 ### 1. aaPanel 准备工作
 
 在 aaPanel 中安装并确认以下组件：
@@ -50,7 +53,7 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 - **部署命令行工具**：`aapanel-healthcheck.sh` 和 `aapanel-update.sh` 需要系统命令 `curl`、`tar`，数据库备份还需要 `mysqldump` 或 `mariadb-dump`；这不是 PHP 的 `ext-curl` 扩展。PHP `ext-curl` 只有在应用或 Composer 包实际选择 cURL 网络处理器时才需要。
 - **按功能启用的扩展**：使用 Redis 缓存、Session 或队列时启用 `redis`（phpredis），使用 Memcached 时启用 `memcached`；本方案默认使用 database 驱动，不要求这两个扩展。`zip` 可帮助 Composer 和发布工具处理压缩包，但不是本项目生产代码的硬性运行时要求。
 - **开发/测试扩展**：`xml`、`xmlwriter`、`phar` 以及 `pcov`/`xdebug` 主要由 PHPUnit、Pint 或其他开发工具使用；`intl`、`gd`、`gmp`、`pcntl`、`posix` 只有在对应功能、开发工具或队列管理方案实际使用时才启用，不要将 Composer 的 `suggest` 项当作生产硬要求。
-- 若要编译前端资源，再安装 Node.js 20 LTS 或更高版本；本最简方案不要求 Node.js，使用仓库中已构建的资源或项目实际构建流程即可。
+- 若从源码部署且发布包不包含 `public/build`，需要安装 Node.js 20 LTS 或更高版本，用于构建前端资源；如果发布包已经经过构建并包含 `public/build`，可以跳过 Node.js 安装和构建步骤。本项目的 `public/build` 已加入 `.gitignore`，不能假设 Git 克隆后仍然存在。
 
 建议先在 aaPanel 的终端执行：
 
@@ -157,12 +160,14 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-如果项目包含前端源码并且没有可用的构建产物，再执行：
+如果从 Git 或源码压缩包部署，先构建前端资源。`resources/views/layouts/app.blade.php` 使用 `@vite` 加载 `resources/css/app.css` 和 `resources/js/app.js`，生产环境需要存在 `public/build/manifest.json`；由于 `public/build` 被 `.gitignore` 忽略，源码部署不能省略这一步：
 
 ```bash
 npm ci
 npm run build
 ```
+
+如果使用的是已经包含 `public/build` 的正式发布包，并已确认 `public/build/manifest.json` 存在，可以跳过 Node.js 安装和上述构建步骤。
 
 不要在生产服务器执行 `composer update`；依赖版本应由 `composer.lock` 固定。每次发布前后可执行：
 
