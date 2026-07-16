@@ -370,6 +370,14 @@ php artisan view:cache
 - `route:cache` 预编译所有路由，加速路由匹配。当前路由全部使用控制器语法，不会因闭包导致缓存失败。
 - `view:cache` 预编译所有 Blade 模板。
 
+> **`view:cache` 报 `Unable to locate a class or view for component [xxx]`**：
+> 这说明某个 `<x-xxx />` Blade 组件文件放错了目录。所有组件必须放在 `resources/views/components/` 下，不能放在 `resources/views/partials/`。如果报这个错，找到对应文件移动过去即可：
+> ```bash
+> mv resources/views/partials/theme-toggle.blade.php resources/views/components/
+> mv resources/views/partials/book-cover.blade.php resources/views/components/
+> ```
+> 移完后执行 `php artisan view:clear` 再 `php artisan view:cache`。
+
 以后每次修改 `.env` 或配置文件后，都必须重新运行这三条。
 
 > 注意：配置缓存后 `.env` 不再被 PHP 读取，所有 `env()` 调用都从缓存取。所以修改 `.env` 后**必须先清缓存再重建**：
@@ -528,6 +536,37 @@ tail -100 storage/logs/laravel.log
 ```
 
 然后用第 14 节的速查表定位。
+
+### 11.1 如果页面样式异常（纯文字无 CSS）
+
+这种情况 95% 是 **Cloudflare 缓存了旧版 HTML**。你的服务器上 `npm run build` 已经生成了新的 CSS/JS 文件（带新哈希名），但 Cloudflare 边缘节点缓存中的 HTML 仍然引用旧文件名。旧文件在 `public/build/assets/` 里已经不存在，返回 404。
+
+**验证是否 Cloudflare 缓存导致的：**
+
+```bash
+# 看 manifest.json 里的实际文件名
+curl -sk "https://your-domain.com/build/manifest.json" | grep '"file"'
+
+# 看首页 HTML 里引用的文件名
+curl -sk "https://your-domain.com/" | grep -o 'build/assets/[^"]*'
+
+# 对比是两个不同的文件名（hash 不同），就确认是 Cloudflare 缓存问题
+```
+
+**修复：**
+
+1. 在服务器上重建视图缓存：
+   ```bash
+   cd /www/wwwroot/your-domain.com
+   php artisan view:clear
+   php artisan view:cache
+   ```
+
+2. 登录 Cloudflare 控制台 → 你的域名 → 缓存 → 配置 → **清除所有内容**（Purge Everything）。
+
+3. 用带随机参数的地址跳过浏览器缓存验证：`https://your-domain.com/?v=1`
+
+4. 以后每次 `npm run build` 后如果用了 Cloudflare，都建议清一次缓存。或者在 Cloudflare 的缓存规则中设置 **Bypass Cache** 对首页 `/` 生效。
 
 然后用浏览器访问：
 
