@@ -50,6 +50,8 @@ chown -h www:www public/storage
 ## 3. 站点和 PHP-FPM
 
 - [ ] 网站根目录为 `/www/wwwroot/yuejing/public`，不是项目根目录。
+- [ ] 如果从 Git 或源码包部署，已安装 Node.js 20 LTS 或更高版本，并执行 `npm ci` 和 `npm run build`。
+- [ ] `public/build/manifest.json` 存在；只有使用已包含构建产物的正式发布包时，才可以跳过前端构建。
 - [ ] Nginx 配置包含 `try_files $uri $uri/ /index.php?$query_string;`，并将 PHP 请求转发到正确的 PHP-FPM socket。
 - [ ] Apache 的 `DocumentRoot` 指向 `public`，且 `public/.htaccess` 生效；需要 `AllowOverride All` 时已配置。
 - [ ] Nginx 配置检查通过并已重载；Apache 配置检查通过并已重载。
