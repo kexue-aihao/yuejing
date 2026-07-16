@@ -34,13 +34,29 @@
                     <a class="login-link" href="{{ Route::has('login') ? route('login') : '#' }}">登录</a>
                     <a class="button button-small" href="{{ Route::has('register') ? route('register') : '#' }}">注册</a>
                 @endauth
+                <x-theme-toggle />
                 <button class="mobile-menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span><span class="sr-only">打开菜单</span></button>
             </div>
         </div>
         <div id="mobile-menu" class="mobile-menu" data-mobile-menu hidden>
+            <button class="mobile-menu-close" type="button" data-menu-close aria-label="关闭菜单">✕</button>
             <nav class="site-shell mobile-nav" aria-label="移动端主导航"><a href="{{ Route::has('home') ? route('home') : url('/') }}">首页</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">书库</a><a href="#categories">分类</a><a href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">成为作者</a><a href="{{ Route::has('dashboard') ? route('dashboard') : (Route::has('login') ? route('login') : '#') }}">{{ auth()->check() ? '我的阅境' : '登录 / 注册' }}</a></nav>
         </div>
     </header>
+    @if (session('success'))
+        <div class="site-shell" style="margin-top: 18px"><x-alert type="success" :message="session('success')" dismissible /></div>
+    @endif
+    @if (session('warning'))
+        <div class="site-shell" style="margin-top: 18px"><x-alert type="warning" :message="session('warning')" dismissible /></div>
+    @endif
+    @if (session('error'))
+        <div class="site-shell" style="margin-top: 18px"><x-alert type="error" :message="session('error')" dismissible /></div>
+    @endif
+    @if ($errors->any())
+        <div class="site-shell" style="margin-top: 18px">
+            <x-alert type="error" :message="implode('；', $errors->all())" dismissible />
+        </div>
+    @endif
     <div id="main-content">@yield('content')</div>
     <footer class="site-footer"><div class="site-shell footer-grid"><div><a class="brand" href="{{ Route::has('home') ? route('home') : url('/') }}"><span class="brand-mark">阅</span><span>阅境</span></a><p class="footer-copy">让每一次打开，都遇见值得读完的故事。</p></div><div class="footer-links"><div><strong>探索</strong><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">全部作品</a><a href="#categories">作品分类</a></div><div><strong>加入我们</strong><a href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">作者投稿</a><a href="#">关于阅境</a></div><div><strong>帮助</strong><a href="#">阅读指南</a><a href="#">联系我们</a></div></div></div><div class="site-shell footer-bottom"><span>© {{ date('Y') }} 阅境阅读</span><span>把时间留给好故事</span></div></footer>
 </body>

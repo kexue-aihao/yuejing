@@ -24,9 +24,9 @@
         <div class="dashboard-content">
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
             <div class="metric-grid">
-                <div class="metric-card"><span>阅读作品</span><strong>{{ $readingCount }}</strong><small>部作品</small></div>
-                <div class="metric-card"><span>收藏作品</span><strong>{{ $favoriteCount }}</strong><small>部作品</small></div>
-                <div class="metric-card"><span>投稿作品</span><strong>{{ $submissionCounts->sum() }}</strong><small>{{ $submissionCounts->get('pending', 0) }} 部待审核</small></div>
+                <x-metric-card label="阅读作品" :value="$readingCount" />
+                <x-metric-card label="收藏作品" :value="$favoriteCount" />
+                <x-metric-card label="投稿作品" :value="$submissionCounts->sum()" />
             </div>
 
             <section class="panel" id="history">
@@ -46,7 +46,9 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="empty-state compact"><p>还没有阅读记录，去书库打开第一章吧。</p><a class="button button-dark" href="{{ route('novels.index') }}">去书库逛逛</a></div>
+                    <x-empty-state icon="📖" message="还没有阅读记录，去书库打开第一章吧。" compact>
+                        <a class="button button-dark" href="{{ route('novels.index') }}">去书库逛逛</a>
+                    </x-empty-state>
                 @endif
             </section>
 
@@ -65,7 +67,9 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="empty-state compact"><p>收藏喜欢的作品后，它们会出现在这里。</p><a class="button button-dark" href="{{ route('novels.index') }}">去书库逛逛</a></div>
+                    <x-empty-state icon="♡" message="收藏喜欢的作品后，它们会出现在这里。" compact>
+                        <a class="button button-dark" href="{{ route('novels.index') }}">去书库逛逛</a>
+                    </x-empty-state>
                 @endif
             </section>
 
@@ -79,7 +83,7 @@
                 @if ($submissions->isNotEmpty())
                     <div class="submission-mini-list">
                         @foreach ($submissions as $submission)
-                            <div><span>{{ $submission->title }}</span><span class="status {{ $submission->status === 'pending' ? 'pending' : ($submission->status === 'rejected' ? 'rejected' : '') }}">{{ ['pending' => '审核中', 'approved' => '已通过', 'rejected' => '需修改'][$submission->status] ?? $submission->status }}</span></div>
+                            <div><span>{{ $submission->title }}</span><x-status-badge :status="$submission->status" /></div>
                         @endforeach
                     </div>
                 @else
