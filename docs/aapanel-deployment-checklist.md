@@ -50,7 +50,8 @@ chown -h www:www public/storage
 ## 3. 站点和 PHP-FPM
 
 - [ ] 网站根目录为 `/www/wwwroot/yuejing/public`，不是项目根目录。
-- [ ] 如果从 Git 或源码包部署，已安装 Node.js 20 LTS 或更高版本，并执行 `npm ci` 和 `npm run build`。
+- [ ] aaPanel「防跨站攻击（open_basedir）」已关闭，或添加了 `storage/` 和 `bootstrap/cache/` 路径例外。
+- [ ] 如果从 Git 或源码包部署，已安装 Node.js `^20.19.0` 或 `>=22.12.0` 并执行 `npm ci` 和 `npm run build`。
 - [ ] `public/build/manifest.json` 存在；只有使用已包含构建产物的正式发布包时，才可以跳过前端构建。
 - [ ] Nginx 配置包含 `try_files $uri $uri/ /index.php?$query_string;`，并将 PHP 请求转发到正确的 PHP-FPM socket。
 - [ ] Apache 的 `DocumentRoot` 指向 `public`，且 `public/.htaccess` 生效；需要 `AllowOverride All` 时已配置。
@@ -65,7 +66,12 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://example.com/up
 ## 4. 环境变量、数据库和存储
 
 - [ ] `.env` 存在且未提交到 Git，`APP_KEY` 已生成，生产环境 `APP_DEBUG=false`，`APP_URL` 使用最终 HTTPS 地址。
+- [ ] `APP_LOCALE=zh_CN` 和 `APP_FALLBACK_LOCALE=zh_CN` 已配置。
+- [ ] `VITE_APP_NAME="${APP_NAME}"` 已配置。
 - [ ] `DB_CONNECTION=mysql` 时，数据库、用户、密码、端口和 `utf8mb4` 配置正确。
+- [ ] **MySQL 用户 host 匹配**：如果 `DB_HOST=127.0.0.1`，确认 MySQL 用户有 `'user'@'127.0.0.1'` 权限（不只是 `'user'@'localhost'`）。或把 `DB_HOST` 改为 `localhost`，走 Unix socket。
+- [ ] `SESSION_SECURE_COOKIE=true` 时网站已配置 HTTPS；暂未配置 SSL 时临时改为 `false`（上线前必须改回）。
+- [ ] `SESSION_ENCRYPT=true` 依赖 `APP_KEY`；`APP_KEY` 生成后不要再变更，否则所有用户 Session 立即失效。
 - [ ] 已执行迁移并确认应用可以读写数据库：
 
 ```bash
@@ -83,10 +89,10 @@ php artisan about --only=environment
 - [ ] 已通过“站点设置”的 SMTP 测试或实际业务流程验证密码重置、邮箱验证邮件能够送达。
 - [ ] 项目优先使用 `smtp`。如果使用 `sendmail`，已确认 `MAIL_SENDMAIL_PATH` 指向的程序存在，并验证 PHP-FPM 权限和邮件投递。
 - [ ] 没有 Redis 时，保持 `SESSION_DRIVER=database`、`CACHE_STORE=database`、`QUEUE_CONNECTION=database`，并确认对应表已迁移。
-- [ ] 使用 `QUEUE_CONNECTION=database` 时，已用 Supervisor 或 aaPanel 常驻任务运行 worker：
+- [ ] 使用 `QUEUE_CONNECTION=database` 时，已在 aaPanel 计划任务中运行 worker（注意用 aaPanel PHP 的绝对路径，如 `/www/server/php/83/bin/php`）：
 
 ```bash
-php artisan queue:work database --sleep=3 --tries=3 --timeout=90
+/www/server/php/83/bin/php /www/wwwroot/yuejing/artisan queue:work database --sleep=3 --tries=3 --timeout=90 --max-jobs=500 --rest=1
 ```
 
 - [ ] 使用 `sync` 队列时，已确认业务可接受请求内同步执行；不要配置 database 队列却不运行 worker。

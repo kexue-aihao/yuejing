@@ -4,9 +4,8 @@
 
 ## 项目文档
 
-- [标准 Linux 生产部署](docs/linux-deployment.md)
-- [aaPanel 独立部署教程](docs/aapanel-deployment.md)
-- [aaPanel 生产部署（原有）](#aapanel-最简生产部署)
+- [aaPanel 完整部署教程](docs/aapanel-deployment.md) — **推荐**：从零到可用的完整流程，含所有常见错误速查
+- [标准 Linux 生产部署](docs/linux-deployment.md) — 适用于 Ubuntu/Debian，不依赖 aaPanel
 - [aaPanel 部署检查清单](docs/aapanel-deployment-checklist.md)
 - [API 管理文档](docs/api-management.md)
 - [Nginx 站点配置示例](docs/aapanel-nginx.conf.example)
