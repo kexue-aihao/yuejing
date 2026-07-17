@@ -67,7 +67,7 @@ class InteractionsAndSubmissionTest extends TestCase
 
     public function test_submission_form_returns_html_and_stores_a_submission(): void
     {
-        $author = User::factory()->create(['role' => 'user']);
+        $author = User::factory()->create(['role' => 'author']);
 
         $this->actingAs($author)
             ->get(route('author.submissions'))
@@ -104,7 +104,7 @@ class InteractionsAndSubmissionTest extends TestCase
 
     public function test_submission_requires_manuscript_and_does_not_create_partial_data(): void
     {
-        $author = User::factory()->create(['role' => 'user']);
+        $author = User::factory()->create(['role' => 'author']);
 
         $this->actingAs($author)
             ->postJsonWithCsrf(route('submissions.store'), ['title' => '缺少正文'])
@@ -112,6 +112,43 @@ class InteractionsAndSubmissionTest extends TestCase
             ->assertJsonValidationErrors('manuscript');
 
         $this->assertDatabaseMissing('submissions', ['title' => '缺少正文']);
+    }
+
+    public function test_only_author_editor_and_admin_can_access_submission_entrypoints(): void
+    {
+        foreach (['author', 'editor', 'admin'] as $role) {
+            $account = User::factory()->create(['role' => $role]);
+
+            $this->actingAs($account)
+                ->get(route('submissions.index'))
+                ->assertOk();
+            $this->actingAs($account)
+                ->get(route('author.submissions'))
+                ->assertOk();
+        }
+
+        $reader = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($reader)
+            ->get(route('submissions.index'))
+            ->assertForbidden();
+        $this->actingAs($reader)
+            ->get(route('author.submissions'))
+            ->assertForbidden();
+        $this->actingAs($reader)
+            ->postJsonWithCsrf(route('submissions.store'), [
+                'title' => '越权投稿',
+                'content' => '不应创建',
+            ])
+            ->assertForbidden();
+        $this->actingAs($reader)
+            ->postJsonWithCsrf(route('author.submissions.store'), [
+                'title' => '越权作者投稿',
+                'content' => '不应创建',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('submissions', ['user_id' => $reader->id]);
     }
 
     public function test_submission_is_private_to_its_author(): void

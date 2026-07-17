@@ -5,7 +5,7 @@
 <main class="site-shell dashboard-page">
     <div class="dashboard-head"><div><p class="eyebrow">READING HISTORY</p><h1>阅读记录</h1><p>从上次停下的地方，继续你的故事。</p></div><a class="button button-primary" href="{{ route('novels.index') }}">寻找新故事 <span>→</span></a></div>
     <div class="dashboard-grid">
-        <nav class="dashboard-nav" aria-label="个人中心导航"><a href="{{ route('dashboard') }}">阅读概览</a><a href="{{ route('account.favorites') }}">我的收藏</a><a class="is-active" href="{{ route('account.reading-records') }}" aria-current="page">阅读记录</a><a href="{{ route('account.settings') }}">账号设置</a><a href="{{ route('author.submissions') }}">作者中心</a></nav>
+        <x-account-nav active="reading-records" />
         <div class="dashboard-content">
             <section class="panel"><div class="panel-heading"><h2>最近阅读</h2><span class="muted">共 {{ $records->total() }} 条</span></div>
                 @if ($records->count() > 0)

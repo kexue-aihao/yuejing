@@ -79,6 +79,55 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_registration_can_create_an_author_without_exposing_privileged_roles(): void
+    {
+        $this->postJsonWithCsrf(route('register'), [
+            'name' => '投稿作者',
+            'email' => 'author@example.test',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'role' => 'author',
+        ])->assertCreated()->assertJsonPath('user.role', 'author');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'author@example.test',
+            'role' => 'author',
+        ]);
+    }
+
+    public function test_registration_defaults_to_user_when_role_is_omitted(): void
+    {
+        $this->postJsonWithCsrf(route('register'), [
+            'name' => '默认读者',
+            'email' => 'default-user@example.test',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertCreated()->assertJsonPath('user.role', 'user');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'default-user@example.test',
+            'role' => 'user',
+        ]);
+    }
+
+    public function test_registration_rejects_privileged_or_unknown_roles(): void
+    {
+        foreach (['editor', 'admin', 'moderator'] as $role) {
+            $this->from(route('register'))
+                ->postWithCsrf(route('register'), [
+                    'name' => '非法角色',
+                    'email' => $role.'@example.test',
+                    'password' => 'password',
+                    'password_confirmation' => 'password',
+                    'role' => $role,
+                ])
+                ->assertRedirect(route('register'))
+                ->assertSessionHasErrors('role');
+
+            $this->assertDatabaseMissing('users', ['email' => $role.'@example.test']);
+        }
+    }
+
     public function test_login_authenticates_valid_credentials_and_rejects_invalid_credentials(): void
     {
         $user = User::factory()->create([
@@ -104,7 +153,7 @@ class AuthenticationTest extends TestCase
 
     public function test_email_verification_requirement_blocks_unverified_submission_pages_when_enabled(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = User::factory()->unverified()->create(['role' => 'author']);
         Setting::create([
             'key' => 'email_verification_required',
             'value' => '1',
@@ -119,7 +168,7 @@ class AuthenticationTest extends TestCase
     public function test_email_verification_requirement_allows_unverified_submission_pages_when_disabled(): void
     {
         Setting::query()->where('key', 'email_verification_required')->delete();
-        $user = User::factory()->unverified()->create();
+        $user = User::factory()->unverified()->create(['role' => 'author']);
         Setting::create([
             'key' => 'email_verification_required',
             'value' => '0',

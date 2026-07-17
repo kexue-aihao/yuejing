@@ -13,13 +13,7 @@
     </div>
 
     <div class="dashboard-grid">
-        <nav class="dashboard-nav" aria-label="个人中心导航">
-            <a class="is-active" href="{{ route('dashboard') }}" aria-current="page">阅读概览</a>
-            <a href="{{ route('account.favorites') }}">我的收藏</a>
-            <a href="{{ route('account.reading-records') }}">阅读记录</a>
-            <a href="{{ route('account.settings') }}">账号设置</a>
-            <a href="{{ route('author.submissions') }}">作者中心</a>
-        </nav>
+        <x-account-nav active="dashboard" />
 
         <div class="dashboard-content">
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
@@ -73,23 +67,25 @@
                 @endif
             </section>
 
-            <section class="panel" id="author-summary">
-                <div class="panel-heading"><h2>作者中心</h2><a href="{{ route('author.submissions') }}">进入作者中心 →</a></div>
-                <div class="submission-summary">
-                    <div><span>待审核</span><strong>{{ $submissionCounts->get('pending', 0) }}</strong></div>
-                    <div><span>已通过</span><strong>{{ $submissionCounts->get('approved', 0) }}</strong></div>
-                    <div><span>需修改</span><strong>{{ $submissionCounts->get('rejected', 0) }}</strong></div>
-                </div>
-                @if ($submissions->isNotEmpty())
-                    <div class="submission-mini-list">
-                        @foreach ($submissions as $submission)
-                            <div><span>{{ $submission->title }}</span><x-status-badge :status="$submission->status" /></div>
-                        @endforeach
+            @if (auth()->user()->isRole(['author', 'editor', 'admin']))
+                <section class="panel" id="author-summary">
+                    <div class="panel-heading"><h2>作品投稿</h2><a href="{{ route('author.submissions') }}">进入作品投稿 →</a></div>
+                    <div class="submission-summary">
+                        <div><span>待审核</span><strong>{{ $submissionCounts->get('pending', 0) }}</strong></div>
+                        <div><span>已通过</span><strong>{{ $submissionCounts->get('approved', 0) }}</strong></div>
+                        <div><span>需修改</span><strong>{{ $submissionCounts->get('rejected', 0) }}</strong></div>
                     </div>
-                @else
-                    <p class="muted dashboard-note">还没有投稿，写下你的第一个故事。</p>
-                @endif
-            </section>
+                    @if ($submissions->isNotEmpty())
+                        <div class="submission-mini-list">
+                            @foreach ($submissions as $submission)
+                                <div><span>{{ $submission->title }}</span><x-status-badge :status="$submission->status" /></div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="muted dashboard-note">还没有投稿，写下你的第一个故事。</p>
+                    @endif
+                </section>
+            @endif
         </div>
     </div>
 </main>

@@ -67,12 +67,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/novels/{novel:slug}/favorite', [InteractionController::class, 'unfavorite'])->name('novels.unfavorite');
 
     Route::middleware('email.required')->group(function () {
-        Route::get('/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
-        Route::post('/submissions', [SubmissionController::class, 'store'])->middleware('role:user,author,editor,admin')->name('submissions.store');
         Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
 
-        Route::get('/author/submissions', [SubmissionController::class, 'index'])->name('author.submissions');
-        Route::post('/author/submissions', [SubmissionController::class, 'store'])->middleware('role:user,author,editor,admin')->name('author.submissions.store');
+        Route::middleware('role:author,editor,admin')->group(function () {
+            Route::get('/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
+            Route::post('/submissions', [SubmissionController::class, 'store'])->name('submissions.store');
+            Route::get('/author/submissions', [SubmissionController::class, 'index'])->name('author.submissions');
+            Route::post('/author/submissions', [SubmissionController::class, 'store'])->name('author.submissions.store');
+        });
     });
 });
 

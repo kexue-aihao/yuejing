@@ -5,7 +5,7 @@
 <main class="site-shell dashboard-page">
     <div class="dashboard-head"><div><p class="eyebrow">MY LIBRARY</p><h1>我的收藏</h1><p>把想读的故事留在身边。</p></div><a class="button button-primary" href="{{ route('novels.index') }}">发现新故事 <span>→</span></a></div>
     <div class="dashboard-grid">
-        <nav class="dashboard-nav" aria-label="个人中心导航"><a href="{{ route('dashboard') }}">阅读概览</a><a class="is-active" href="{{ route('account.favorites') }}" aria-current="page">我的收藏</a><a href="{{ route('account.reading-records') }}">阅读记录</a><a href="{{ route('account.settings') }}">账号设置</a><a href="{{ route('author.submissions') }}">作者中心</a></nav>
+        <x-account-nav active="favorites" />
         <div class="dashboard-content">
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
             <section class="panel">
