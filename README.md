@@ -364,6 +364,16 @@ php artisan config:cache
 
 站点已经通过 Git 克隆后，后续更新应在**原项目目录**执行 `git pull`，不要重新克隆，也不要用文件管理器覆盖项目目录。当前仓库线上分支是 `master`，不是 `main`。
 
+#### 稳定更新原则
+
+- 更新前必须让项目工作区保持干净：`git status --short` 不应有输出，当前分支必须是 `master`。
+- 服务器上不要在 Git 管理的目录中手工创建或覆盖 Blade、CSS、JS、组件等文件；临时文件、备份文件应放在项目目录之外。
+- 如果 `git pull` 提示 `untracked working tree files would be overwritten by merge`，说明服务器存在未跟踪文件与远程同名。先将文件复制到项目外的备份目录，再用 `mv` 移出项目目录；单纯 `cp` 不会解决冲突，因为原文件仍然存在。
+- 不要未经确认执行 `git clean -fd`、`git reset --hard` 或覆盖式解压；这些操作可能删除服务器上的本地文件和配置。
+- `public/build` 被 Git 忽略。只要本次更新涉及 Blade、CSS 或 JS，就必须在服务器执行 `npm ci` 和 `npm run build`，不能只执行 `git pull`。
+- 数据库迁移成功后不要自动执行 `php artisan migrate:rollback`。代码回滚和数据库回滚是两个独立操作，必须结合数据库备份和迁移影响人工判断。
+- 更新完成后必须同时检查 Laravel 路由、数据库迁移状态、`public/build/manifest.json`、健康检查 `/up`，并在浏览器实际访问首页、登录页和本次新增功能页面。
+
 更新前必须备份数据库、`.env` 和 `storage/`，并确认工作区没有 aaPanel 上的手工修改：
 
 ```bash
