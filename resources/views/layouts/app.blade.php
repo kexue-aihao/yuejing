@@ -23,8 +23,8 @@
         <div class="site-shell nav-shell">
             <a class="brand" href="{{ Route::has('home') ? route('home') : url('/') }}" aria-label="阅境首页"><span class="brand-mark">阅</span><span>阅境</span></a>
             <nav class="desktop-nav" aria-label="主导航">
-                <a class="nav-link {{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ Route::has('home') ? route('home') : url('/') }}">首页</a>
-                <a class="nav-link {{ request()->routeIs('novels.*') ? 'is-active' : '' }}" href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">书库</a>
+                <a class="nav-link {{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ Route::has('home') ? route('home') : url('/') }}" @if(request()->routeIs('home')) aria-current="page" @endif>首页</a>
+                <a class="nav-link {{ request()->routeIs('novels.*') ? 'is-active' : '' }}" href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}" @if(request()->routeIs('novels.*')) aria-current="page" @endif>书库</a>
                 <a class="nav-link" href="#categories">分类</a>
                 <a class="nav-link" href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">成为作者</a>
             </nav>
@@ -45,10 +45,10 @@
                     <a class="button button-small" href="{{ Route::has('register') ? route('register') : '#' }}">注册</a>
                 @endauth
                 <x-theme-toggle />
-                <button class="mobile-menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span><span class="sr-only">打开菜单</span></button>
+                <button class="mobile-menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="打开菜单"><span></span><span></span><span></span><span class="sr-only">打开菜单</span></button>
             </div>
         </div>
-        <div id="mobile-menu" class="mobile-menu" data-mobile-menu hidden>
+        <div id="mobile-menu" class="mobile-menu" data-mobile-menu hidden aria-hidden="true" inert>
             <button class="mobile-menu-close" type="button" data-menu-close aria-label="关闭菜单">✕</button>
             <nav class="site-shell mobile-nav" aria-label="移动端主导航"><a href="{{ Route::has('home') ? route('home') : url('/') }}">首页</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">书库</a><a href="#categories">分类</a><a href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">成为作者</a><a href="{{ Route::has('dashboard') ? route('dashboard') : (Route::has('login') ? route('login') : '#') }}">{{ auth()->check() ? '我的阅境' : '登录 / 注册' }}</a></nav>
         </div>

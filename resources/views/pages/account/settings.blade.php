@@ -5,7 +5,7 @@
 <main class="site-shell dashboard-page">
     <div class="dashboard-head"><div><p class="eyebrow">ACCOUNT SETTINGS</p><h1>账号设置</h1><p>管理你的公开信息和登录安全。</p></div></div>
     <div class="dashboard-grid">
-        <nav class="dashboard-nav" aria-label="个人中心导航"><a href="{{ route('dashboard') }}">阅读概览</a><a href="{{ route('account.favorites') }}">我的收藏</a><a href="{{ route('account.reading-records') }}">阅读记录</a><a class="is-active" href="{{ route('account.settings') }}">账号设置</a><a href="{{ route('author.submissions') }}">作者中心</a></nav>
+        <nav class="dashboard-nav" aria-label="个人中心导航"><a href="{{ route('dashboard') }}">阅读概览</a><a href="{{ route('account.favorites') }}">我的收藏</a><a href="{{ route('account.reading-records') }}">阅读记录</a><a class="is-active" href="{{ route('account.settings') }}" aria-current="page">账号设置</a><a href="{{ route('author.submissions') }}">作者中心</a></nav>
         <div class="dashboard-content">
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
             @if ($errors->any())<div class="alert">{{ $errors->first() }}</div>@endif

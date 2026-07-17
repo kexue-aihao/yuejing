@@ -10,8 +10,8 @@ $icons = [
 $icon = $icons[$type] ?? $icons['info'];
 @endphp
 
-<div {{ $attributes->merge(['class' => 'toast toast-' . $type]) }} role="alert">
-    <span class="toast-icon">{{ $icon }}</span>
+<div {{ $attributes->merge(['class' => 'toast toast-' . $type]) }} role="{{ in_array($type, ['error', 'warning'], true) ? 'alert' : 'status' }}" aria-live="{{ in_array($type, ['error', 'warning'], true) ? 'assertive' : 'polite' }}">
+    <span class="toast-icon" aria-hidden="true">{{ $icon }}</span>
     <span class="toast-text">{{ $message ?: $slot }}</span>
     @if($dismissible)
         <button type="button" class="toast-close" data-toast-dismiss aria-label="关闭通知">✕</button>

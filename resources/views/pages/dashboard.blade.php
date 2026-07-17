@@ -14,7 +14,7 @@
 
     <div class="dashboard-grid">
         <nav class="dashboard-nav" aria-label="个人中心导航">
-            <a class="is-active" href="{{ route('dashboard') }}">阅读概览</a>
+            <a class="is-active" href="{{ route('dashboard') }}" aria-current="page">阅读概览</a>
             <a href="{{ route('account.favorites') }}">我的收藏</a>
             <a href="{{ route('account.reading-records') }}">阅读记录</a>
             <a href="{{ route('account.settings') }}">账号设置</a>
