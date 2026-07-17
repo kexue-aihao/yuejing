@@ -63,6 +63,16 @@
     --c-text-control: light-dark(#233c3a, #e4e0d6);
     --c-text-disabled: light-dark(#64736f, #a0aaa4);
     --c-text-on-accent: light-dark(#fffaf0, #1a1f1e);
+    --c-form-bg: light-dark(#fbfaf5, #2d3633);
+    --c-form-text: light-dark(#233c3a, #f1eee6);
+    --c-form-placeholder: light-dark(#64736f, #aebbb5);
+    --c-form-disabled-text: light-dark(#7f8a86, #aebbb5);
+    --c-form-disabled-bg: light-dark(#eef0eb, #252c2a);
+    --c-form-option-bg: light-dark(#fbfaf5, #2d3633);
+    --c-form-border: light-dark(#cfd4cf, #71867c);
+    --c-form-focus-border: light-dark(#a94f3d, #d08b6d);
+    --c-form-focus-ring: light-dark(color-mix(in srgb, #a94f3d 22%, transparent), #d08b6d);
+    --c-form-check: light-dark(#244644, #70a79d);
     --c-text-on-dark: #f8f6ed;
 
     --c-border: light-dark(#e3e3db, #333a37);
@@ -1252,18 +1262,6 @@ body {
 .visitor-ip { box-shadow: 0 8px 20px color-mix(in srgb, var(--c-text) 10%, transparent); }
 
 /* Keep the dark palette warm and readable in controls. */
-[data-theme="dark"] .form-field label,
-[data-theme="dark"] .form-field input,
-[data-theme="dark"] .form-field textarea,
-[data-theme="dark"] .form-field select,
-[data-theme="dark"] .form-field select option,
-[data-theme="dark"] .form-field input::placeholder,
-[data-theme="dark"] .form-field textarea::placeholder {
-    color: var(--c-text-control);
-    -webkit-text-fill-color: var(--c-text-control);
-}
-[data-theme="dark"] .form-field input::placeholder,
-[data-theme="dark"] .form-field textarea::placeholder { color: var(--c-text-disabled); }
 
 
 
@@ -1304,4 +1302,99 @@ body {
         transition-duration: .01ms !important;
         animation-duration: .01ms !important;
     }
+}
+
+/* ── Global Form Control Semantics ──
+   Keep value text, placeholder text, disabled state, native options, and
+   browser autofill separate so later theme rules cannot collapse their roles. */
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+body textarea,
+body select {
+    color: var(--c-form-text);
+    -webkit-text-fill-color: var(--c-form-text);
+    background: var(--c-form-bg);
+    border-color: var(--c-form-border);
+    caret-color: var(--c-accent);
+    color-scheme: inherit;
+}
+
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"])::placeholder,
+body textarea::placeholder {
+    color: var(--c-form-placeholder);
+    -webkit-text-fill-color: var(--c-form-placeholder);
+    opacity: 1;
+}
+
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):disabled,
+body textarea:disabled,
+body select:disabled {
+    color: var(--c-form-disabled-text);
+    -webkit-text-fill-color: var(--c-form-disabled-text);
+    background: var(--c-form-disabled-bg);
+    border-color: var(--c-form-border);
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+body select option,
+body select optgroup,
+body .form-field select option,
+body .form-field select optgroup {
+    color: var(--c-form-text);
+    background-color: var(--c-form-option-bg);
+}
+
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
+body textarea:focus,
+body select:focus {
+    color: var(--c-form-text);
+    -webkit-text-fill-color: var(--c-form-text);
+    border-color: var(--c-form-focus-border);
+    box-shadow: 0 0 0 3px var(--c-form-focus-ring), 0 4px 12px color-mix(in srgb, var(--c-text) 5%, transparent);
+}
+
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):-webkit-autofill,
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):-webkit-autofill:hover,
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):-webkit-autofill:focus,
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):-webkit-autofill:active,
+body textarea:-webkit-autofill,
+body textarea:-webkit-autofill:hover,
+body textarea:-webkit-autofill:focus,
+body textarea:-webkit-autofill:active {
+    color: var(--c-form-text);
+    -webkit-text-fill-color: var(--c-form-text);
+    -webkit-box-shadow: 0 0 0 1000px var(--c-form-bg) inset;
+    caret-color: var(--c-accent);
+}
+
+body input[type="checkbox"],
+body input[type="radio"] {
+    accent-color: var(--c-form-check);
+}
+
+/* Explicit themes override light-dark() when the browser preference differs. */
+[data-theme="light"] {
+    --c-form-bg: #fbfaf5;
+    --c-form-text: #233c3a;
+    --c-form-placeholder: #64736f;
+    --c-form-disabled-text: #7f8a86;
+    --c-form-disabled-bg: #eef0eb;
+    --c-form-option-bg: #fbfaf5;
+    --c-form-border: #cfd4cf;
+    --c-form-focus-border: #a94f3d;
+    --c-form-focus-ring: color-mix(in srgb, #a94f3d 22%, transparent);
+    --c-form-check: #244644;
+}
+
+[data-theme="dark"] {
+    --c-form-bg: #2d3633;
+    --c-form-text: #f1eee6;
+    --c-form-placeholder: #aebbb5;
+    --c-form-disabled-text: #aebbb5;
+    --c-form-disabled-bg: #252c2a;
+    --c-form-option-bg: #2d3633;
+    --c-form-border: #71867c;
+    --c-form-focus-border: #d08b6d;
+    --c-form-focus-ring: #d08b6d;
+    --c-form-check: #70a79d;
 }
