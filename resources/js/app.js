@@ -2,7 +2,7 @@
 class ThemeManager {
     constructor() {
         this.STORAGE_KEY = 'yuejing-theme';
-        this.validThemes = ['light', 'dark', 'system'];
+        this.validThemes = ['light', 'dark', 'eye-care', 'system'];
         this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         this.currentTheme = this.getStoredTheme();
         this.applyTheme(this.currentTheme);

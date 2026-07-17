@@ -136,6 +136,68 @@
 
 [data-theme="light"] { color-scheme: light; }
 [data-theme="dark"] { color-scheme: dark; }
+[data-theme="eye-care"] {
+    color-scheme: light;
+    --c-bg: #f3eedc;
+    --c-bg-alt: #ebe4ca;
+    --c-bg-card: #faf6e8;
+    --c-bg-card-alt: #f6f0dc;
+    --c-bg-footer: #e5dfc5;
+    --c-bg-input: #fffaf0;
+    --c-bg-nav: #ebe4ca;
+    --c-bg-nav-active: #dcd4b5;
+    --c-bg-rank: #e3dcc1;
+    --c-bg-detail: #e7e0c7;
+    --c-bg-hero: #ebe4ca;
+    --c-bg-aside: #e9e2c9;
+    --c-bg-author-note: #e5dfc5;
+    --c-bg-status-ok: #e3ebd9;
+    --c-bg-status-pending: #f1e5c5;
+    --c-bg-status-reject: #f0dcd0;
+    --c-bg-alert: #f0dcd0;
+    --c-bg-info: #e2e8df;
+    --c-bg-reader: #eee7d2;
+    --c-text: #403d32;
+    --c-text-heading: #4b5140;
+    --c-text-heading-soft: #5a6049;
+    --c-text-heading-warm: #62573e;
+    --c-text-muted: #716d5d;
+    --c-text-muted-soft: #77715f;
+    --c-text-muted-warm: #7a705b;
+    --c-text-link: #586b4b;
+    --c-text-nav: #746f5d;
+    --c-text-nav-hover: #3e553d;
+    --c-text-brand: #4d5b43;
+    --c-text-body: #4b493d;
+    --c-text-subtle: #77715f;
+    --c-text-control: #4b493d;
+    --c-text-disabled: #8e8975;
+    --c-form-bg: #fffaf0;
+    --c-form-text: #403d32;
+    --c-form-placeholder: #8a846f;
+    --c-form-disabled-text: #9b957f;
+    --c-form-disabled-bg: #e9e2cf;
+    --c-form-option-bg: #fffaf0;
+    --c-form-border: #d5ccb0;
+    --c-form-focus-border: #8b9860;
+    --c-form-focus-ring: color-mix(in srgb, #8b9860 24%, transparent);
+    --c-form-check: #66744e;
+    --c-border: #ded6bd;
+    --c-border-alt: #d2c9ad;
+    --c-border-card: #d7ceb3;
+    --c-border-light: #e3dbc4;
+    --c-border-form: #d6cdb4;
+    --c-border-input: #d5ccb0;
+    --c-accent: #876f43;
+    --c-accent-hover: #725d38;
+    --c-accent-soft: #9b8455;
+    --c-green-dark: #617451;
+    --c-green-btn: #66784f;
+    --c-green-btn-hover: #526440;
+    --c-green-text: #5f6e51;
+    --c-green-text-alt: #68775a;
+    --c-green-text-soft: #718060;
+}
 
 /* ── Global Reset ── */
 * { box-sizing: border-box; }

@@ -9,7 +9,7 @@
         (() => {
             try {
                 const theme = localStorage.getItem('yuejing-theme');
-                if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+                if (theme === 'light' || theme === 'dark' || theme === 'eye-care') document.documentElement.dataset.theme = theme;
             } catch (_) {
                 // Use the system theme when storage is unavailable.
             }
