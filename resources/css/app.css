@@ -1209,6 +1209,44 @@ a.pagination-item:hover { border-color: var(--c-accent); color: var(--c-accent);
     caret-color: var(--c-accent);
 }
 
+/* ── Dark Theme Form Text ── */
+[data-theme="dark"] .form-field label,
+[data-theme="dark"] .form-field input,
+[data-theme="dark"] .form-field textarea,
+[data-theme="dark"] .form-field select {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff;
+}
+[data-theme="dark"] .form-field input::placeholder,
+[data-theme="dark"] .form-field textarea::placeholder {
+    color: #fff !important;
+    opacity: 1;
+}
+[data-theme="dark"] .form-field input:-webkit-autofill,
+[data-theme="dark"] .form-field input:-webkit-autofill:hover,
+[data-theme="dark"] .form-field input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #fff;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .form-field label,
+    :root:not([data-theme]) .form-field input,
+    :root:not([data-theme]) .form-field textarea,
+    :root:not([data-theme]) .form-field select {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff;
+    }
+    :root:not([data-theme]) .form-field input::placeholder,
+    :root:not([data-theme]) .form-field textarea::placeholder {
+        color: #fff !important;
+        opacity: 1;
+    }
+    :root:not([data-theme]) .form-field input:-webkit-autofill,
+    :root:not([data-theme]) .form-field input:-webkit-autofill:hover,
+    :root:not([data-theme]) .form-field input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #fff;
+    }
+}
+
 /* ── Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
