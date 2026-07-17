@@ -26,12 +26,14 @@ class SubmissionController extends Controller
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'synopsis' => ['nullable', 'string', 'max:5000'],
             'manuscript' => ['nullable', 'string'],
+            'manuscript_format' => ['nullable', 'in:markdown'],
             'summary' => ['nullable', 'string', 'max:5000'],
             'content' => ['nullable', 'string'],
         ]);
 
         $data['synopsis'] = $data['synopsis'] ?? $data['summary'] ?? null;
         $data['manuscript'] = $data['manuscript'] ?? $data['content'] ?? null;
+        $data['manuscript_format'] = 'markdown';
         unset($data['summary'], $data['content']);
 
         if ($data['manuscript'] === null) {

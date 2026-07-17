@@ -1,4 +1,11 @@
 // ── Theme Manager ──
+import Vditor from 'vditor';
+import 'vditor/dist/index.css';
+import '@fontsource/noto-sans-sc/400.css';
+import '@fontsource/noto-sans-sc/600.css';
+import '@fontsource/noto-serif-sc/400.css';
+import '@fontsource/noto-serif-sc/600.css';
+
 class ThemeManager {
     constructor() {
         this.STORAGE_KEY = 'yuejing-theme';
@@ -735,6 +742,62 @@ function initGroups() {
 }
 
 // ── Bootstrap ──
+function initMarkdownEditors() {
+    document.querySelectorAll('[data-markdown-editor]').forEach((form) => {
+        const textarea = form.querySelector('textarea[data-markdown-source]');
+        const editor = form.querySelector('[data-vditor-editor]');
+        if (!textarea || !editor) return;
+
+        const storageKey = `yuejing-markdown-draft:${window.location.pathname}`;
+        let initialValue = textarea.value;
+        try {
+            const draft = localStorage.getItem(storageKey);
+            if (draft && !initialValue.trim()) initialValue = draft;
+        } catch {
+            // Editing still works when local storage is unavailable.
+        }
+
+        const syncSource = (value) => {
+            textarea.value = value;
+            try { localStorage.setItem(storageKey, value); } catch { /* Ignore unavailable storage. */ }
+        };
+
+        // Vditor measures its container during initialization, so make it
+        // visible before constructing the editor. The plain textarea remains
+        // available until this succeeds, preserving the no-JavaScript fallback.
+        editor.hidden = false;
+        const instance = new Vditor(editor, {
+            mode: 'sv',
+            height: 460,
+            value: initialValue,
+            cache: { enable: false },
+            counter: { enable: true },
+            toolbar: [
+                'headings', 'bold', 'italic', 'strike', '|', 'quote', 'line',
+                'list', 'ordered-list', 'check', 'link', 'code', 'table', '|',
+                'undo', 'redo', '|', 'fullscreen', 'edit-mode', 'preview',
+            ],
+            after: () => {
+                editor.addEventListener('input', () => syncSource(instance.getValue()));
+                syncSource(instance.getValue());
+            },
+        });
+
+        form.addEventListener('submit', () => {
+            syncSource(instance.getValue());
+            try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
+        });
+
+        form.querySelector('[data-clear-markdown-draft]')?.addEventListener('click', () => {
+            try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
+            instance.setValue('');
+            syncSource('');
+        });
+
+        textarea.hidden = true;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
     initMobileMenu();
@@ -742,4 +805,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initToastDismiss();
     initPrivateMessages();
     initGroups();
+    initMarkdownEditors();
 });

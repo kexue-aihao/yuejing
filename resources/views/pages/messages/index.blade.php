@@ -25,7 +25,7 @@
                 <div><p class="panel-kicker">CONVERSATIONS</p><h2>我的会话</h2></div>
                 <span class="live-dot" aria-label="实时更新中"></span>
             </div>
-            <form class="communication-search" method="get" action="{{ $api['users'] }}" data-user-search-form>
+            <form class="communication-search" method="get" action="{{ $api['users'] ?? route('messages.page') }}" data-user-search-form>
                 @csrf
                 <label class="sr-only" for="message-user-search">搜索用户</label>
                 <input id="message-user-search" name="q" placeholder="搜索昵称或邮箱" autocomplete="off">

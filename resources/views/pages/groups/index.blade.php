@@ -28,7 +28,7 @@
             <div class="group-list" data-group-list aria-live="polite">
                 <p class="communication-empty">正在加载群聊…</p>
             </div>
-            <form class="group-create-form" method="post" action="{{ $api['store'] }}" data-group-create-form>
+            <form class="group-create-form" method="post" action="{{ $api['store'] ?? route('groups.page') }}" data-group-create-form>
                 @csrf
                 <h3>创建交流群</h3>
                 <label class="form-field"><span>群名称</span><input name="name" placeholder="例如：本周共读小组" required></label>
@@ -54,7 +54,7 @@
             <div class="group-members" data-group-members>
                 <div class="section-label"><span>群成员</span><span data-member-count>0 人</span></div>
                 <div class="member-chips" data-member-list><span class="muted">选择群聊后显示成员。</span></div>
-                <form class="member-add-form" method="post" action="{{ $api['addMember'] }}" data-member-add-form>
+                <form class="member-add-form" method="post" action="{{ $api['addMember'] ?? route('groups.page') }}" data-member-add-form>
                     @csrf
                     <label class="sr-only" for="group-member-select">选择要邀请的成员</label>
                     <select id="group-member-select" name="user_id" data-member-select>
@@ -68,7 +68,7 @@
                 <p class="communication-empty">选择群聊后，消息会显示在这里。</p>
             </div>
 
-            <form class="message-compose" method="post" action="{{ $api['sendMessage'] }}" data-group-send-form>
+            <form class="message-compose" method="post" action="{{ $api['sendMessage'] ?? route('groups.page') }}" data-group-send-form>
                 @csrf
                 <label class="sr-only" for="group-message-body">输入群聊消息</label>
                 <textarea id="group-message-body" name="body" rows="3" placeholder="和群友聊聊…" required></textarea>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Chapter;
 use App\Models\Novel;
 use App\Models\ReadingRecord;
+use App\Services\MarkdownRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -55,7 +56,7 @@ class PublicController extends Controller
         return response()->json($novel->loadCount('ratings'));
     }
 
-    public function chapter(Request $request, Novel $novel, Chapter $chapter)
+    public function chapter(Request $request, Novel $novel, Chapter $chapter, MarkdownRenderer $markdownRenderer)
     {
         abort_unless($chapter->novel_id === $novel->id && $novel->status === 'published' && $chapter->status === 'published', 404);
 
@@ -74,6 +75,7 @@ class PublicController extends Controller
                     'number' => $chapter->chapter_number,
                     'title' => $chapter->title,
                     'content' => $chapter->content,
+                    'content_html' => $markdownRenderer->render($chapter->content),
                 ],
             ]);
         }

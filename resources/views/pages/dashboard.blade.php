@@ -67,6 +67,18 @@
                 @endif
             </section>
 
+            <section class="panel" id="communication">
+                <div class="panel-heading"><h2>沟通中心</h2><span class="muted">与读者和同伴保持联系</span></div>
+                <div class="communication-summary">
+                    @if (Route::has('messages.page'))
+                        <a class="communication-summary-card" href="{{ route('messages.page') }}"><strong>站内私信</strong><span>发起或继续一对一会话</span><span class="text-link">打开私信 →</span></a>
+                    @endif
+                    @if (Route::has('groups.page'))
+                        <a class="communication-summary-card" href="{{ route('groups.page') }}"><strong>实时交流群</strong><span>加入或创建阅读交流小组</span><span class="text-link">打开交流群 →</span></a>
+                    @endif
+                </div>
+            </section>
+
             @if (auth()->user()->isRole(['author', 'editor', 'admin']))
                 <section class="panel" id="author-summary">
                     <div class="panel-heading"><h2>作品投稿</h2><a href="{{ route('author.submissions') }}">进入作品投稿 →</a></div>

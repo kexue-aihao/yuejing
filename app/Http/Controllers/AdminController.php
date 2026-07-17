@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\Submission;
 use App\Models\User;
 use App\Services\AppSettingService;
+use App\Services\MarkdownRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -230,7 +231,7 @@ class AdminController extends Controller
         return response()->json(['message' => 'Novel deleted.']);
     }
 
-    public function submissions(Request $request)
+    public function submissions(Request $request, MarkdownRenderer $markdownRenderer)
     {
         $query = Submission::with(['user:id,name,email', 'novel:id,title', 'category:id,name'])->latest();
         if ($request->filled('status')) {
@@ -238,6 +239,9 @@ class AdminController extends Controller
         }
 
         $submissions = $query->paginate(config('yuejing.pagination'))->withQueryString();
+        $submissions->getCollection()->each(function (Submission $submission) use ($markdownRenderer): void {
+            $submission->setAttribute('manuscript_html', $markdownRenderer->render($submission->manuscript));
+        });
 
         if (! $this->wantsJson($request)) {
             return view('pages.admin.submissions', compact('submissions'));
