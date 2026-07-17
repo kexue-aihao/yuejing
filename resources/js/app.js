@@ -176,10 +176,25 @@ function initToastDismiss() {
 }
 
 // ── Communication helpers ──
+function isConfiguredApiUrl(value) {
+    return typeof value === 'string'
+        && value.trim() !== ''
+        && !/(^|\/)undefined(?:\/|$)/.test(value);
+}
+
 function readApiConfig(element) {
+    const requiredKeys = element.matches('[data-groups-app]')
+        ? ['users', 'index', 'store', 'show', 'addMember', 'removeMember', 'sendMessage', 'read', 'stream']
+        : ['users', 'index', 'store', 'show', 'read', 'stream'];
+
     try {
-        return JSON.parse(element.dataset.api || '{}');
-    } catch {
+        const config = JSON.parse(element.dataset.api || '{}');
+        if (!config || typeof config !== 'object' || !requiredKeys.every((key) => isConfiguredApiUrl(config[key]))) {
+            throw new Error('消息接口配置缺失');
+        }
+        return config;
+    } catch (error) {
+        console.error('[communication] API 配置解析失败', error);
         return {};
     }
 }
@@ -194,6 +209,10 @@ function csrfHeaders(json = false) {
 }
 
 async function apiRequest(url, options = {}) {
+    if (!isConfiguredApiUrl(url)) {
+        throw new Error('消息接口配置缺失，无法发送请求。');
+    }
+
     const response = await fetch(url, {
         credentials: 'same-origin',
         ...options,

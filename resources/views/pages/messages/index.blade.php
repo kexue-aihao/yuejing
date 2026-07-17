@@ -5,7 +5,7 @@
 @section('content')
 <main class="site-shell communication-page messages-page"
       data-messages-app
-      data-api="@json($api)"
+      data-api='@json($api)'
       data-current-user-id="{{ $currentUserId }}">
     <div class="communication-head">
         <div>

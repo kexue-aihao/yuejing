@@ -69,6 +69,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://example.com/up
 ## 4. 环境变量、数据库和存储
 
 - [ ] `.env` 存在且未提交到 Git，`APP_KEY` 已生成，生产环境 `APP_DEBUG=false`，`APP_URL` 使用最终 HTTPS 地址。
+- [ ] Before running `scripts/aapanel-update.sh`, confirm the effective values are `APP_ENV=production` and `APP_DEBUG=false`; the script stops before backups, database backups, or maintenance mode when either value is unsafe, and it never modifies `.env`.
 - [ ] `APP_LOCALE=zh_CN` 和 `APP_FALLBACK_LOCALE=zh_CN` 已配置。
 - [ ] `VITE_APP_NAME="${APP_NAME}"` 已配置。
 - [ ] `DB_CONNECTION=mysql` 时，数据库、用户、密码、端口和 `utf8mb4` 配置正确。

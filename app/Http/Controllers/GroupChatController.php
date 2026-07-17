@@ -261,13 +261,19 @@ class GroupChatController extends Controller
         $data = $this->validated($request, [
             'body' => ['required', 'string', 'max:5000'],
         ]);
+        $body = trim($data['body']);
+        if ($body === '') {
+            throw ValidationException::withMessages([
+                'body' => ['The body field must contain at least one non-whitespace character.'],
+            ]);
+        }
 
-        $message = DB::transaction(function () use ($data, $group, $user): ChatGroupMessage {
+        $message = DB::transaction(function () use ($body, $group, $user): ChatGroupMessage {
             $message = new ChatGroupMessage();
             $message->forceFill([
                 'chat_group_id' => $group->getKey(),
                 'sender_id' => $user->getKey(),
-                'body' => $data['body'],
+                'body' => $body,
             ]);
             $message->save();
 

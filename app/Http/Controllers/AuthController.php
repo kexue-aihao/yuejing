@@ -8,6 +8,7 @@ use App\Services\AppSettingService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password as PasswordBroker;
@@ -204,9 +205,11 @@ HTML);
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
+        $resetUser = null;
         $status = PasswordBroker::reset(
             $data,
-            function (User $user, string $password): void {
+            function (User $user, string $password) use (&$resetUser): void {
+                $resetUser = $user;
                 $user->forceFill([
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
@@ -220,6 +223,13 @@ HTML);
             }
 
             return back()->withErrors(['email' => '密码重置链接无效或已过期。']);
+        }
+
+        if ($resetUser !== null && config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $resetUser->getAuthIdentifier())
+                ->where('id', '!=', $request->session()->getId())
+                ->delete();
         }
 
         if ($this->wantsJson($request)) {

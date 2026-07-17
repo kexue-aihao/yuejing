@@ -26,11 +26,6 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            ['name' => 'Test User', 'password' => Hash::make('password'), 'role' => 'user', 'email_verified_at' => now()],
-        );
-
         foreach ([['name' => '玄幻', 'slug' => 'xuanhuan'], ['name' => '都市', 'slug' => 'dushi'], ['name' => '科幻', 'slug' => 'kehuan']] as $category) {
             Category::firstOrCreate(['slug' => $category['slug']], $category);
         }

@@ -59,6 +59,23 @@ trap cleanup EXIT
 [ -d "$ROOT_DIR/.git" ] || die "不是 Git 工作区：$ROOT_DIR"
 [ -f "$ENV_FILE" ] || die "缺少 $ENV_FILE；请先从 .env.example 创建并填写生产配置。"
 command -v "$PHP_BIN" >/dev/null 2>&1 || die "找不到 PHP：$PHP_BIN"
+dotenv_value() {
+    "$PHP_BIN" -r '
+        require $argv[1] . "/vendor/autoload.php";
+        $dotenv = Dotenv\Dotenv::createImmutable($argv[1]);
+        $dotenv->safeLoad();
+        $key = $argv[2];
+        $value = $_ENV[$key] ?? $_SERVER[$key] ?? "";
+        if (is_string($value)) { echo $value; }
+    ' "$ROOT_DIR" "$1"
+}
+
+app_env="$(dotenv_value APP_ENV)" || die 'Unable to read APP_ENV; deployment stopped.'
+app_debug="$(dotenv_value APP_DEBUG)" || die 'Unable to read APP_DEBUG; deployment stopped.'
+[ "$app_env" = 'production' ] || \
+    die "Unsafe configuration: APP_ENV must be production (current: ${app_env:-unset}); deployment stopped."
+[ "$app_debug" = 'false' ] || \
+    die "Unsafe configuration: APP_DEBUG must be false (current: ${app_debug:-unset}); deployment stopped."
 command -v "$COMPOSER_BIN" >/dev/null 2>&1 || die "找不到 Composer：$COMPOSER_BIN"
 command -v tar >/dev/null 2>&1 || die '找不到 tar，无法备份 storage。'
 
@@ -77,17 +94,6 @@ printf '%s\n' "$previous_commit" > "$backup_dir/commit.txt"
 if [ -d "$ROOT_DIR/storage" ]; then
     tar -czf "$backup_dir/storage.tar.gz" -C "$ROOT_DIR" storage
 fi
-
-dotenv_value() {
-    "$PHP_BIN" -r '
-        require $argv[1] . "/vendor/autoload.php";
-        $dotenv = Dotenv\Dotenv::createImmutable($argv[1]);
-        $dotenv->safeLoad();
-        $key = $argv[2];
-        $value = $_ENV[$key] ?? $_SERVER[$key] ?? "";
-        if (is_string($value)) { echo $value; }
-    ' "$ROOT_DIR" "$1"
-}
 
 db_connection="$(dotenv_value DB_CONNECTION)"
 if [ "$SKIP_DB_BACKUP" = '1' ]; then

@@ -5,7 +5,7 @@
 @section('content')
 <main class="site-shell communication-page groups-page"
       data-groups-app
-      data-api="@json($api)"
+      data-api='@json($api)'
       data-current-user-id="{{ $currentUserId }}">
     <div class="communication-head">
         <div>
@@ -54,7 +54,7 @@
             <div class="group-members" data-group-members>
                 <div class="section-label"><span>群成员</span><span data-member-count>0 人</span></div>
                 <div class="member-chips" data-member-list><span class="muted">选择群聊后显示成员。</span></div>
-                <form class="member-add-form" method="post" action="{{ $api['store'] }}" data-member-add-form>
+                <form class="member-add-form" method="post" action="{{ $api['addMember'] }}" data-member-add-form>
                     @csrf
                     <label class="sr-only" for="group-member-select">选择要邀请的成员</label>
                     <select id="group-member-select" name="user_id" data-member-select>
@@ -68,7 +68,7 @@
                 <p class="communication-empty">选择群聊后，消息会显示在这里。</p>
             </div>
 
-            <form class="message-compose" method="post" action="{{ $api['store'] }}" data-group-send-form>
+            <form class="message-compose" method="post" action="{{ $api['sendMessage'] }}" data-group-send-form>
                 @csrf
                 <label class="sr-only" for="group-message-body">输入群聊消息</label>
                 <textarea id="group-message-body" name="body" rows="3" placeholder="和群友聊聊…" required></textarea>
