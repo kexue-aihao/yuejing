@@ -50,6 +50,48 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ReadingRecord::class);
     }
 
+    public function privateConversationsAsLow()
+    {
+        return $this->hasMany(PrivateConversation::class, 'user_low_id');
+    }
+
+    public function privateConversationsAsHigh()
+    {
+        return $this->hasMany(PrivateConversation::class, 'user_high_id');
+    }
+
+    public function privateMessages()
+    {
+        return $this->hasMany(PrivateMessage::class, 'sender_id');
+    }
+
+    public function chatGroupsCreated()
+    {
+        return $this->hasMany(ChatGroup::class, 'creator_id');
+    }
+
+    public function chatGroupMemberships()
+    {
+        return $this->hasMany(ChatGroupMember::class);
+    }
+
+    public function chatGroups()
+    {
+        return $this->belongsToMany(ChatGroup::class, 'chat_group_members')
+            ->withPivot(['role', 'joined_at', 'last_read_at'])
+            ->withTimestamps();
+    }
+
+    public function chatGroupMessages()
+    {
+        return $this->hasMany(ChatGroupMessage::class, 'sender_id');
+    }
+
+    public function chatGroupMessageReads()
+    {
+        return $this->hasMany(ChatGroupMessageRead::class);
+    }
+
     public function twoFactorSetting()
     {
         return $this->hasOne(UserTwoFactorSetting::class);

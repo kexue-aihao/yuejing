@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\InteractionController;
+use App\Http\Controllers\MessagePageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\SubmissionController;
@@ -54,6 +55,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
+    Route::get('/messages', [MessagePageController::class, 'messages'])->name('messages.page');
+    Route::get('/groups', [MessagePageController::class, 'groups'])->name('groups.page');
     Route::get('/account/settings', [AccountController::class, 'settings'])->name('account.settings');
     Route::put('/account/settings', [AccountController::class, 'update'])->name('account.settings.update');
     Route::get('/account/favorites', [InteractionController::class, 'favorites'])->name('account.favorites');
@@ -99,4 +102,3 @@ Route::middleware(['auth', 'email.required', 'role:admin'])->prefix('admin')->gr
     Route::put('/submissions/{submission}/review', [AdminController::class, 'reviewSubmission'])->name('admin.submissions.review');
     Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('admin.audit-logs.index');
 });
-

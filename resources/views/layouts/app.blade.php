@@ -27,6 +27,10 @@
                 <a class="nav-link {{ request()->routeIs('novels.*') ? 'is-active' : '' }}" href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}" @if(request()->routeIs('novels.*')) aria-current="page" @endif>书库</a>
                 <a class="nav-link" href="#categories">分类</a>
                 <a class="nav-link" href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">成为作者</a>
+                @auth
+                    @if (Route::has('messages.page'))<a class="nav-link {{ request()->routeIs('messages.*') ? 'is-active' : '' }}" href="{{ route('messages.page') }}" @if(request()->routeIs('messages.*')) aria-current="page" @endif>站内私信</a>@endif
+                    @if (Route::has('groups.page'))<a class="nav-link {{ request()->routeIs('groups.*') ? 'is-active' : '' }}" href="{{ route('groups.page') }}" @if(request()->routeIs('groups.*')) aria-current="page" @endif>交流群</a>@endif
+                @endauth
             </nav>
             <div class="nav-actions">
                 <form class="nav-search" action="{{ Route::has('novels.index') ? route('novels.index') : '#' }}" method="get" role="search">
@@ -50,7 +54,7 @@
         </div>
         <div id="mobile-menu" class="mobile-menu" data-mobile-menu hidden aria-hidden="true" inert>
             <button class="mobile-menu-close" type="button" data-menu-close aria-label="关闭菜单">✕</button>
-            <nav class="site-shell mobile-nav" aria-label="移动端主导航"><a href="{{ Route::has('home') ? route('home') : url('/') }}">首页</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">书库</a><a href="#categories">分类</a><a href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">成为作者</a><a href="{{ Route::has('dashboard') ? route('dashboard') : (Route::has('login') ? route('login') : '#') }}">{{ auth()->check() ? '我的阅境' : '登录 / 注册' }}</a></nav>
+            <nav class="site-shell mobile-nav" aria-label="移动端主导航"><a href="{{ Route::has('home') ? route('home') : url('/') }}">首页</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">书库</a><a href="#categories">分类</a><a href="{{ Route::has('author.submissions') ? route('author.submissions') : '#' }}">成为作者</a>@auth @if (Route::has('messages.page'))<a href="{{ route('messages.page') }}">站内私信</a>@endif @if (Route::has('groups.page'))<a href="{{ route('groups.page') }}">交流群</a>@endif @endauth<a href="{{ Route::has('dashboard') ? route('dashboard') : (Route::has('login') ? route('login') : '#') }}">{{ auth()->check() ? '我的阅境' : '登录 / 注册' }}</a></nav>
         </div>
     </header>
     @if (session('success'))

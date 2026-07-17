@@ -17,7 +17,9 @@ abstract class TestCase extends BaseTestCase
     {
         $token = bin2hex(random_bytes(16));
 
-        return $this->withSession(['_token' => $token])->postJson($uri, ['_token' => $token, ...$data]);
+        return $this->withSession(['_token' => $token])
+            ->withHeaders(['X-CSRF-TOKEN' => $token, 'X-Requested-With' => 'XMLHttpRequest'])
+            ->postJson($uri, ['_token' => $token, ...$data]);
     }
 
     protected function putJsonWithCsrf(string $uri, array $data = [])
@@ -31,6 +33,8 @@ abstract class TestCase extends BaseTestCase
     {
         $token = bin2hex(random_bytes(16));
 
-        return $this->withSession(['_token' => $token])->deleteJson($uri, ['_token' => $token, ...$data]);
+        return $this->withSession(['_token' => $token])
+            ->withHeaders(['X-CSRF-TOKEN' => $token, 'X-Requested-With' => 'XMLHttpRequest'])
+            ->deleteJson($uri, ['_token' => $token, ...$data]);
     }
 }

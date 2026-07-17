@@ -2,7 +2,29 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ChapterController;
+use App\Http\Controllers\GroupChatController;
+use App\Http\Controllers\PrivateMessageController;
 use Illuminate\Support\Facades\Route;
+
+/* Messages use browser/session semantics so the same-origin UI can send CSRF-protected JSON. */
+Route::middleware(['web', 'auth'])
+    ->group(function (): void {
+        Route::get('/messages/users', [PrivateMessageController::class, 'users'])->name('api.messages.users');
+        Route::get('/messages', [PrivateMessageController::class, 'index'])->name('api.messages.index');
+        Route::get('/messages/{conversation}', [PrivateMessageController::class, 'show'])->name('api.messages.show');
+        Route::post('/messages', [PrivateMessageController::class, 'store'])->name('api.messages.store');
+        Route::post('/messages/{conversation}/read', [PrivateMessageController::class, 'markRead'])->name('api.messages.read');
+        Route::get('/messages/{conversation}/stream', [PrivateMessageController::class, 'stream'])->name('api.messages.stream');
+
+        Route::get('/groups', [GroupChatController::class, 'index'])->name('api.groups.index');
+        Route::get('/groups/{group}', [GroupChatController::class, 'show'])->name('api.groups.show');
+        Route::post('/groups', [GroupChatController::class, 'store'])->name('api.groups.store');
+        Route::post('/groups/{group}/members', [GroupChatController::class, 'addMember'])->name('api.groups.members.add');
+        Route::delete('/groups/{group}/members/{user}', [GroupChatController::class, 'removeMember'])->name('api.groups.members.remove');
+        Route::post('/groups/{group}/messages', [GroupChatController::class, 'sendMessage'])->name('api.groups.messages.store');
+        Route::post('/groups/{group}/read', [GroupChatController::class, 'markRead'])->name('api.groups.read');
+        Route::get('/groups/{group}/stream', [GroupChatController::class, 'stream'])->name('api.groups.stream');
+    });
 
 /* Admin API uses browser/session semantics, including CSRF protection. */
 Route::middleware(['web', 'auth', 'role:admin'])
