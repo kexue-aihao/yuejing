@@ -1191,6 +1191,24 @@ a.pagination-item:hover { border-color: var(--c-accent); color: var(--c-accent);
     outline-offset: 3px;
 }
 
+/* ── Auth Input Contrast ── */
+.form-field input,
+.form-field textarea,
+.form-field select {
+    color: var(--c-text-control) !important;
+    -webkit-text-fill-color: var(--c-text-control);
+}
+.form-field input:-webkit-autofill,
+.form-field input:-webkit-autofill:hover,
+.form-field input:-webkit-autofill:focus,
+.form-field textarea:-webkit-autofill,
+.form-field textarea:-webkit-autofill:hover,
+.form-field textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--c-text-control);
+    -webkit-box-shadow: 0 0 0 1000px var(--c-bg-input) inset;
+    caret-color: var(--c-accent);
+}
+
 /* ── Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
