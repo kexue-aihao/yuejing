@@ -22,6 +22,9 @@ class PublicController extends Controller
                     'Cache-Control' => 'private, no-store, no-cache, max-age=0, must-revalidate',
                     'Pragma' => 'no-cache',
                     'Expires' => '0',
+                    'CDN-Cache-Control' => 'no-store',
+                    'Cloudflare-CDN-Cache-Control' => 'no-store',
+                    'Surrogate-Control' => 'no-store',
                     'Vary' => 'Cookie, Accept-Language',
                 ]);
         }

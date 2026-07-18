@@ -56,14 +56,26 @@ class LocalizationTest extends TestCase
             ->get(route('home'))
             ->assertOk()
             ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
+            ->assertHeader('CDN-Cache-Control', 'no-store')
+            ->assertHeader('Cloudflare-CDN-Cache-Control', 'no-store')
             ->assertHeader('Vary', 'Cookie, Accept-Language');
 
         $response = $this->withSession(['_token' => $token])
             ->from(route('home'))
-            ->followingRedirects()
             ->post(route('language.switch'), ['_token' => $token, 'locale' => 'ja']);
 
         $response
+            ->assertRedirect()
+            ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
+            ->assertHeader('CDN-Cache-Control', 'no-store')
+            ->assertHeader('Cloudflare-CDN-Cache-Control', 'no-store');
+
+        $location = $response->headers->get('Location');
+        $this->assertIsString($location);
+        $this->assertStringContainsString('_locale_refresh=', $location);
+
+        $this->withSession(['locale' => 'ja'])
+            ->get($location)
             ->assertOk()
             ->assertSee('<html lang="ja"', false)
             ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private');
