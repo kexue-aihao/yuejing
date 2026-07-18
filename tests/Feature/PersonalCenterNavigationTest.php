@@ -116,4 +116,19 @@ class PersonalCenterNavigationTest extends TestCase
         $this->assertStringContainsString('站内私信', $accountNavigation);
         $this->assertStringContainsString('实时交流群', $accountNavigation);
     }
+
+    public function test_social_navigation_is_a_collapsible_module_without_replacing_other_menu_items(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('<details class="dashboard-nav-group"', false)
+            ->assertSee('<summary class="dashboard-nav-trigger">', false)
+            ->assertSee('data-account-social-menu', false)
+            ->assertSee('href="'.route('messages.page').'"', false)
+            ->assertSee('href="'.route('groups.page').'"', false)
+            ->assertDontSee('<details class="dashboard-nav-group" open', false);
+    }
 }
