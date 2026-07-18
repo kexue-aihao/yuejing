@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'Hikayelerle burada buluşun'],
     'common' => ['skip_to_content' => 'Ana içeriğe geç'],
     'locale' => ['choose' => 'Dil seçin', 'apply' => 'Dili uygula'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'YÖNETİM KONSOLU', 'settings_intro' => 'Site bilgilerini, doğrulama politikasını ve e-posta gönderimini yönetin.', 'admin_permission' => 'Yönetici erişimi', 'basic_info' => 'Temel bilgiler', 'save_settings' => 'Ayarları kaydet', 'site_name' => 'Site adı', 'site_tagline' => 'Site sloganı', 'contact_email' => 'İletişim e-postası', 'accent_color' => 'Vurgu rengi', 'coral' => 'Mercan kırmızısı', 'moss' => 'Yosun yeşili', 'ink' => 'Mürekkep siyahı', 'email_verification_required' => 'Yeni kullanıcılar için e-posta doğrulaması iste', 'email_verification_hint' => 'Etkinleştirildiğinde doğrulanmamış hesaplar doğrulama gerektiren özelliklere erişemez.', 'show_rank' => 'Ana sayfada trend sıralamasını göster', 'show_new' => 'Ana sayfada yeni eserleri göster', 'allow_comments' => 'Bölüm yorumlarına izin ver', 'smtp_status' => 'SMTP durumu', 'smtp_intro' => 'Mevcut uygulama e-posta yapılandırmasını kullanarak test e-postası gönderin.', 'testable' => 'Teste hazır', 'test_email' => 'Test e-postası', 'send_test_email' => 'Test e-postası gönder', 'send_test_hint' => 'Yalnızca test e-postası gönderir; site verileri değişmez.',
         'audit_eyebrow' => 'DENETİM İZİ', 'audit_intro' => 'Gönderi incelemesini, yayınlamayı ve yönetici işlemlerini takip edin.', 'audit_action' => 'İşlem', 'audit_operator' => 'İşlemi yapan', 'audit_time' => 'Zaman', 'audit_target' => 'Hedef', 'metadata' => 'Üst veriler', 'author' => 'Yazar', 'no_audit_logs' => 'Henüz denetim kaydı yok.',
     ],
-];
+]);

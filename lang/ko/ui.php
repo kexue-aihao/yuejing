@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => [
         'name' => '열경',
         'tagline' => '이야기 속에서 만나요',
@@ -617,4 +617,4 @@ return [
         'author' => '작가',
         'no_audit_logs' => '없음audit records 아직.',
     ],
-];
+]);

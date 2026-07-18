@@ -51,7 +51,7 @@ final class LocaleManager
         if (config('locales.browser_detection', true)
             && is_string($acceptLanguage)
             && trim($acceptLanguage) !== '') {
-            foreach ($request?->getLanguages() ?? [] as $browserLocale) {
+            foreach ($this->browserLocales($acceptLanguage) as $browserLocale) {
                 $resolved = $this->resolve($browserLocale, $supported);
 
                 if ($resolved !== null) {
@@ -61,6 +61,54 @@ final class LocaleManager
         }
 
         return $fallback;
+    }
+
+    /**
+     * Return browser language ranges in preference order while excluding
+     * ranges explicitly assigned q=0. Symfony exposes the sorted language
+     * tags but not their quality values through Request::getLanguages().
+     *
+     * @return list<string>
+     */
+    private function browserLocales(string $header): array
+    {
+        $languages = [];
+
+        foreach (explode(',', $header) as $position => $part) {
+            $segments = array_map('trim', explode(';', $part));
+            $language = strtolower((string) array_shift($segments));
+
+            if ($language === '' || $language === '*') {
+                continue;
+            }
+
+            $quality = 1.0;
+
+            foreach ($segments as $segment) {
+                if (str_starts_with(strtolower($segment), 'q=')) {
+                    $value = trim(substr($segment, 2));
+                    $quality = is_numeric($value) ? (float) $value : 0.0;
+                    break;
+                }
+            }
+
+            if ($quality <= 0) {
+                continue;
+            }
+
+            $languages[] = [
+                'language' => $language,
+                'quality' => min(1.0, max(0.0, $quality)),
+                'position' => $position,
+            ];
+        }
+
+        usort($languages, static fn (array $left, array $right): int =>
+            ($right['quality'] <=> $left['quality'])
+                ?: ($left['position'] <=> $right['position'])
+        );
+
+        return array_values(array_unique(array_column($languages, 'language')));
     }
 
     public function translationLocale(string $locale): string

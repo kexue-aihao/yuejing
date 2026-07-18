@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'Temui cerita di sini'],
     'common' => ['skip_to_content' => 'Langsung ke konten utama'],
     'locale' => ['choose' => 'Pilih bahasa', 'apply' => 'Terapkan bahasa'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'KONSOL ADMIN', 'settings_intro' => 'Kelola informasi situs, kebijakan verifikasi, dan pengiriman email.', 'admin_permission' => 'Akses administrator', 'basic_info' => 'Informasi dasar', 'save_settings' => 'Simpan pengaturan', 'site_name' => 'Nama situs', 'site_tagline' => 'Slogan situs', 'contact_email' => 'Email kontak', 'accent_color' => 'Warna aksen', 'coral' => 'Merah koral', 'moss' => 'Hijau lumut', 'ink' => 'Hitam tinta', 'email_verification_required' => 'Wajibkan verifikasi email untuk pengguna baru', 'email_verification_hint' => 'Jika diaktifkan, akun yang belum diverifikasi tidak dapat mengakses fitur yang memerlukan verifikasi.', 'show_rank' => 'Tampilkan peringkat tren di beranda', 'show_new' => 'Tampilkan karya baru di beranda', 'allow_comments' => 'Izinkan komentar bab', 'smtp_status' => 'Status SMTP', 'smtp_intro' => 'Kirim email tes menggunakan konfigurasi email aplikasi saat ini.', 'testable' => 'Siap diuji', 'test_email' => 'Email tes', 'send_test_email' => 'Kirim email tes', 'send_test_hint' => 'Hanya mengirim email tes; tidak ada data situs yang diubah.',
         'audit_eyebrow' => 'JEJAK AUDIT', 'audit_intro' => 'Lacak peninjauan karya kiriman, penerbitan, dan tindakan administrator.', 'audit_action' => 'Tindakan', 'audit_operator' => 'Operator', 'audit_time' => 'Waktu', 'audit_target' => 'Target', 'metadata' => 'Metadata', 'author' => 'Penulis', 'no_audit_logs' => 'Belum ada catatan audit.',
     ],
-];
+]);

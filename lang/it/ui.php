@@ -1,6 +1,6 @@
 <?php
 
-return array_replace_recursive([
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'Incontra qui le storie'],
     'common' => ['skip_to_content' => 'Vai al contenuto principale'],
     'locale' => ['choose' => 'Scegli la lingua', 'apply' => 'Applica lingua'],

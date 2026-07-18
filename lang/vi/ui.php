@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'Gặp gỡ những câu chuyện tại đây'],
     'common' => ['skip_to_content' => 'Bỏ qua để đến nội dung chính'],
     'locale' => ['choose' => 'Chọn ngôn ngữ', 'apply' => 'Áp dụng ngôn ngữ'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'BẢNG QUẢN TRỊ', 'settings_intro' => 'Quản lý thông tin trang, chính sách xác minh và việc gửi email.', 'admin_permission' => 'Quyền quản trị viên', 'basic_info' => 'Thông tin cơ bản', 'save_settings' => 'Lưu cài đặt', 'site_name' => 'Tên trang', 'site_tagline' => 'Khẩu hiệu trang', 'contact_email' => 'Email liên hệ', 'accent_color' => 'Màu nhấn', 'coral' => 'Đỏ san hô', 'moss' => 'Xanh rêu', 'ink' => 'Đen mực', 'email_verification_required' => 'Yêu cầu xác minh email với người dùng mới', 'email_verification_hint' => 'Khi bật, tài khoản chưa xác minh không thể dùng các tính năng yêu cầu xác minh.', 'show_rank' => 'Hiển thị bảng xếp hạng xu hướng trên trang chủ', 'show_new' => 'Hiển thị tác phẩm mới trên trang chủ', 'allow_comments' => 'Cho phép bình luận chương', 'smtp_status' => 'Trạng thái SMTP', 'smtp_intro' => 'Gửi email kiểm tra bằng cấu hình thư hiện tại của ứng dụng.', 'testable' => 'Sẵn sàng kiểm tra', 'test_email' => 'Email kiểm tra', 'send_test_email' => 'Gửi email kiểm tra', 'send_test_hint' => 'Chỉ gửi email kiểm tra; không thay đổi dữ liệu trang.',
         'audit_eyebrow' => 'DẤU VẾT KIỂM TRA', 'audit_intro' => 'Theo dõi việc xét duyệt bài gửi, xuất bản và các thao tác của quản trị viên.', 'audit_action' => 'Thao tác', 'audit_operator' => 'Người thực hiện', 'audit_time' => 'Thời gian', 'audit_target' => 'Đối tượng', 'metadata' => 'Siêu dữ liệu', 'author' => 'Tác giả', 'no_audit_logs' => 'Chưa có bản ghi kiểm tra.',
     ],
-];
+]);

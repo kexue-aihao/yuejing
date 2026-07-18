@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'Temui cerita di sini'],
     'common' => ['skip_to_content' => 'Langkau ke kandungan utama'],
     'locale' => ['choose' => 'Pilih bahasa', 'apply' => 'Gunakan bahasa'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'KONSOL PENTADBIR', 'settings_intro' => 'Urus maklumat laman, dasar pengesahan dan penghantaran e-mel.', 'admin_permission' => 'Akses pentadbir', 'basic_info' => 'Maklumat asas', 'save_settings' => 'Simpan tetapan', 'site_name' => 'Nama laman', 'site_tagline' => 'Slogan laman', 'contact_email' => 'E-mel hubungan', 'accent_color' => 'Warna aksen', 'coral' => 'Merah karang', 'moss' => 'Hijau lumut', 'ink' => 'Hitam dakwat', 'email_verification_required' => 'Wajibkan pengesahan e-mel untuk pengguna baharu', 'email_verification_hint' => 'Apabila didayakan, akaun yang belum disahkan tidak boleh mengakses ciri yang memerlukan pengesahan.', 'show_rank' => 'Tunjukkan kedudukan trending di laman utama', 'show_new' => 'Tunjukkan karya baharu di laman utama', 'allow_comments' => 'Benarkan komen bab', 'smtp_status' => 'Status SMTP', 'smtp_intro' => 'Hantar e-mel ujian menggunakan konfigurasi mel aplikasi semasa.', 'testable' => 'Sedia untuk diuji', 'test_email' => 'E-mel ujian', 'send_test_email' => 'Hantar e-mel ujian', 'send_test_hint' => 'Hanya menghantar e-mel ujian; tiada data laman diubah.',
         'audit_eyebrow' => 'JEJAK AUDIT', 'audit_intro' => 'Jejaki semakan karya, penerbitan dan tindakan pentadbir.', 'audit_action' => 'Tindakan', 'audit_operator' => 'Pengendali', 'audit_time' => 'Masa', 'audit_target' => 'Sasaran', 'metadata' => 'Metadata', 'author' => 'Penulis', 'no_audit_logs' => 'Tiada rekod audit lagi.',
     ],
-];
+]);

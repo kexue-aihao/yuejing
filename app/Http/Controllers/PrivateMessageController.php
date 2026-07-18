@@ -119,20 +119,20 @@ class PrivateMessageController extends Controller
         $user = $this->authenticatedUser($request);
         $data = $request->validate([
             'recipient_id' => ['required', 'integer', 'exists:users,id'],
-            'body' => ['required', 'string', 'max:'.self::MAX_BODY_LENGTH],
+            'body' => ['nullable', 'string', 'max:'.self::MAX_BODY_LENGTH],
         ]);
 
         $recipientId = (int) $data['recipient_id'];
         if ($recipientId === (int) $user->id) {
             throw ValidationException::withMessages([
-                'recipient_id' => 'You cannot send a private message to yourself.',
+                'recipient_id' => __('private.self_message'),
             ]);
         }
 
         $body = trim($data['body']);
         if ($body === '') {
             throw ValidationException::withMessages([
-                'body' => 'The body field must contain at least one non-whitespace character.',
+                'body' => __('private.whitespace_body'),
             ]);
         }
 

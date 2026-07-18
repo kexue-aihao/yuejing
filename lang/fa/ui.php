@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'جایی برای دیدار با داستان‌ها'],
     'common' => ['skip_to_content' => 'رفتن به محتوای اصلی'],
     'locale' => ['choose' => 'انتخاب زبان', 'apply' => 'اعمال زبان'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'کنسول مدیریت', 'settings_intro' => 'اطلاعات سایت، سیاست تأیید و ارسال ایمیل را مدیریت کنید.', 'admin_permission' => 'دسترسی مدیر', 'basic_info' => 'اطلاعات پایه', 'save_settings' => 'ذخیره تنظیمات', 'site_name' => 'نام سایت', 'site_tagline' => 'شعار سایت', 'contact_email' => 'ایمیل تماس', 'accent_color' => 'رنگ تأکیدی', 'coral' => 'قرمز مرجانی', 'moss' => 'سبز خزه‌ای', 'ink' => 'مشکی جوهری', 'email_verification_required' => 'تأیید ایمیل را برای کاربران جدید الزامی کن', 'email_verification_hint' => 'با فعال بودن این گزینه، حساب‌های تأییدنشده به قابلیت‌های نیازمند تأیید دسترسی ندارند.', 'show_rank' => 'نمایش رتبه‌بندی پرطرفدارها در خانه', 'show_new' => 'نمایش آثار جدید در خانه', 'allow_comments' => 'اجازه دادن به نظرهای فصل', 'smtp_status' => 'وضعیت SMTP', 'smtp_intro' => 'با پیکربندی فعلی ایمیل برنامه، یک ایمیل آزمایشی بفرستید.', 'testable' => 'آماده آزمایش', 'test_email' => 'ایمیل آزمایشی', 'send_test_email' => 'ارسال ایمیل آزمایشی', 'send_test_hint' => 'فقط یک ایمیل آزمایشی ارسال می‌شود؛ داده‌های سایت تغییر نمی‌کنند.',
         'audit_eyebrow' => 'ردیابی حسابرسی', 'audit_intro' => 'بررسی ارسالی‌ها، انتشار و اقدامات مدیران را پیگیری کنید.', 'audit_action' => 'عملیات', 'audit_operator' => 'اجراکننده', 'audit_time' => 'زمان', 'audit_target' => 'هدف', 'metadata' => 'فراداده', 'author' => 'نویسنده', 'no_audit_logs' => 'هنوز سابقه حسابرسی‌ای وجود ندارد.',
     ],
-];
+]);

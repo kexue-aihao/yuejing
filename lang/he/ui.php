@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'כאן פוגשים סיפורים'],
     'common' => ['skip_to_content' => 'דלג לתוכן הראשי'],
     'locale' => ['choose' => 'בחירת שפה', 'apply' => 'החלת השפה'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'מסוף ניהול', 'settings_intro' => 'נהלו את פרטי האתר, את מדיניות האימות ואת משלוח הדואר.', 'admin_permission' => 'גישת מנהל', 'basic_info' => 'מידע בסיסי', 'save_settings' => 'שמירת הגדרות', 'site_name' => 'שם האתר', 'site_tagline' => 'סיסמת האתר', 'contact_email' => 'אימייל ליצירת קשר', 'accent_color' => 'צבע הדגשה', 'coral' => 'אדום אלמוג', 'moss' => 'ירוק טחב', 'ink' => 'שחור דיו', 'email_verification_required' => 'דרישת אימות אימייל למשתמשים חדשים', 'email_verification_hint' => 'כאשר מופעל, חשבונות שלא אומתו לא יכולים להשתמש בתכונות שדורשות אימות.', 'show_rank' => 'הצגת דירוג פופולרי בדף הבית', 'show_new' => 'הצגת יצירות חדשות בדף הבית', 'allow_comments' => 'אפשר תגובות לפרקים', 'smtp_status' => 'מצב SMTP', 'smtp_intro' => 'שלחו אימייל בדיקה באמצעות הגדרות הדואר הנוכחיות של האפליקציה.', 'testable' => 'מוכן לבדיקה', 'test_email' => 'אימייל בדיקה', 'send_test_email' => 'שליחת אימייל בדיקה', 'send_test_hint' => 'נשלח אימייל בדיקה בלבד; נתוני האתר אינם משתנים.',
         'audit_eyebrow' => 'מסלול ביקורת', 'audit_intro' => 'עקבו אחר בדיקת הגשות, פרסום ופעולות מנהלים.', 'audit_action' => 'פעולה', 'audit_operator' => 'מפעיל', 'audit_time' => 'זמן', 'audit_target' => 'יעד', 'metadata' => 'מטא-נתונים', 'author' => 'סופר', 'no_audit_logs' => 'עדיין אין רשומות ביקורת.',
     ],
-];
+]);

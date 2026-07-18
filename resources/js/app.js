@@ -9,8 +9,20 @@ import '@fontsource/noto-serif-sc/600.css';
 const I18N = window.YuejingI18n || {};
 
 function tr(path, replacements = {}) {
-    const value = path.split('.').reduce((current, key) => current?.[key], I18N);
+    let value = path.split('.').reduce((current, key) => current?.[key], I18N);
     if (typeof value !== 'string') return path;
+
+    const count = Number(replacements.count);
+    if (Number.isFinite(count) && value.includes('|')) {
+        const choices = value.split('|');
+        value = choices.length === 2
+            ? (count === 1 ? choices[0] : choices[1])
+            : choices.find((choice) => {
+                const match = choice.match(/^\{(\d+),(\d+)\}/);
+                return match && count >= Number(match[1]) && count <= Number(match[2]);
+            })?.replace(/^\{[^}]+\}/, '') ?? choices.at(-1);
+    }
+
     return Object.entries(replacements).reduce((text, [key, replacement]) => text.replaceAll(`:${key}`, String(replacement)), value);
 }
 

@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'Tu spotykają się historie'],
     'common' => ['skip_to_content' => 'Przejdź do głównej treści'],
     'locale' => ['choose' => 'Wybierz język', 'apply' => 'Zastosuj język'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'KONSOLA ADMINISTRACYJNA', 'settings_intro' => 'Zarządzaj informacjami serwisu, zasadami weryfikacji i wysyłką wiadomości e-mail.', 'admin_permission' => 'Dostęp administratora', 'basic_info' => 'Podstawowe informacje', 'save_settings' => 'Zapisz ustawienia', 'site_name' => 'Nazwa serwisu', 'site_tagline' => 'Hasło serwisu', 'contact_email' => 'E-mail kontaktowy', 'accent_color' => 'Kolor akcentu', 'coral' => 'Koralowa czerwień', 'moss' => 'Mechowa zieleń', 'ink' => 'Atramentowa czerń', 'email_verification_required' => 'Wymagaj weryfikacji e-mail przy rejestracji nowych użytkowników', 'email_verification_hint' => 'Po włączeniu niezweryfikowane konta nie mogą korzystać z funkcji wymagających weryfikacji.', 'show_rank' => 'Pokaż ranking trendów na stronie głównej', 'show_new' => 'Pokaż nowe utwory na stronie głównej', 'allow_comments' => 'Zezwalaj na komentarze do rozdziałów', 'smtp_status' => 'Status SMTP', 'smtp_intro' => 'Wyślij testową wiadomość przy użyciu bieżącej konfiguracji poczty aplikacji.', 'testable' => 'Gotowe do testu', 'test_email' => 'Testowa wiadomość', 'send_test_email' => 'Wyślij testową wiadomość', 'send_test_hint' => 'Wysyłana jest tylko wiadomość testowa; dane serwisu nie zostaną zmienione.',
         'audit_eyebrow' => 'ŚLAD AUDYTOWY', 'audit_intro' => 'Śledź recenzję zgłoszeń, publikację i działania administratorów.', 'audit_action' => 'Działanie', 'audit_operator' => 'Operator', 'audit_time' => 'Czas', 'audit_target' => 'Cel', 'metadata' => 'Metadane', 'author' => 'Autor', 'no_audit_logs' => 'Brak rekordów audytu.',
     ],
-];
+]);

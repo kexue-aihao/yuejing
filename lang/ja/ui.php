@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => [
         'name' => '閲境',
         'tagline' => '物語と出会う場所',
@@ -617,4 +617,4 @@ return [
         'author' => '作者',
         'no_audit_logs' => '監査記録はまだありません。',
     ],
-];
+]);

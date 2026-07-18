@@ -152,7 +152,9 @@ class PrivateMessagingTest extends TestCase
                 'body' => 'Not allowed',
             ])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('recipient_id');
+            ->assertJsonValidationErrors('recipient_id')
+            ->assertJsonPath('errors.recipient_id.0', __('private.self_message'))
+            ->assertJsonMissing(['errors' => ['recipient_id' => ['You cannot send a private message to yourself.']]]);
 
         $this->actingAs($alice)
             ->postJsonWithCsrf(route('api.messages.store'), [
@@ -160,7 +162,9 @@ class PrivateMessagingTest extends TestCase
                 'body' => '   ',
             ])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('body');
+            ->assertJsonValidationErrors('body')
+            ->assertJsonPath('errors.body.0', __('private.whitespace_body'))
+            ->assertJsonMissing(['errors' => ['body' => ['The body field must contain at least one non-whitespace character.']]]);
 
         $this->actingAs($alice)
             ->postJsonWithCsrf(route('api.messages.store'), [

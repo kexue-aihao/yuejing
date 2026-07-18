@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => '阅境', 'tagline' => '在故事里相遇'],
     'common' => ['skip_to_content' => '跳到主要内容'],
     'locale' => ['choose' => '选择语言', 'apply' => '应用语言'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'ADMIN CONSOLE', 'settings_intro' => '管理站点信息、验证策略和邮件发送状态。', 'admin_permission' => '管理权限', 'basic_info' => '基础信息', 'save_settings' => '保存设置', 'site_name' => '站点名称', 'site_tagline' => '站点副标题', 'contact_email' => '联系邮箱', 'accent_color' => '主题色', 'coral' => '朱砂红', 'moss' => '苔绿色', 'ink' => '墨黑色', 'email_verification_required' => '新用户必须完成邮箱验证', 'email_verification_hint' => '开启后，未验证邮箱的账户无法访问需要验证的内容功能。', 'show_rank' => '首页展示热度榜', 'show_new' => '首页展示新书区域', 'allow_comments' => '开放章节评论', 'smtp_status' => 'SMTP 状态', 'smtp_intro' => '使用当前应用邮件配置发送一封测试邮件。', 'testable' => '可测试', 'test_email' => '测试邮箱', 'send_test_email' => '发送测试邮件', 'send_test_hint' => '只发送测试邮件，不会修改站点数据。',
         'audit_eyebrow' => 'AUDIT TRAIL', 'audit_intro' => '追踪投稿审核、发布和管理员操作记录。', 'audit_action' => '操作', 'audit_operator' => '操作人', 'audit_time' => '时间', 'audit_target' => '对象', 'metadata' => '元数据', 'author' => '作者', 'no_audit_logs' => '暂时没有审计记录。',
     ],
-];
+]);

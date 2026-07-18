@@ -70,10 +70,23 @@ class LocalizationTest extends TestCase
             ->assertSee('>首頁<', false);
     }
 
+    public function test_browser_language_detection_ignores_languages_with_zero_quality(): void
+    {
+        config(['locales.browser_detection' => true]);
+
+        $response = $this->withHeaders([
+            'Accept-Language' => 'xx;q=0.8,fr;q=0',
+        ])->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee('<html lang="zh-CN"', false);
+    }
+
     public function test_every_supported_locale_has_ui_and_validation_catalogs(): void
     {
         $uiKeys = $this->translationKeys(require base_path('lang/en/ui.php'));
         $validationKeys = $this->translationKeys(require base_path('lang/en/validation.php'));
+        $privateKeys = $this->translationKeys(require base_path('lang/en/private.php'));
         $supported = config('locales.supported', []);
 
         $this->assertIsArray($supported);
@@ -87,6 +100,7 @@ class LocalizationTest extends TestCase
 
             $uiCatalog = $this->loadCatalog($translation, 'ui');
             $validationCatalog = $this->loadCatalog($translation, 'validation');
+            $privateCatalog = $this->loadCatalog($translation, 'private');
 
             $this->assertSame(
                 $uiKeys,
@@ -98,11 +112,117 @@ class LocalizationTest extends TestCase
                 $this->translationKeys($validationCatalog),
                 "Validation translation keys must match the English catalog for {$locale}",
             );
+            $this->assertSame(
+                $privateKeys,
+                $this->translationKeys($privateCatalog),
+                "Private-message translation keys must match the English catalog for {$locale}",
+            );
 
             $response = $this->withSession(['locale' => $locale])->get(route('home'));
             $this->assertIsString($definition['html'] ?? null, "Locale HTML tag must be a string for {$locale}");
-            $response->assertOk()->assertSee('<html lang="'.$definition['html'].'"', false);
-            $response->assertSee('data-language-switcher', false);
+            $this->assertContains($definition['dir'] ?? 'ltr', ['ltr', 'rtl'], "Locale direction must be ltr or rtl for {$locale}");
+            $response->assertOk()
+                ->assertSee('<html lang="'.$definition['html'].'" dir="'.($definition['dir'] ?? 'ltr').'"', false)
+                ->assertSee('data-language-switcher', false);
+        }
+    }
+
+    public function test_supported_catalog_locales_match_the_directories_on_disk_without_ghost_registrations(): void
+    {
+        $supported = config('locales.supported', []);
+        $directories = collect(glob(base_path('lang/*'), GLOB_ONLYDIR))
+            ->map(fn (string $path): string => basename($path))
+            ->sort()
+            ->values()
+            ->all();
+        $catalogLocales = collect($supported)
+            ->filter(fn (mixed $definition, string $locale): bool => is_array($definition) && ($definition['translation'] ?? null) === $locale)
+            ->keys()
+            ->sort()
+            ->values()
+            ->all();
+
+        $this->assertSame($directories, $catalogLocales, 'Each real lang directory must be registered exactly once as a catalog locale.');
+
+        foreach ($supported as $locale => $definition) {
+            $this->assertIsArray($definition, "Locale definition must be an array for {$locale}");
+            $translation = $definition['translation'] ?? null;
+            $this->assertIsString($translation, "Locale translation mapping must be a string for {$locale}");
+            $this->assertContains($definition['dir'] ?? 'ltr', ['ltr', 'rtl'], "Locale direction must be valid for {$locale}");
+            $this->assertMatchesRegularExpression('/\\A[A-Za-z0-9_-]+\\z/', (string) ($definition['html'] ?? ''), "Locale HTML tag must be safe for {$locale}");
+            $this->assertFileExists(base_path("lang/{$translation}/ui.php"));
+            $this->assertFileExists(base_path("lang/{$translation}/validation.php"));
+            $this->assertFileExists(base_path("lang/{$translation}/private.php"));
+
+            if (($definition['kind'] ?? 'catalog') === 'region_alias') {
+                $this->assertNotSame($locale, $translation, "Region aliases must point to a base catalog for {$locale}");
+            }
+        }
+    }
+
+    public function test_rtl_locales_render_rtl_html_direction(): void
+    {
+        foreach (['ar', 'fa', 'he', 'ur', 'ku', 'ps'] as $locale) {
+            $definition = config("locales.supported.{$locale}");
+
+            $this->assertSame('rtl', $definition['dir'] ?? null, "{$locale} must be configured as RTL");
+            $this->withSession(['locale' => $locale])
+                ->get(route('home'))
+                ->assertOk()
+                ->assertSee('<html lang="'.$definition['html'].'" dir="rtl"', false);
+        }
+    }
+
+    public function test_translation_catalogs_are_valid_utf8_files(): void
+    {
+        $supported = config('locales.supported', []);
+        $catalogLocales = collect($supported)
+            ->filter(fn (mixed $definition, string $locale): bool => is_array($definition) && ($definition['translation'] ?? null) === $locale)
+            ->keys();
+
+        foreach ($catalogLocales as $locale) {
+            foreach (['ui', 'validation', 'private'] as $catalog) {
+                $path = base_path("lang/{$locale}/{$catalog}.php");
+                $contents = file_get_contents($path);
+
+                $this->assertIsString($contents, "Unable to read {$path}");
+                $this->assertTrue(
+                    function_exists('mb_check_encoding')
+                        ? mb_check_encoding($contents, 'UTF-8')
+                        : preg_match('//u', $contents) === 1,
+                    "{$path} must be valid UTF-8",
+                );
+                $this->loadCatalog($locale, $catalog);
+            }
+        }
+    }
+
+    public function test_rtl_layout_contract_covers_navigation_forms_content_and_ltr_tokens(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertIsString($css);
+        foreach (['ar', 'fa', 'he', 'ur', 'ku', 'ps'] as $locale) {
+            $this->assertSame('rtl', config("locales.supported.{$locale}.dir"), "{$locale} must remain an RTL locale");
+        }
+
+        foreach ([
+            '.dashboard-nav-submenu',
+            '.communication-search',
+            '.member-add-form',
+            '.markdown-preview blockquote',
+            '.category-links a',
+            '.mobile-menu-close',
+            'code',
+            'pre',
+            'input[type="email"]',
+            'input[type="url"]',
+        ] as $selector) {
+            $this->assertStringContainsString(
+                '[dir="rtl"] '.$selector,
+                $css,
+                "RTL CSS must explicitly cover {$selector}",
+            );
         }
     }
 
@@ -112,7 +232,7 @@ class LocalizationTest extends TestCase
 
         $this->assertIsArray($supported);
 
-        foreach (['ui', 'validation'] as $catalogName) {
+        foreach (['ui', 'validation', 'private'] as $catalogName) {
             $englishPlaceholders = $this->translationPlaceholders($this->loadCatalog('en', $catalogName));
 
             foreach ($supported as $locale => $definition) {
@@ -162,6 +282,7 @@ class LocalizationTest extends TestCase
 
             $this->loadCatalog($translation, 'ui');
             $this->loadCatalog($translation, 'validation');
+            $this->loadCatalog($translation, 'private');
         }
     }
 

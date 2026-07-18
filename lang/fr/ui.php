@@ -1,5 +1,5 @@
 <?php
-return array_replace_recursive([], [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['tagline' => 'Les histoires se rencontrent ici'], 'common' => ['skip_to_content' => 'Aller au contenu principal'], 'locale' => ['choose' => 'Choisir la langue', 'apply' => 'Appliquer la langue'],
     'nav' => ['home' => 'Accueil', 'library' => 'Bibliothèque', 'categories' => 'Catégories', 'search' => 'Rechercher', 'search_placeholder' => 'Rechercher des œuvres ou des auteurs', 'personal_center' => 'Compte', 'admin' => 'Administration', 'logout' => 'Se déconnecter', 'login' => 'Se connecter', 'register' => 'S’inscrire', 'open_menu' => 'Ouvrir le menu', 'close_menu' => 'Fermer le menu', 'all_books' => 'Toutes les œuvres', 'about' => 'À propos de Yuejing', 'help' => 'Aide', 'contact' => 'Contact'],
     'account' => ['navigation' => 'Navigation du compte', 'overview' => 'Vue de lecture', 'favorites' => 'Mes favoris', 'reading_records' => 'Historique de lecture', 'settings' => 'Paramètres du compte', 'social' => 'Social', 'messages' => 'Messages privés', 'groups' => 'Groupes de lecture', 'submissions' => 'Soumissions'],

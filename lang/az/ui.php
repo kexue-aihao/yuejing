@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'Hekayələrlə burada görüşün'],
     'common' => ['skip_to_content' => 'Əsas məzmuna keç'],
     'locale' => ['choose' => 'Dil seçin', 'apply' => 'Dili tətbiq edin'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'ADMİN PANELİ', 'settings_intro' => 'Sayt məlumatlarını, təsdiq siyasətini və e-poçt göndərişini idarə edin.', 'admin_permission' => 'Administrator girişi', 'basic_info' => 'Əsas məlumatlar', 'save_settings' => 'Ayarları saxla', 'site_name' => 'Sayt adı', 'site_tagline' => 'Sayt sloqanı', 'contact_email' => 'Əlaqə e-poçtu', 'accent_color' => 'Vurğu rəngi', 'coral' => 'Mərcan qırmızısı', 'moss' => 'Mamır yaşılı', 'ink' => 'Mürəkkəb qarası', 'email_verification_required' => 'Yeni istifadəçilər üçün e-poçt təsdiqini tələb et', 'email_verification_hint' => 'Aktiv olduqda təsdiqlənməmiş hesablar təsdiq tələb edən funksiyalara girə bilmir.', 'show_rank' => 'Ana səhifədə trend reytinqini göstər', 'show_new' => 'Ana səhifədə yeni əsərləri göstər', 'allow_comments' => 'Fəsil şərhlərinə icazə ver', 'smtp_status' => 'SMTP vəziyyəti', 'smtp_intro' => 'Cari poçt konfiqurasiyası ilə sınaq e-poçtu göndərin.', 'testable' => 'Sınağa hazırdır', 'test_email' => 'Sınaq e-poçtu', 'send_test_email' => 'Sınaq e-poçtu göndər', 'send_test_hint' => 'Yalnız sınaq e-poçtu göndərilir; sayt məlumatları dəyişmir.',
         'audit_eyebrow' => 'AUDİT İZİ', 'audit_intro' => 'Təqdimat yoxlamasını, nəşri və administrator əməliyyatlarını izləyin.', 'audit_action' => 'Əməl', 'audit_operator' => 'Operator', 'audit_time' => 'Vaxt', 'audit_target' => 'Hədəf', 'metadata' => 'Metaməlumat', 'author' => 'Müəllif', 'no_audit_logs' => 'Hələ audit qeydi yoxdur.',
     ],
-];
+]);

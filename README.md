@@ -17,13 +17,13 @@
 
 - 默认语言由 `.env` 的 `APP_LOCALE` 控制，生产环境建议使用 `zh_CN`。
 - 回退语言由 `APP_FALLBACK_LOCALE` 控制。
-- 新增语言时，在 `config/locales.php` 注册语言代码、原生名称、HTML `lang`、文字方向和翻译目录，并在 `lang/<locale>/ui.php`、`lang/<locale>/validation.php` 提供目录。
-- 当前内置 35 个基础语言目录：简体中文、繁體中文、English、Español、Français、Deutsch、Português、Italiano、日本語、한국어、Русский、Українська、العربية、فارسی、עברית、हिन्दी、বাংলা、اردو、Bahasa Indonesia、Bahasa Melayu、Tiếng Việt、ไทย、Türkçe、Polski、Čeština、Nederlands、Svenska、Dansk、Norsk、Suomi、Ελληνικά、Română、Magyar、Kiswahili、አማርኛ。
+- 新增语言时，先创建真实存在的 `lang/<locale>/ui.php` 和 `lang/<locale>/validation.php`，再在 `config/locales.php` 注册语言代码、原生名称、HTML `lang`、文字方向和翻译目录；配置不得引用尚不存在的目录。每个实际语言目录必须只对应一个自身映射的基础 locale，区域别名通过 `translation` 指向已有基础目录。
+- 当前包含 57 个实际基础语言目录（每个目录有 `ui.php` 和 `validation.php`），并在 `config/locales.php` 注册了 30 个区域别名，共支持 87 个 locale 标识。区域别名（例如 `en_US`、`pt_BR`、`zh_HK`）复用基础语言目录，不代表每个国家都有独立的原生翻译；部分基础语言仍通过英文 fallback 补齐未完成的文案，发布前应由对应语种人员复核。
 - `APP_LOCALE_BROWSER_DETECTION=true` 时会根据浏览器 `Accept-Language` 协商基础语种；关闭后只使用应用默认语言、session 和 Cookie。
 - 浏览器的 BCP-47 区域标签会自动归一化到最近的基础目录，例如 `pt-BR` → `pt`、`fr-CA` → `fr`、`zh-Hant-TW` → `zh_TW`；用户 session 和 Cookie 选择优先于浏览器偏好。区域标签不会伪造独立翻译，只有存在对应目录的基础语种才会使用原生目录。
 - 阿拉伯语、波斯语、希伯来语和乌尔都语会输出 `dir="rtl"`；新增 RTL 语言时必须同时验证布局方向、表单和导航。
 - 页面文案必须使用 `__()`/`trans_choice()`，动态 JavaScript 文案通过布局注入的 `window.YuejingI18n` 获取；不要在新功能中继续直接写固定界面文案。作品标题、作者名和用户投稿内容属于数据，不应被自动翻译。
-- 提交新翻译前运行 `artisan test`、`artisan view:cache`、`node --check resources/js/app.js` 和 `npm run build`。
+- 提交新翻译前运行 `artisan test --filter=LocalizationTest`，确认实际 `lang/*` 目录、catalog 键集合、占位符、HTML `lang`/`dir` 和 RTL 页面契约均通过；然后运行 `artisan test`、`artisan view:cache`、`node --check resources/js/app.js` 和 `npm run build`。
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 

@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'جہاں کہانیاں ملتی ہیں'],
     'common' => ['skip_to_content' => 'مرکزی مواد پر جائیں'],
     'locale' => ['choose' => 'زبان منتخب کریں', 'apply' => 'زبان لاگو کریں'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'انتظامی کنسول', 'settings_intro' => 'سائٹ کی معلومات، تصدیقی پالیسی اور ای میل کی ترسیل سنبھالیں۔', 'admin_permission' => 'منتظم کی رسائی', 'basic_info' => 'بنیادی معلومات', 'save_settings' => 'ترتیبات محفوظ کریں', 'site_name' => 'سائٹ کا نام', 'site_tagline' => 'سائٹ کا نعرہ', 'contact_email' => 'رابطے کی ای میل', 'accent_color' => 'نمایاں رنگ', 'coral' => 'مرجانی سرخ', 'moss' => 'کائی سبز', 'ink' => 'سیاہی کالا', 'email_verification_required' => 'نئے صارفین کے لیے ای میل کی تصدیق لازم کریں', 'email_verification_hint' => 'فعال ہونے پر غیر تصدیق شدہ اکاؤنٹس ان خصوصیات تک رسائی نہیں کر سکتے جن کے لیے تصدیق ضروری ہے۔', 'show_rank' => 'ہوم پر مقبول درجہ بندی دکھائیں', 'show_new' => 'ہوم پر نئی تحریریں دکھائیں', 'allow_comments' => 'ابواب پر تبصروں کی اجازت دیں', 'smtp_status' => 'SMTP کی حالت', 'smtp_intro' => 'موجودہ ایپ میل ترتیب کے ذریعے ایک ٹیسٹ ای میل بھیجیں۔', 'testable' => 'ٹیسٹ کے لیے تیار', 'test_email' => 'ٹیسٹ ای میل', 'send_test_email' => 'ٹیسٹ ای میل بھیجیں', 'send_test_hint' => 'صرف ٹیسٹ ای میل بھیجی جاتی ہے؛ سائٹ کا ڈیٹا تبدیل نہیں ہوتا۔',
         'audit_eyebrow' => 'آڈٹ ٹریل', 'audit_intro' => 'پیش کش کے جائزے، اشاعت اور منتظمین کی کارروائیوں کا سراغ رکھیں۔', 'audit_action' => 'کارروائی', 'audit_operator' => 'کارروائی کرنے والا', 'audit_time' => 'وقت', 'audit_target' => 'ہدف', 'metadata' => 'میٹا ڈیٹا', 'author' => 'مصنف', 'no_audit_logs' => 'ابھی آڈٹ ریکارڈ نہیں۔',
     ],
-];
+]);

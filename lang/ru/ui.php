@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => [
         'name' => 'Yuejing',
         'tagline' => 'Встречайте истории здесь',
@@ -617,4 +617,4 @@ return [
         'author' => 'Автор',
         'no_audit_logs' => 'Нет audit records пока.',
     ],
-];
+]);

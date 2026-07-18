@@ -17,7 +17,6 @@ $translate = function ($value) use (&$translate, $map, $fallback, $keep) {
     if (is_array($value)) { foreach ($value as $key => $item) { $value[$key] = $translate($item); } return $value; }
     if (!is_string($value)) return $value;
     $result = strtr($value, $map);
-    if ($result === $value && preg_match('/[A-Za-z]/', $value) && !in_array($value, $keep, true)) { preg_match_all('/:[A-Za-z_][A-Za-z0-9_]*/', $value, $tokens); $result = $fallback.' '.implode(' ', $tokens[0]); }
     return $result;
 };
 return $translate($source);

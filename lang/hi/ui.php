@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'कहानियों से यहीं मिलिए'],
     'common' => ['skip_to_content' => 'मुख्य सामग्री पर जाएँ'],
     'locale' => ['choose' => 'भाषा चुनें', 'apply' => 'भाषा लागू करें'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'एडमिन कंसोल', 'settings_intro' => 'साइट की जानकारी, सत्यापन नीति और ईमेल वितरण प्रबंधित करें।', 'admin_permission' => 'एडमिनिस्ट्रेटर की पहुँच', 'basic_info' => 'मूल जानकारी', 'save_settings' => 'सेटिंग्स सहेजें', 'site_name' => 'साइट का नाम', 'site_tagline' => 'साइट टैगलाइन', 'contact_email' => 'संपर्क ईमेल', 'accent_color' => 'एक्सेंट रंग', 'coral' => 'कोरल लाल', 'moss' => 'मॉस हरा', 'ink' => 'स्याही काला', 'email_verification_required' => 'नए उपयोगकर्ताओं के लिए ईमेल सत्यापन आवश्यक करें', 'email_verification_hint' => 'चालू होने पर असत्यापित खाते सत्यापन आवश्यक सुविधाएँ इस्तेमाल नहीं कर पाएँगे।', 'show_rank' => 'होम पर ट्रेंडिंग रैंकिंग दिखाएँ', 'show_new' => 'होम पर नई रचनाएँ दिखाएँ', 'allow_comments' => 'अध्याय टिप्पणियों की अनुमति दें', 'smtp_status' => 'SMTP स्थिति', 'smtp_intro' => 'वर्तमान एप्लिकेशन मेल कॉन्फ़िगरेशन से एक परीक्षण ईमेल भेजें।', 'testable' => 'परीक्षण के लिए तैयार', 'test_email' => 'परीक्षण ईमेल', 'send_test_email' => 'परीक्षण ईमेल भेजें', 'send_test_hint' => 'केवल परीक्षण ईमेल भेजता है; साइट का कोई डेटा नहीं बदला जाता।',
         'audit_eyebrow' => 'ऑडिट ट्रेल', 'audit_intro' => 'सबमिशन समीक्षा, प्रकाशन और एडमिनिस्ट्रेटर की कार्रवाइयों पर नज़र रखें।', 'audit_action' => 'कार्रवाई', 'audit_operator' => 'ऑपरेटर', 'audit_time' => 'समय', 'audit_target' => 'लक्ष्य', 'metadata' => 'मेटाडेटा', 'author' => 'लेखक', 'no_audit_logs' => 'अभी कोई ऑडिट रिकॉर्ड नहीं है।',
     ],
-];
+]);

@@ -162,7 +162,9 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('author.submissions'))
-            ->assertForbidden();
+            ->assertForbidden()
+            ->assertSee(__('ui.messages.email_verification_required'))
+            ->assertDontSee('ui.messages.email_verification_required');
     }
 
     public function test_email_verification_requirement_allows_unverified_submission_pages_when_disabled(): void

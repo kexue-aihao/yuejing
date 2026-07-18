@@ -1,6 +1,6 @@
 <?php
 
-return [
+return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'app' => ['name' => 'Yuejing', 'tagline' => 'حيث تلتقي القصص'],
     'common' => ['skip_to_content' => 'الانتقال إلى المحتوى الرئيسي'],
     'locale' => ['choose' => 'اختر اللغة', 'apply' => 'تطبيق اللغة'],
@@ -103,4 +103,4 @@ return [
         'settings_eyebrow' => 'لوحة الإدارة', 'settings_intro' => 'أدر معلومات الموقع وسياسة التحقق وإرسال البريد.', 'admin_permission' => 'صلاحيات المدير', 'basic_info' => 'المعلومات الأساسية', 'save_settings' => 'حفظ الإعدادات', 'site_name' => 'اسم الموقع', 'site_tagline' => 'شعار الموقع', 'contact_email' => 'بريد التواصل', 'accent_color' => 'اللون المميز', 'coral' => 'أحمر مرجاني', 'moss' => 'أخضر طحلبي', 'ink' => 'أسود حبر', 'email_verification_required' => 'طلب التحقق من البريد للمستخدمين الجدد', 'email_verification_hint' => 'عند التفعيل، لا يمكن للحسابات غير المتحققة الوصول إلى الميزات التي تتطلب التحقق.', 'show_rank' => 'عرض الترتيب الرائج في الرئيسية', 'show_new' => 'عرض الأعمال الجديدة في الرئيسية', 'allow_comments' => 'السماح بتعليقات الفصول', 'smtp_status' => 'حالة SMTP', 'smtp_intro' => 'أرسل رسالة اختبار باستخدام إعدادات بريد التطبيق الحالية.', 'testable' => 'جاهز للاختبار', 'test_email' => 'رسالة اختبار', 'send_test_email' => 'إرسال رسالة اختبار', 'send_test_hint' => 'ترسل رسالة اختبار فقط؛ لا تتغير بيانات الموقع.',
         'audit_eyebrow' => 'سجل التدقيق', 'audit_intro' => 'تتبع مراجعة الإرسالات والنشر وإجراءات المديرين.', 'audit_action' => 'الإجراء', 'audit_operator' => 'المنفذ', 'audit_time' => 'الوقت', 'audit_target' => 'الهدف', 'metadata' => 'البيانات الوصفية', 'author' => 'المؤلف', 'no_audit_logs' => 'لا توجد سجلات تدقيق بعد.',
     ],
-];
+]);
