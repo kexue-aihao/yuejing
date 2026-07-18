@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\InteractionController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\MessagePageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PublicController;
@@ -52,6 +53,7 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::post('/language', [LanguageController::class, 'update'])->name('language.switch');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');

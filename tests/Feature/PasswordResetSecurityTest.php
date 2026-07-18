@@ -45,7 +45,7 @@ class PasswordResetSecurityTest extends TestCase
         ]);
 
         $response->assertOk()->assertExactJson([
-            'message' => 'Password reset successfully.',
+            'message' => __('ui.messages.reset_success'),
         ]);
         $this->assertDatabaseMissing('sessions', ['id' => $oldSessionId]);
         $this->assertDatabaseHas('sessions', ['id' => $otherSessionId]);
@@ -79,7 +79,7 @@ class PasswordResetSecurityTest extends TestCase
         ]);
 
         $response->assertStatus(422)->assertExactJson([
-            'message' => 'The password reset link is invalid or expired.',
+            'message' => __('ui.messages.reset_invalid'),
         ]);
         $this->assertStringNotContainsString($user->email, $response->getContent());
         $this->assertStringNotContainsString($invalidToken, $response->getContent());

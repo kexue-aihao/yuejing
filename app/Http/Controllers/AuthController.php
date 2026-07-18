@@ -45,21 +45,10 @@ class AuthController extends Controller
 
     public function resetPasswordPage(Request $request, string $token)
     {
-        $token = e($token);
-        $email = e((string) $request->query('email', ''));
-        $action = route('password.update');
-        $csrf = csrf_token();
-
-        return response(<<<HTML
-<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>重置密码</title></head>
-<body><main><h1>重置密码</h1><form method="POST" action="{$action}">
-<input type="hidden" name="_token" value="{$csrf}"><input type="hidden" name="token" value="{$token}">
-<label for="email">邮箱</label><input id="email" name="email" type="email" value="{$email}" required autocomplete="email">
-<label for="password">新密码</label><input id="password" name="password" type="password" required autocomplete="new-password">
-<label for="password_confirmation">确认新密码</label><input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password">
-<button type="submit">重置密码</button></form></main></body></html>
-HTML);
+        return view('pages.auth.reset-password', [
+            'token' => $token,
+            'email' => (string) $request->query('email', ''),
+        ]);
     }
 
     public function register(Request $request, AppSettingService $settings)
@@ -101,12 +90,12 @@ HTML);
 
         if (! $this->wantsJson($request)) {
             return redirect()->route('dashboard')->with('status', $verificationRequired
-                ? '注册成功。请查收验证邮件后继续使用需要验证邮箱的功能。'
-                : '注册成功，欢迎来到阅境。');
+                ? __('ui.messages.registration_verified')
+                : __('ui.messages.registration'));
         }
 
         return response()->json([
-            'message' => 'Registered successfully.',
+            'message' => __('ui.messages.registration'),
             'email_verification_required' => $verificationRequired,
             'user' => $user,
         ], 201);
@@ -130,10 +119,10 @@ HTML);
         if (! Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], (bool) ($credentials['remember'] ?? false))) {
             $this->audit($request, null, 'auth.login_failed');
             if (! $this->wantsJson($request)) {
-                return back()->withErrors(['email' => '邮箱或密码不正确。'])->withInput();
+                return back()->withErrors(['email' => __('ui.messages.invalid_credentials')])->withInput();
             }
 
-            return response()->json(['message' => 'Invalid credentials.'], 422);
+            return response()->json(['message' => __('ui.messages.invalid_credentials')], 422);
         }
 
         $user = $request->user();
@@ -156,7 +145,7 @@ HTML);
             }
 
             return response()->json([
-                'message' => 'Two-factor authentication is required.',
+                'message' => __('ui.messages.two_factor_setup'),
                 'two_factor_required' => true,
                 'challenge_url' => route('two-factor.challenge'),
             ], 202);
@@ -166,10 +155,10 @@ HTML);
         $this->audit($request, $user, 'auth.logged_in');
 
         if (! $this->wantsJson($request)) {
-            return redirect()->intended(route('dashboard'))->with('status', '登录成功，欢迎回来。');
+            return redirect()->intended(route('dashboard'))->with('status', __('ui.messages.login_success'));
         }
 
-        return response()->json(['message' => 'Logged in successfully.', 'user' => $user]);
+        return response()->json(['message' => __('ui.messages.login_success'), 'user' => $user]);
     }
 
     public function logout(Request $request)
@@ -181,10 +170,10 @@ HTML);
         $this->audit($request, $user, 'auth.logged_out');
 
         if (! $this->wantsJson($request)) {
-            return redirect()->route('home')->with('status', '你已安全退出。');
+            return redirect()->route('home')->with('status', __('ui.messages.logout'));
         }
 
-        return response()->json(['message' => 'Logged out successfully.']);
+        return response()->json(['message' => __('ui.messages.logout')]);
     }
 
     public function me(Request $request)
@@ -198,10 +187,10 @@ HTML);
         $status = PasswordBroker::sendResetLink($data);
 
         if ($this->wantsJson($request)) {
-            return response()->json(['message' => 'If the account exists, a password reset link has been sent.'], 200);
+            return response()->json(['message' => __('ui.messages.reset_sent')], 200);
         }
 
-        return back()->with('status', '如果该邮箱已注册，密码重置链接将发送至你的邮箱。');
+        return back()->with('status', __('ui.messages.reset_sent'));
     }
 
     public function resetPassword(Request $request)
@@ -226,10 +215,10 @@ HTML);
 
         if ($status !== PasswordBroker::PASSWORD_RESET) {
             if ($this->wantsJson($request)) {
-                return response()->json(['message' => 'The password reset link is invalid or expired.'], 422);
+                return response()->json(['message' => __('ui.messages.reset_invalid')], 422);
             }
 
-            return back()->withErrors(['email' => '密码重置链接无效或已过期。']);
+            return back()->withErrors(['email' => __('ui.messages.reset_invalid')]);
         }
 
         if ($resetUser !== null && config('session.driver') === 'database') {
@@ -240,10 +229,10 @@ HTML);
         }
 
         if ($this->wantsJson($request)) {
-            return response()->json(['message' => 'Password reset successfully.']);
+            return response()->json(['message' => __('ui.messages.reset_success')]);
         }
 
-        return redirect()->route('login')->with('status', '密码已重置，请重新登录。');
+        return redirect()->route('login')->with('status', __('ui.messages.reset_success'));
     }
 
     private function audit(Request $request, ?User $user, string $action): void

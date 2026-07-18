@@ -1,22 +1,22 @@
 @extends('layouts.app')
 
-@section('title', '作品投稿 · 阅境')
+@section('title', __('ui.author.title'))
 
 @section('content')
 <main class="site-shell dashboard-page">
     <div class="dashboard-head">
         <div>
-            <p class="eyebrow">AUTHOR STUDIO</p>
-            <h1>把你的故事交给阅境</h1>
-            <p>使用 Markdown 写作，随时切换编辑、分屏预览和所见即所得模式。</p>
+            <p class="eyebrow">{{ __('ui.author.eyebrow') }}</p>
+            <h1>{{ __('ui.author.heading') }}</h1>
+            <p>{{ __('ui.author.intro') }}</p>
         </div>
     </div>
 
     <div class="author-layout">
         <section class="panel">
             <div class="panel-heading">
-                <div><p class="panel-kicker">MARKDOWN EDITOR</p><h2>新建投稿</h2></div>
-                <span class="muted">草稿保存在当前浏览器</span>
+                <div><p class="panel-kicker">{{ __('ui.author.editor_eyebrow') }}</p><h2>{{ __('ui.author.new_submission') }}</h2></div>
+                <span class="muted">{{ __('ui.author.draft_saved') }}</span>
             </div>
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
             @if ($errors->any())<div class="alert">{{ $errors->first() }}</div>@endif
@@ -24,34 +24,34 @@
             <form class="form-stack" method="POST" action="{{ route('author.submissions.store') }}" data-markdown-editor>
                 @csrf
                 <input type="hidden" name="manuscript_format" value="markdown">
-                <div class="form-field"><label for="title">作品名称</label><input id="title" name="title" value="{{ old('title') }}" placeholder="给故事一个名字" required></div>
-                <div class="form-field"><label for="genre">作品分类</label><select id="genre" name="genre"><option>都市情感</option><option>古风言情</option><option>悬疑推理</option><option>科幻世界</option><option>青春成长</option></select></div>
-                <div class="form-field"><label for="summary">作品简介</label><textarea id="summary" name="summary" placeholder="用几句话介绍你的故事、人物和想表达的主题" required>{{ old('summary') }}</textarea></div>
+                <div class="form-field"><label for="title">{{ __('ui.author.title_label') }}</label><input id="title" name="title" value="{{ old('title') }}" placeholder="{{ __('ui.author.title_placeholder') }}" required></div>
+                <div class="form-field"><label for="genre">{{ __('ui.author.genre_label') }}</label><select id="genre" name="genre"><option value="都市情感">{{ __('ui.home.categories.urban') }}</option><option value="古风言情">{{ __('ui.home.categories.ancient') }}</option><option value="悬疑推理">{{ __('ui.home.categories.mystery') }}</option><option value="科幻世界">{{ __('ui.home.categories.scifi') }}</option><option value="青春成长">{{ __('ui.home.categories.youth') }}</option></select></div>
+                <div class="form-field"><label for="summary">{{ __('ui.author.summary_label') }}</label><textarea id="summary" name="summary" placeholder="{{ __('ui.author.summary_placeholder') }}" required>{{ old('summary') }}</textarea></div>
                 <div class="form-field manuscript-editor-field">
-                    <div class="editor-label-row"><label for="content">首章内容（Markdown）</label><button class="text-button" type="button" data-clear-markdown-draft>清除草稿</button></div>
-                    <textarea id="content" name="content" data-markdown-source placeholder="# 第一章\n\n从这里开始写下第一章">{{ old('content') }}</textarea>
-                    <div data-vditor-editor hidden aria-label="Markdown 投稿编辑器"></div>
-                    <p class="form-help">支持标题、粗体、引用、列表、代码、表格、链接和分屏预览。图片请先使用公开图片链接。</p>
+                    <div class="editor-label-row"><label for="content">{{ __('ui.author.first_chapter') }}</label><button class="text-button" type="button" data-clear-markdown-draft>{{ __('ui.author.clear_draft') }}</button></div>
+                    <textarea id="content" name="content" data-markdown-source placeholder="{{ __('ui.author.content_placeholder') }}">{{ old('content') }}</textarea>
+                    <div data-vditor-editor hidden aria-label="{{ __('ui.author.editor_label') }}"></div>
+                    <p class="form-help">{{ __('ui.author.editor_help') }}</p>
                 </div>
-                <button class="button button-primary" type="submit">提交审核 <span>→</span></button>
+                <button class="button button-primary" type="submit">{{ __('ui.author.submit_review') }} <span>→</span></button>
             </form>
         </section>
 
         <aside class="author-note">
-            <p class="eyebrow">WRITING NOTES</p>
-            <h2>写给愿意认真讲故事的人</h2>
-            <p>好的作品不急着抵达终点。先把你真正想说的那句话写下来，阅境会陪你把它变成一部完整的小说。</p>
-            <ul><li>每周至少更新 3 次</li><li>尊重原创，拒绝搬运</li><li>审核结果将在 3 个工作日内反馈</li></ul>
-            <p class="no-script-note">关闭 JavaScript 后仍可使用原始 Markdown 文本框提交。</p>
+            <p class="eyebrow">{{ __('ui.author.notes_eyebrow') }}</p>
+            <h2>{{ __('ui.author.notes_title') }}</h2>
+            <p>{{ __('ui.author.notes_intro') }}</p>
+            <ul><li>{{ __('ui.author.rule_frequency') }}</li><li>{{ __('ui.author.rule_original') }}</li><li>{{ __('ui.author.rule_review') }}</li></ul>
+            <p class="no-script-note">{{ __('ui.author.no_script') }}</p>
         </aside>
     </div>
 
     @if (isset($submissions) && $submissions->isNotEmpty())
         <section class="panel submission-history">
-            <div class="panel-heading"><h2>投稿记录</h2><span class="muted">共 {{ $submissions->total() }} 篇</span></div>
+            <div class="panel-heading"><h2>{{ __('ui.author.history') }}</h2><span class="muted">{{ __('ui.author.total_submissions', ['count' => $submissions->total()]) }}</span></div>
             <div class="submission-mini-list">
                 @foreach ($submissions as $submission)
-                    <div><span><strong>{{ $submission->title }}</strong><small>{{ $submission->created_at?->format('Y-m-d') }} @if ($submission->review_note) · {{ $submission->review_note }} @endif</small></span><span class="status {{ $submission->status === 'pending' ? 'pending' : ($submission->status === 'rejected' ? 'rejected' : '') }}">{{ ['pending' => '审核中', 'approved' => '已通过', 'rejected' => '需修改'][$submission->status] ?? $submission->status }}</span></div>
+                    <div><span><strong>{{ $submission->title }}</strong><small>{{ $submission->created_at?->format('Y-m-d') }} @if ($submission->review_note) · {{ $submission->review_note }} @endif</small></span><span class="status {{ $submission->status === 'pending' ? 'pending' : ($submission->status === 'rejected' ? 'rejected' : '') }}">{{ ['pending' => __('ui.author.reviewing'), 'approved' => __('ui.author.approved'), 'rejected' => __('ui.author.needs_changes')][$submission->status] ?? __('ui.components.no_content') }}</span></div>
                 @endforeach
             </div>
             <div class="pagination-wrap">{{ $submissions->links() }}</div>

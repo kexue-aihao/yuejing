@@ -179,7 +179,7 @@ class GroupChatController extends Controller
         });
 
         return response()->json([
-            'message' => 'Group created.',
+            'message' => __('ui.messages.operation_success'),
             'group' => [
                 'id' => $group->getKey(),
                 'creator_id' => $group->creator_id,
@@ -204,7 +204,7 @@ class GroupChatController extends Controller
 
         if ($member->exists) {
             return response()->json([
-                'message' => 'User is already a member.',
+                'message' => __('ui.messages.operation_success'),
                 'member' => $this->memberPayload($member),
             ]);
         }
@@ -217,7 +217,7 @@ class GroupChatController extends Controller
         $member->save();
 
         return response()->json([
-            'message' => 'Member added.',
+            'message' => __('ui.messages.operation_success'),
             'member' => $this->memberPayload($member),
         ], 201);
     }
@@ -228,7 +228,7 @@ class GroupChatController extends Controller
 
         if ((int) $user->getKey() === (int) $group->creator_id) {
             throw ValidationException::withMessages([
-                'user_id' => ['The group creator cannot be removed.'],
+                'user_id' => [trans('validation.in', ['attribute' => trans('validation.attributes.name')])],
             ]);
         }
 
@@ -237,7 +237,7 @@ class GroupChatController extends Controller
             ->where('user_id', $user->getKey())
             ->first();
 
-        abort_unless($member, 404, 'User is not a member of this group.');
+        abort_unless($member, 404);
 
         $messageIds = ChatGroupMessage::query()
             ->where('chat_group_id', $group->getKey())
@@ -252,7 +252,7 @@ class GroupChatController extends Controller
 
         $member->delete();
 
-        return response()->json(['message' => 'Member removed.']);
+        return response()->json(['message' => __('ui.messages.operation_success')]);
     }
 
     public function sendMessage(Request $request, ChatGroup $group): JsonResponse
@@ -264,7 +264,7 @@ class GroupChatController extends Controller
         $body = trim($data['body']);
         if ($body === '') {
             throw ValidationException::withMessages([
-                'body' => ['The body field must contain at least one non-whitespace character.'],
+                'body' => [trans('validation.required', ['attribute' => trans('validation.attributes.content')])],
             ]);
         }
 
@@ -294,7 +294,7 @@ class GroupChatController extends Controller
         });
 
         return response()->json([
-            'message' => 'Message sent.',
+            'message' => __('ui.messages.operation_success'),
             'data' => $this->messagePayload($message),
         ], 201);
     }
@@ -312,7 +312,7 @@ class GroupChatController extends Controller
 
         if (! $hasMessageId && ! $latest) {
             throw ValidationException::withMessages([
-                'message_id' => ['Provide message_id or set latest to true.'],
+                'message_id' => [trans('validation.required', ['attribute' => trans('validation.attributes.content')])],
             ]);
         }
 
@@ -321,11 +321,11 @@ class GroupChatController extends Controller
             ? $messageQuery->whereKey($data['message_id'])->first()
             : $messageQuery->latest('id')->first();
 
-        abort_unless($target || ! $hasMessageId, 404, 'Message does not belong to this group.');
+        abort_unless($target || ! $hasMessageId, 404);
 
         if (! $target) {
             return response()->json([
-                'message' => 'No messages to mark as read.',
+                'message' => __('ui.messages.operation_success'),
                 'message_id' => null,
                 'marked_count' => 0,
             ]);
@@ -360,7 +360,7 @@ class GroupChatController extends Controller
         });
 
         return response()->json([
-            'message' => 'Messages marked as read.',
+            'message' => __('ui.messages.operation_success'),
             'message_id' => $target->getKey(),
             'marked_count' => $messages->count(),
         ]);
@@ -451,7 +451,7 @@ class GroupChatController extends Controller
     private function authenticatedUser(Request $request): User
     {
         $user = $request->user();
-        abort_unless($user instanceof User, 401, 'Authentication required.');
+        abort_unless($user instanceof User, 401);
 
         return $user;
     }
@@ -464,10 +464,10 @@ class GroupChatController extends Controller
             ->where('user_id', $user->getKey())
             ->first();
 
-        abort_unless($member, 403, 'You are not a member of this group.');
+        abort_unless($member, 403);
 
         if ($roles !== []) {
-            abort_unless(in_array($member->role, $roles, true), 403, 'You are not allowed to manage this group.');
+            abort_unless(in_array($member->role, $roles, true), 403);
         }
 
         return $user;

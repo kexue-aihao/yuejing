@@ -6,6 +6,14 @@ import '@fontsource/noto-sans-sc/600.css';
 import '@fontsource/noto-serif-sc/400.css';
 import '@fontsource/noto-serif-sc/600.css';
 
+const I18N = window.YuejingI18n || {};
+
+function tr(path, replacements = {}) {
+    const value = path.split('.').reduce((current, key) => current?.[key], I18N);
+    if (typeof value !== 'string') return path;
+    return Object.entries(replacements).reduce((text, [key, replacement]) => text.replaceAll(`:${key}`, String(replacement)), value);
+}
+
 class ThemeManager {
     constructor() {
         this.STORAGE_KEY = 'yuejing-theme';
@@ -96,9 +104,9 @@ function initMobileMenu() {
         menu.setAttribute('aria-hidden', String(!isOpen));
         menu.inert = !isOpen;
         toggle.setAttribute('aria-expanded', String(isOpen));
-        toggle.setAttribute('aria-label', isOpen ? '关闭菜单' : '打开菜单');
+        toggle.setAttribute('aria-label', isOpen ? tr('frontend.close_menu') : tr('frontend.open_menu'));
         const toggleText = toggle.querySelector('.sr-only');
-        if (toggleText) toggleText.textContent = isOpen ? '关闭菜单' : '打开菜单';
+        if (toggleText) toggleText.textContent = isOpen ? tr('frontend.close_menu') : tr('frontend.open_menu');
         if (isOpen) {
             requestAnimationFrame(() => closeBtn?.focus());
         } else {
@@ -121,6 +129,18 @@ function initMobileMenu() {
 
     document.addEventListener('click', (event) => {
         if (isOpen() && !menu.contains(event.target) && !toggle.contains(event.target)) setMenuState(false);
+    });
+}
+
+// ── Language Switcher ──
+function initLanguageSwitcher() {
+    document.querySelectorAll('[data-language-switcher]').forEach((form) => {
+        const select = form.querySelector('select[name="locale"]');
+        if (!select) return;
+        select.addEventListener('change', () => {
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.submit();
+        });
     });
 }
 
@@ -155,7 +175,7 @@ function initReaderControls() {
             button.disabled = isDecrease ? size <= minSize : size >= maxSize;
             button.setAttribute('aria-disabled', String(button.disabled));
         });
-        announce(`字号 ${size} 像素`);
+        announce(tr('frontend.font_size', { size }));
         try { localStorage.setItem(sizeKey, String(size)); } catch { /* Ignore unavailable storage. */ }
     };
 
@@ -169,7 +189,7 @@ function initReaderControls() {
         document.body.classList.toggle('reader-night');
         const isNight = document.body.classList.contains('reader-night');
         themeButton.setAttribute('aria-pressed', String(isNight));
-        announce(isNight ? '已开启阅读夜间模式' : '已关闭阅读夜间模式');
+        announce(isNight ? tr('frontend.night_on') : tr('frontend.night_off'));
         try { localStorage.setItem(nightKey, String(isNight)); } catch { /* Ignore unavailable storage. */ }
     });
     themeButton?.setAttribute('aria-pressed', String(document.body.classList.contains('reader-night')));
@@ -197,11 +217,11 @@ function readApiConfig(element) {
     try {
         const config = JSON.parse(element.dataset.api || '{}');
         if (!config || typeof config !== 'object' || !requiredKeys.every((key) => isConfiguredApiUrl(config[key]))) {
-            throw new Error('消息接口配置缺失');
+            throw new Error(tr('frontend.api_missing'));
         }
         return config;
     } catch (error) {
-        console.error('[communication] API 配置解析失败', error);
+        console.error(`[communication] ${tr('frontend.api_parse_failed')}`, error);
         return {};
     }
 }
@@ -217,7 +237,7 @@ function csrfHeaders(json = false) {
 
 async function apiRequest(url, options = {}) {
     if (!isConfiguredApiUrl(url)) {
-        throw new Error('消息接口配置缺失，无法发送请求。');
+        throw new Error(tr('frontend.api_request_missing'));
     }
 
     const response = await fetch(url, {
@@ -232,7 +252,7 @@ async function apiRequest(url, options = {}) {
     const payload = contentType.includes('application/json') ? await response.json() : await response.text();
     if (!response.ok) {
         const message = typeof payload === 'object' ? payload.message : payload;
-        throw new Error(message || `请求失败（${response.status}）`);
+        throw new Error(message || tr('frontend.request_failed', { status: response.status }));
     }
     return payload;
 }
@@ -273,14 +293,14 @@ function formatTime(value) {
     if (!value) return '';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
-    return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+    return new Intl.DateTimeFormat(document.documentElement.lang || 'en', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
 function entityId(entity, fallback = '') {
     return entity?.id ?? entity?.conversation_id ?? entity?.group_id ?? entity?.user_id ?? fallback;
 }
 
-function entityName(entity, fallback = '未命名') {
+function entityName(entity, fallback = tr('frontend.unnamed_user')) {
     return entity?.name || entity?.title || entity?.username || entity?.display_name || fallback;
 }
 
@@ -318,14 +338,14 @@ function renderMessage(message, currentUserId, group = false) {
     const receiver = messageReceiver(message);
     const senderId = message?.sender_id ?? sender?.id;
     const own = String(senderId) === String(currentUserId);
-    const senderName = own ? '我' : entityName(sender, message?.sender_name || '对方');
-    const receiverName = entityName(receiver, message?.recipient_name || (group ? '群聊成员' : own ? '对方' : '我'));
+    const senderName = own ? tr('frontend.me') : entityName(sender, message?.sender_name || tr('frontend.other'));
+    const receiverName = entityName(receiver, message?.recipient_name || (group ? tr('frontend.group_member') : own ? tr('frontend.other') : tr('frontend.me')));
     const read = messageRead(message);
     const stats = messageReadStats(message);
     const statsText = group && stats
-        ? ` · 已读 ${Array.isArray(stats) ? stats.length : (stats.read ?? stats.count ?? stats.total ?? 0)}`
+        ? ` · ${tr('frontend.read_count', { count: Array.isArray(stats) ? stats.length : (stats.read ?? stats.count ?? stats.total ?? 0) })}`
         : '';
-    const status = group ? statsText : ` · ${read ? '已读' : '未读'}`;
+    const status = group ? statsText : ` · ${read ? tr('frontend.read') : tr('frontend.unread')}`;
     const id = entityId(message);
 
     return `<article class="message-bubble-row ${own ? 'is-own' : ''}" data-message-id="${escapeHtml(id)}">
@@ -388,14 +408,14 @@ function initPrivateMessages() {
 
     const renderConversations = () => {
         if (!conversations.length) {
-            list.innerHTML = '<p class="communication-empty">还没有会话，搜索一位用户开始聊天。</p>';
+            list.innerHTML = `<p class="communication-empty">${escapeHtml(tr('frontend.empty_conversations'))}</p>`;
             return;
         }
         list.innerHTML = conversations.map((conversation) => {
             const id = entityId(conversation);
             const other = conversation.other_user || conversation.user || conversation.participant || conversation.recipient || {};
-            const name = entityName(other, entityName(conversation, '新会话'));
-            const preview = conversation.last_message?.body || conversation.last_message?.content || conversation.preview || '开始一段新的对话';
+            const name = entityName(other, entityName(conversation, tr('frontend.new_conversation')));
+            const preview = conversation.last_message?.body || conversation.last_message?.content || conversation.preview || tr('frontend.start_conversation');
             const unread = conversation.unread_count ?? conversation.unread ?? 0;
             return `<button class="conversation-item ${String(id) === activeId ? 'is-active' : ''}" type="button" data-conversation-id="${escapeHtml(id)}" data-recipient-id="${escapeHtml(entityId(other))}" data-recipient-name="${escapeHtml(name)}">
                 <span class="avatar avatar-small">${escapeHtml(name.slice(0, 1))}</span><span class="conversation-copy"><strong>${escapeHtml(name)}</strong><small>${escapeHtml(preview)}</small></span>${Number(unread) > 0 ? `<b class="unread-count">${escapeHtml(unread)}</b>` : ''}
@@ -408,12 +428,12 @@ function initPrivateMessages() {
 
     const renderUsers = (users) => {
         if (!users.length) {
-            results.innerHTML = '<p class="search-empty">没有找到匹配的用户。</p>';
+            results.innerHTML = `<p class="search-empty">${escapeHtml(tr('frontend.no_users'))}</p>`;
             return;
         }
         results.innerHTML = users.map((user) => {
             const id = entityId(user);
-            const name = entityName(user, '未命名用户');
+            const name = entityName(user, tr('frontend.unnamed_user'));
             return `<button type="button" class="search-result" data-user-id="${escapeHtml(id)}" data-user-name="${escapeHtml(name)}"><span class="avatar avatar-small">${escapeHtml(name.slice(0, 1))}</span><span><strong>${escapeHtml(name)}</strong><small>${escapeHtml(user.email || user.username || '')}</small></span></button>`;
         }).join('');
         results.querySelectorAll('[data-user-id]').forEach((button) => {
@@ -436,7 +456,7 @@ function initPrivateMessages() {
     const renderMessages = (messages) => {
         messageList.innerHTML = messages.length
             ? messages.map((message) => renderMessage(message, currentUserId, false, { otherName: activeRecipientName })).join('')
-            : '<p class="communication-empty">这段对话还没有消息，写下第一句吧。</p>';
+            : `<p class="communication-empty">${escapeHtml(tr('frontend.empty_messages'))}</p>`;
         messageList.scrollTop = messageList.scrollHeight;
     };
 
@@ -455,8 +475,8 @@ function initPrivateMessages() {
             lastId = Math.max(lastId, maxId);
             if (!silent) {
                 const other = conversation.other_user || conversation.user || conversation.participant || {};
-                title.textContent = entityName(other, entityName(conversation, '私信会话'));
-                meta.textContent = conversation.email || other.email || '私信内容仅对会话双方可见。';
+                title.textContent = entityName(other, entityName(conversation, tr('frontend.private_conversation')));
+                meta.textContent = conversation.email || other.email || tr('frontend.private_visible');
             }
             renderMessages(messages);
             await markRead(id);
@@ -480,13 +500,13 @@ function initPrivateMessages() {
         if (!id) return;
         const url = `${api.stream}/${encodeURIComponent(id)}/stream?after_id=${encodeURIComponent(lastId)}`;
         source = new EventSource(url, { withCredentials: true });
-        setPanelStatus(status, '实时连接中', 'connected');
+        setPanelStatus(status, tr('frontend.connected'), 'connected');
         source.onmessage = (event) => {
             try { appendStreamPayload(JSON.parse(event.data)); } catch { /* Ignore keep-alive or malformed events. */ }
         };
         source.onerror = () => {
             stopStream();
-            setPanelStatus(status, '连接暂时中断，正在重试', 'retrying');
+            setPanelStatus(status, tr('frontend.retrying'), 'retrying');
             pollTimer = window.setInterval(() => loadConversation(activeId, true), 4000);
             reconnectTimer = window.setTimeout(() => openStream(activeId), 2500);
         };
@@ -499,13 +519,13 @@ function initPrivateMessages() {
         const participant = existing?.participant || existing?.user || {};
         const resolvedName = userName || entityName(participant, '');
         setActiveForm(id, userId || entityId(participant), resolvedName);
-        title.textContent = resolvedName || '正在打开会话…';
-        meta.textContent = id ? '正在加载消息…' : '发送第一条消息后会创建会话。';
-        help.textContent = id ? '消息发送后会自动标记为已读。' : '请选择用户后发送消息。';
+        title.textContent = resolvedName || tr('frontend.loading_messages');
+        meta.textContent = id ? tr('frontend.loading_messages') : tr('frontend.new_message');
+        help.textContent = id ? tr('frontend.send_read') : tr('frontend.choose_user');
         renderConversations();
         if (!id) {
-            messageList.innerHTML = '<p class="communication-empty">这是新的会话，写下第一句吧。</p>';
-            setPanelStatus(status, '等待发送', 'idle');
+            messageList.innerHTML = `<p class="communication-empty">${escapeHtml(tr('frontend.empty_messages'))}</p>`;
+            setPanelStatus(status, tr('frontend.waiting_send'), 'idle');
             return;
         }
         await loadConversation(id);
@@ -546,7 +566,7 @@ function initPrivateMessages() {
         }
     });
 
-    setPanelStatus(status, '加载中', 'loading');
+    setPanelStatus(status, tr('frontend.loading'), 'loading');
     loadConversations();
 }
 
@@ -585,24 +605,24 @@ function initGroups() {
 
     const renderGroups = () => {
         if (!groups.length) {
-            groupList.innerHTML = '<p class="communication-empty">还没有群聊，创建一个共读小组吧。</p>';
+            groupList.innerHTML = `<p class="communication-empty">${escapeHtml(tr('frontend.empty_groups'))}</p>`;
             return;
         }
         groupList.innerHTML = groups.map((group) => {
             const id = entityId(group);
-            const name = entityName(group, '未命名群聊');
+            const name = entityName(group, tr('frontend.unnamed_group'));
             const members = group.member_count ?? group.members_count ?? group.members?.length ?? '';
-            return `<button type="button" class="conversation-item ${String(id) === activeId ? 'is-active' : ''}" data-group-id="${escapeHtml(id)}"><span class="avatar avatar-small">${escapeHtml(name.slice(0, 1))}</span><span class="conversation-copy"><strong>${escapeHtml(name)}</strong><small>${members === '' ? '交流群' : `${escapeHtml(members)} 位成员`}</small></span></button>`;
+            return `<button type="button" class="conversation-item ${String(id) === activeId ? 'is-active' : ''}" data-group-id="${escapeHtml(id)}"><span class="avatar avatar-small">${escapeHtml(name.slice(0, 1))}</span><span class="conversation-copy"><strong>${escapeHtml(name)}</strong><small>${members === '' ? tr('frontend.group_label') : escapeHtml(tr('frontend.member_count', { count: members }))}</small></span></button>`;
         }).join('');
         groupList.querySelectorAll('[data-group-id]').forEach((button) => button.addEventListener('click', () => selectGroup(button.dataset.groupId)));
     };
 
     const renderUserChoices = () => {
         const choices = users.filter((user) => String(entityId(user)) !== String(currentUserId));
-        const optionHtml = choices.map((user) => `<option value="${escapeHtml(entityId(user))}">${escapeHtml(entityName(user, '未命名用户'))}</option>`).join('');
-        memberSelect.innerHTML = `<option value="">选择成员</option>${optionHtml}`;
+        const optionHtml = choices.map((user) => `<option value="${escapeHtml(entityId(user))}">${escapeHtml(entityName(user, tr('frontend.unnamed_user')))}</option>`).join('');
+        memberSelect.innerHTML = `<option value="">${escapeHtml(tr('frontend.choose_member'))}</option>${optionHtml}`;
         const checklist = app.querySelector('[data-user-checklist]');
-        checklist.innerHTML = choices.length ? choices.map((user) => `<label class="check-option"><input type="checkbox" name="member_ids[]" value="${escapeHtml(entityId(user))}"><span>${escapeHtml(entityName(user, '未命名用户'))}</span></label>`).join('') : '<p class="form-help">没有可邀请的用户。</p>';
+        checklist.innerHTML = choices.length ? choices.map((user) => `<label class="check-option"><input type="checkbox" name="member_ids[]" value="${escapeHtml(entityId(user))}"><span>${escapeHtml(entityName(user, tr('frontend.unnamed_user')))}</span></label>`).join('') : `<p class="form-help">${escapeHtml(tr('frontend.no_invitable'))}</p>`;
     };
 
     const loadUsers = async () => {
@@ -613,21 +633,21 @@ function initGroups() {
     };
 
     const renderMembers = (members) => {
-        memberCount.textContent = `${members.length} 人`;
+        memberCount.textContent = tr('frontend.member_count', { count: members.length });
         memberList.innerHTML = members.length ? members.map((member) => {
             const user = member.user || member;
             const id = entityId(user, member.user_id);
-            const name = entityName(user, '未命名用户');
-            const remove = String(id) === String(currentUserId) ? '' : `<button type="button" title="移除成员" data-remove-member="${escapeHtml(id)}">×</button>`;
+            const name = entityName(user, tr('frontend.unnamed_user'));
+            const remove = String(id) === String(currentUserId) ? '' : `<button type="button" title="${escapeHtml(tr('frontend.remove_member'))}" data-remove-member="${escapeHtml(id)}">×</button>`;
             return `<span class="member-chip"><span class="avatar avatar-tiny">${escapeHtml(name.slice(0, 1))}</span>${escapeHtml(name)}${remove}</span>`;
-        }).join('') : '<span class="muted">暂无成员信息。</span>';
+        }).join('') : `<span class="muted">${escapeHtml(tr('frontend.no_members'))}</span>`;
         memberList.querySelectorAll('[data-remove-member]').forEach((button) => button.addEventListener('click', () => removeMember(button.dataset.removeMember)));
     };
 
     const renderMessages = (messages) => {
         messageList.innerHTML = messages.length
             ? messages.map((message) => renderMessage(message, currentUserId, true)).join('')
-            : '<p class="communication-empty">这个群聊还没有消息，开始聊聊吧。</p>';
+            : `<p class="communication-empty">${escapeHtml(tr('frontend.empty_group_messages'))}</p>`;
         messageList.scrollTop = messageList.scrollHeight;
     };
 
@@ -645,8 +665,8 @@ function initGroups() {
             const maxId = messages.reduce((max, message) => Math.max(max, Number(entityId(message, 0)) || 0), lastId);
             lastId = Math.max(lastId, maxId);
             if (!silent) {
-                groupTitle.textContent = entityName(group, '交流群');
-                groupMeta.textContent = `${members.length} 位成员 · 消息已读状态会随成员更新`;
+                groupTitle.textContent = entityName(group, tr('frontend.group_default'));
+                groupMeta.textContent = tr('frontend.group_meta', { count: members.length });
                 renderMembers(members);
             }
             renderMessages(messages);
@@ -670,13 +690,13 @@ function initGroups() {
         stopStream();
         if (!id) return;
         source = new EventSource(`${api.stream}/${encodeURIComponent(id)}/stream?after_id=${encodeURIComponent(lastId)}`, { withCredentials: true });
-        setPanelStatus(status, '实时连接中', 'connected');
+        setPanelStatus(status, tr('frontend.connected'), 'connected');
         source.onmessage = (event) => {
             try { appendStreamPayload(JSON.parse(event.data)); } catch { /* Ignore keep-alive or malformed events. */ }
         };
         source.onerror = () => {
             stopStream();
-            setPanelStatus(status, '连接暂时中断，正在重试', 'retrying');
+            setPanelStatus(status, tr('frontend.retrying'), 'retrying');
             pollTimer = window.setInterval(() => loadGroup(activeId, true), 4000);
             reconnectTimer = window.setTimeout(() => openStream(activeId), 2500);
         };
@@ -687,9 +707,9 @@ function initGroups() {
         activeId = String(id || '');
         lastId = 0;
         renderGroups();
-        groupTitle.textContent = '正在打开群聊…';
-        groupMeta.textContent = '正在加载成员和消息…';
-        sendHelp.textContent = '消息发送后会自动标记为已读。';
+        groupTitle.textContent = tr('frontend.opening_group');
+        groupMeta.textContent = tr('frontend.loading_group');
+        sendHelp.textContent = tr('frontend.send_group_read');
         await loadGroup(activeId);
         openStream(activeId);
     }
@@ -736,7 +756,7 @@ function initGroups() {
         try { groups = collection(await apiRequest(api.index), ['groups', 'items']); renderGroups(); } catch (error) { groupList.innerHTML = `<p class="communication-error">${escapeHtml(error.message)}</p>`; }
     }
 
-    setPanelStatus(status, '加载中', 'loading');
+    setPanelStatus(status, tr('frontend.loading'), 'loading');
     loadUsers();
     loadGroups();
 }
@@ -767,6 +787,8 @@ function initMarkdownEditors() {
         // available until this succeeds, preserving the no-JavaScript fallback.
         editor.hidden = false;
         const instance = new Vditor(editor, {
+            lang: I18N.editorLocale || 'en_US',
+            rtl: I18N.editorDirection === 'rtl' || document.documentElement.dir === 'rtl',
             mode: 'sv',
             height: 460,
             value: initialValue,
@@ -801,6 +823,7 @@ function initMarkdownEditors() {
 document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
     initMobileMenu();
+    initLanguageSwitcher();
     initReaderControls();
     initToastDismiss();
     initPrivateMessages();

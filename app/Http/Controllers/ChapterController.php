@@ -29,7 +29,7 @@ class ChapterController extends Controller
         $chapter = $novel->chapters()->create($data);
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '章节已创建。');
+            return back()->with('status', __('ui.messages.chapter_created'));
         }
 
         return response()->json($chapter, 201);
@@ -43,7 +43,7 @@ class ChapterController extends Controller
         $chapter->update($this->setPublicationTimestamp($data, $chapter));
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '章节已更新。');
+            return back()->with('status', __('ui.messages.chapter_updated'));
         }
 
         return response()->json($chapter);
@@ -56,10 +56,10 @@ class ChapterController extends Controller
         $chapter->delete();
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '章节已删除。');
+            return back()->with('status', __('ui.messages.chapter_deleted'));
         }
 
-        return response()->json(['message' => 'Chapter deleted.']);
+        return response()->json(['message' => __('ui.messages.chapter_deleted')]);
     }
 
     private function setPublicationTimestamp(array $data, ?Chapter $chapter = null): array

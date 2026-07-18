@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', '阅境 · 投稿审计日志')
+@section('title', __('ui.admin.audit_logs').' · '.__('ui.admin.title_suffix'))
 @section('content')
 <main class="site-shell dashboard-page">
     <div class="dashboard-head">
         <div>
-            <p class="eyebrow">SUBMISSION AUDIT</p>
-            <h1>投稿审计日志</h1>
-            <p>只记录投稿提交、批准和拒绝，追踪作品审核的完整链路。</p>
+            <p class="eyebrow">{{ __('ui.admin.audit_eyebrow') }}</p>
+            <h1>{{ __('ui.admin.audit_logs') }}</h1>
+            <p>{{ __('ui.admin.audit_intro') }}</p>
         </div>
     </div>
     <div class="dashboard-grid">
@@ -19,34 +19,34 @@
                             $submission = $log->auditable;
                             $metadata = $log->metadata ?? [];
                             $actionLabels = [
-                                'submission.created' => '投稿提交',
-                                'submission.approved' => '批准发布',
-                                'submission.rejected' => '拒绝投稿',
+                                'submission.created' => __('ui.admin.review_submissions'),
+                                'submission.approved' => __('ui.admin.approve_publish'),
+                                'submission.rejected' => __('ui.admin.reject_submission'),
                             ];
                         @endphp
                         <article class="submission-audit-row">
                             <div class="submission-audit-main">
                                 <div class="submission-audit-heading">
-                                    <strong>{{ $actionLabels[$log->action] ?? $log->action }}</strong>
-                                    <span class="submission-audit-id">投稿 #{{ $log->auditable_id }}</span>
+                                    <strong>{{ $actionLabels[$log->action] ?? __('ui.components.no_content') }}</strong>
+                                    <span class="submission-audit-id">{{ __('ui.admin.review_submissions') }} #{{ $log->auditable_id }}</span>
                                 </div>
-                                <h2>{{ $submission?->title ?? ($metadata['title'] ?? '投稿已删除') }}</h2>
+                                <h2>{{ $submission?->title ?? ($metadata['title'] ?? __('ui.admin.no_matching_submissions')) }}</h2>
                                 <p class="submission-audit-meta">
-                                    作者：{{ $submission?->user?->name ?? '未知作者' }}
-                                    @if($submission?->category?->name) · 分类：{{ $submission->category->name }} @endif
-                                    · 操作人：{{ $log->user?->name ?? '系统' }}
+                                    {{ __('ui.admin.anonymous_author') }}: {{ $submission?->user?->name ?? __('ui.admin.anonymous_author') }}
+                                    @if($submission?->category?->name) · {{ __('ui.admin.category_name') }}: {{ $submission->category->name }} @endif
+                                    · {{ __('ui.admin.audit_operator') }}: {{ $log->user?->name ?? __('ui.admin.console') }}
                                 </p>
                                 @if(!empty($metadata['review_note']))
-                                    <p class="submission-audit-note">审核意见：{{ $metadata['review_note'] }}</p>
+                                    <p class="submission-audit-note">{{ __('ui.admin.review_note_prefix') }}{{ $metadata['review_note'] }}</p>
                                 @endif
                             </div>
                             <div class="submission-audit-side">
                                 <time datetime="{{ $log->created_at?->toIso8601String() }}">{{ $log->created_at?->format('Y-m-d H:i:s') }}</time>
-                                <span>投稿来源 IP：{{ $log->ip_address ?? '未知 IP' }}</span>
+                                <span>{{ __('ui.components.current_ip') }}: {{ $log->ip_address ?? __('ui.components.no_content') }}</span>
                             </div>
                         </article>
                     @empty
-                        <x-empty-state icon="📋" message="暂无投稿审计记录。" compact />
+                        <x-empty-state icon="📋" :message="__('ui.admin.no_audit_logs')" compact />
                     @endforelse
                 </div>
                 <div class="pagination-wrap">{{ $logs->links() }}</div>

@@ -9,6 +9,9 @@ class PageController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user();
+        $activeSection = in_array($request->query('section'), ['messages', 'groups'], true)
+            ? $request->query('section')
+            : 'dashboard';
 
         $reading = $user->readingRecords()
             ->with(['novel.author:id,name', 'chapter:id,title,chapter_number'])
@@ -37,16 +40,37 @@ class PageController extends Controller
             'favoriteCount' => $user->favorites()->count(),
             'readingCount' => $user->readingRecords()->count(),
             'submissionCounts' => $submissionCounts,
+            'activeSection' => $activeSection,
+            'messagesApi' => [
+                'users' => url('/api/messages/users'),
+                'index' => url('/api/messages'),
+                'store' => url('/api/messages'),
+                'show' => url('/api/messages'),
+                'read' => url('/api/messages'),
+                'stream' => url('/api/messages'),
+            ],
+            'groupsApi' => [
+                'users' => url('/api/messages/users'),
+                'index' => url('/api/groups'),
+                'store' => url('/api/groups'),
+                'show' => url('/api/groups'),
+                'addMember' => url('/api/groups'),
+                'removeMember' => url('/api/groups'),
+                'sendMessage' => url('/api/groups'),
+                'read' => url('/api/groups'),
+                'stream' => url('/api/groups'),
+            ],
+            'currentUserId' => $user->id,
         ]);
     }
 
     private function readingItem($record): array
     {
         return [
-            'title' => $record->novel?->title ?? '未命名作品',
-            'author' => $record->novel?->author?->name ?? '匿名作者',
-            'progress' => '第 '.($record->chapter?->chapter_number ?? 1).' 章',
-            'status' => '阅读至 '.((int) $record->progress).'%',
+            'title' => $record->novel?->title ?? __('ui.components.untitled_work'),
+            'author' => $record->novel?->author?->name ?? __('ui.components.anonymous_author'),
+            'progress' => __('ui.account_pages.chapter', ['number' => $record->chapter?->chapter_number ?? 1]),
+            'status' => __('ui.account_pages.read_to', ['percent' => (int) $record->progress]),
             'slug' => $record->novel?->slug,
             'chapter' => $record->chapter?->chapter_number ?? 1,
             'last_read_at' => $record->last_read_at,

@@ -39,12 +39,12 @@ class SubmissionController extends Controller
         if ($data['manuscript'] === null) {
             if ($this->wantsJson($request)) {
                 return response()->json([
-                    'message' => 'The manuscript field is required.',
-                    'errors' => ['manuscript' => ['The manuscript field is required.']],
+                    'message' => trans('validation.required', ['attribute' => trans('validation.attributes.manuscript')]),
+                    'errors' => ['manuscript' => [trans('validation.required', ['attribute' => trans('validation.attributes.manuscript')])]],
                 ], 422);
             }
 
-            return back()->withErrors(['content' => '请填写首章内容。'])->withInput();
+            return back()->withErrors(['content' => __('ui.messages.submission_content_required')])->withInput();
         }
 
         $submission = $request->user()->submissions()->create($data);
@@ -66,10 +66,10 @@ class SubmissionController extends Controller
         ]);
 
         if (! $this->wantsJson($request)) {
-            return redirect()->route('author.submissions')->with('status', '投稿已提交，等待审核。');
+            return redirect()->route('author.submissions')->with('status', __('ui.messages.submission_created'));
         }
 
-        return response()->json(['message' => 'Submission created.', 'submission' => $submission], 201);
+        return response()->json(['message' => __('ui.messages.submission_created'), 'submission' => $submission], 201);
     }
 
     public function show(Request $request, Submission $submission)

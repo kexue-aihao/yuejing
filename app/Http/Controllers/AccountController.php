@@ -32,7 +32,7 @@ class AccountController extends Controller
         $user->save();
 
         return redirect()->route('account.settings')->with('status', $emailChanged
-            ? '账号信息已保存，请重新验证新的邮箱地址。'
-            : '账号信息已保存。');
+            ? __('ui.messages.account_saved_reverify')
+            : __('ui.messages.account_saved'));
     }
 }

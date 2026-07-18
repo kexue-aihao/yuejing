@@ -48,7 +48,7 @@ class PublicController extends Controller
                     ->map(fn (Chapter $chapter) => [
                         'number' => $chapter->chapter_number,
                         'title' => $chapter->title,
-                        'date' => $chapter->published_at?->format('m-d') ?? '待更新',
+                        'date' => $chapter->published_at?->format('m-d') ?? __('ui.messages.pending_update'),
                     ])->values(),
             ]);
         }
@@ -114,13 +114,13 @@ class PublicController extends Controller
             'id' => $novel->id,
             'title' => $novel->title,
             'slug' => $novel->slug,
-            'author' => $novel->author?->name ?? '匿名作者',
-            'genre' => $novel->categories?->pluck('name')->join(' · ') ?: '现代 · 故事',
-            'desc' => $novel->synopsis ?? '作者还没有留下简介，但故事已经准备好被打开。',
+            'author' => $novel->author?->name ?? __('ui.components.anonymous_author'),
+            'genre' => $novel->categories?->pluck('name')->join(' · ') ?: __('ui.novel_detail.default_genre'),
+            'desc' => $novel->synopsis ?? __('ui.messages.default_description'),
             'description' => $novel->synopsis,
             'chapters' => $chaptersCount,
             'chapters_count' => $chaptersCount,
-            'status' => $novel->status === 'published' ? '连载中' : $novel->status,
+            'status' => $novel->status === 'published' ? __('ui.messages.ongoing') : $novel->status,
             'cover_url' => $novel->cover_url,
             'cover_a' => '#355c5d',
             'cover_b' => '#d6aa67',

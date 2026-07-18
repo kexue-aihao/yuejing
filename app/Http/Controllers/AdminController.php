@@ -51,8 +51,8 @@ class AdminController extends Controller
             }]);
             $settingValues = collect([
                 'email_verification_required' => $service->get('email_verification_required', false),
-                'site_name' => $service->get('site_name', config('app.name', '阅境')),
-                'site_tagline' => $service->get('site_tagline', '在故事里相遇'),
+                'site_name' => $service->get('site_name', __('ui.app.name')),
+                'site_tagline' => $service->get('site_tagline', __('ui.messages.site_tagline')),
                 'contact_email' => $service->get('contact_email', 'hello@yuejing.local'),
                 'accent_color' => $service->get('accent_color', 'coral'),
                 'show_rank' => $service->get('show_rank', true),
@@ -84,10 +84,10 @@ class AdminController extends Controller
         }
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '设置已更新。');
+            return back()->with('status', __('ui.messages.settings_updated'));
         }
 
-        return response()->json(['message' => 'Settings updated.']);
+        return response()->json(['message' => __('ui.messages.settings_updated')]);
     }
 
     public function testEmail(Request $request)
@@ -95,27 +95,27 @@ class AdminController extends Controller
         $data = $request->validate(['email' => ['required', 'email', 'max:255']]);
 
         try {
-            Mail::raw('这是阅境的 SMTP 测试邮件。', function ($message) use ($data): void {
-                $message->to($data['email'])->subject('阅境 SMTP 测试');
+            Mail::raw(__('ui.messages.smtp_body'), function ($message) use ($data): void {
+                $message->to($data['email'])->subject(__('ui.messages.smtp_subject'));
             });
         } catch (Throwable $exception) {
             Log::warning('SMTP test failed.', ['exception' => $exception]);
 
             if (! $this->wantsJson($request)) {
-                return back()->withErrors(['email' => 'SMTP 测试发送失败，请检查邮件配置。'])->withInput();
+                return back()->withErrors(['email' => __('ui.messages.smtp_test_failed')])->withInput();
             }
 
             return response()->json([
-                'message' => 'SMTP test failed.',
+                'message' => __('ui.messages.smtp_test_failed'),
                 'success' => false,
             ], 422);
         }
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', 'SMTP 测试邮件已发送。');
+            return back()->with('status', __('ui.messages.smtp_test_sent'));
         }
 
-        return response()->json(['message' => 'SMTP test sent.', 'success' => true]);
+        return response()->json(['message' => __('ui.messages.smtp_test_sent'), 'success' => true]);
     }
 
     public function categories(Request $request)
@@ -141,7 +141,7 @@ class AdminController extends Controller
         $category = Category::create($data);
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '分类已创建。');
+            return back()->with('status', __('ui.messages.category_created'));
         }
 
         return response()->json($category, 201);
@@ -158,7 +158,7 @@ class AdminController extends Controller
         $category->update($data);
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '分类已更新。');
+            return back()->with('status', __('ui.messages.category_updated'));
         }
 
         return response()->json($category);
@@ -169,10 +169,10 @@ class AdminController extends Controller
         $category->delete();
 
         if (! $this->wantsJson(request())) {
-            return back()->with('status', '分类已删除。');
+            return back()->with('status', __('ui.messages.category_deleted'));
         }
 
-        return response()->json(['message' => 'Category deleted.']);
+        return response()->json(['message' => __('ui.messages.category_deleted')]);
     }
 
     public function novels(Request $request)
@@ -197,7 +197,7 @@ class AdminController extends Controller
         $novel->categories()->sync($categoryIds);
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '小说已创建。');
+            return back()->with('status', __('ui.messages.novel_created'));
         }
 
         return response()->json($novel->load('categories'), 201);
@@ -214,7 +214,7 @@ class AdminController extends Controller
         }
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '小说已更新。');
+            return back()->with('status', __('ui.messages.novel_updated'));
         }
 
         return response()->json($novel->load('categories'));
@@ -225,10 +225,10 @@ class AdminController extends Controller
         $novel->delete();
 
         if (! $this->wantsJson(request())) {
-            return back()->with('status', '小说已删除。');
+            return back()->with('status', __('ui.messages.novel_deleted'));
         }
 
-        return response()->json(['message' => 'Novel deleted.']);
+        return response()->json(['message' => __('ui.messages.novel_deleted')]);
     }
 
     public function submissions(Request $request, MarkdownRenderer $markdownRenderer)
@@ -261,7 +261,7 @@ class AdminController extends Controller
         $reviewerId = $request->user()->id;
         $submission = DB::transaction(function () use ($data, $submission, $reviewedAt, $reviewerId, $request): Submission {
             $submission = Submission::query()->lockForUpdate()->findOrFail($submission->id);
-            abort_if($submission->status !== 'pending', 409, '该投稿已经处理，不能重复审核。');
+            abort_if($submission->status !== 'pending', 409, __('ui.messages.submission_processed'));
 
             $novel = null;
             if ($data['status'] === 'approved') {
@@ -283,7 +283,7 @@ class AdminController extends Controller
                 if (! $novel->chapters()->exists()) {
                     $novel->chapters()->create([
                         'chapter_number' => 1,
-                        'title' => '第一章',
+                        'title' => __('ui.messages.untitled_chapter'),
                         'content' => $submission->manuscript,
                         'status' => 'published',
                         'published_at' => $reviewedAt,
@@ -312,10 +312,12 @@ class AdminController extends Controller
         });
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', $data['status'] === 'approved' ? '投稿已批准，作品已同步。' : '投稿已拒绝。');
+            return back()->with('status', $data['status'] === 'approved'
+                ? __('ui.messages.submission_approved')
+                : __('ui.messages.submission_rejected'));
         }
 
-        return response()->json(['message' => 'Submission reviewed.', 'submission' => $submission]);
+        return response()->json(['message' => __('ui.messages.operation_success'), 'submission' => $submission]);
     }
 
     public function auditLogs(Request $request)

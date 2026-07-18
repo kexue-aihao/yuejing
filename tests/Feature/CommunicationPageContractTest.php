@@ -49,6 +49,34 @@ class CommunicationPageContractTest extends TestCase
         $this->assertSame('/api/messages', parse_url($config['index'], PHP_URL_PATH));
     }
 
+    public function test_dashboard_embeds_private_messages_and_keeps_personal_center_navigation(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('dashboard', ['section' => 'messages']));
+
+        $response->assertOk()
+            ->assertViewIs('pages.dashboard')
+            ->assertSee('data-messages-app', false)
+            ->assertSee('embedded-communication-page', false)
+            ->assertSee('<nav class="dashboard-nav"', false)
+            ->assertSee('href="'.route('dashboard', ['section' => 'messages']).'"', false);
+        $this->assertMatchesRegularExpression('/<details class="dashboard-nav-group"[^>]*open/', $response->getContent());
+    }
+
+    public function test_dashboard_embeds_groups_and_keeps_personal_center_navigation(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('dashboard', ['section' => 'groups']));
+
+        $response->assertOk()
+            ->assertViewIs('pages.dashboard')
+            ->assertSee('data-groups-app', false)
+            ->assertSee('embedded-communication-page', false)
+            ->assertSee('<nav class="dashboard-nav"', false)
+            ->assertSee('href="'.route('dashboard', ['section' => 'groups']).'"', false);
+        $this->assertMatchesRegularExpression('/<details class="dashboard-nav-group"[^>]*open/', $response->getContent());
+    }
+
     private function extractApiConfig(string $html): array
     {
         $this->assertSame(1, preg_match("~data-api='([^']+)'~", $html, $matches));

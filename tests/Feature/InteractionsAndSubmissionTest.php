@@ -60,7 +60,7 @@ class InteractionsAndSubmissionTest extends TestCase
         $this->actingAs($reader)
             ->deleteJsonWithCsrf(route('novels.unfavorite', $novel))
             ->assertOk()
-            ->assertJson(['message' => 'Novel removed from favorites.']);
+            ->assertJson(['message' => __('ui.messages.favorite_removed')]);
         $this->assertDatabaseMissing('favorites', ['user_id' => $reader->id, 'novel_id' => $novel->id]);
         $this->assertSame(0, Favorite::where('user_id', $reader->id)->where('novel_id', $novel->id)->count());
     }

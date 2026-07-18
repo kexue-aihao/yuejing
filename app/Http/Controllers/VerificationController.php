@@ -16,20 +16,20 @@ class VerificationController extends Controller
         abort_unless(hash_equals($hash, sha1($user->getEmailForVerification())), 403);
 
         if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email already verified.']);
+            return response()->json(['message' => __('ui.messages.email_already_verified')]);
         }
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
 
-        return response()->json(['message' => 'Email verified successfully.']);
+        return response()->json(['message' => __('ui.messages.email_verified')]);
     }
 
     public function resend(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email already verified.']);
+            return response()->json(['message' => __('ui.messages.email_already_verified')]);
         }
 
         try {
@@ -42,16 +42,16 @@ class VerificationController extends Controller
             ]);
 
             if (! $this->wantsJson($request)) {
-                return back()->withErrors(['email' => '验证邮件发送失败，请稍后重试。']);
+                return back()->withErrors(['email' => __('ui.messages.verification_failed')]);
             }
 
-            return response()->json(['message' => 'Verification email could not be sent.'], 422);
+            return response()->json(['message' => __('ui.messages.verification_failed')], 422);
         }
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '验证邮件已发送。');
+            return back()->with('status', __('ui.messages.verification_sent'));
         }
 
-        return response()->json(['message' => 'Verification email sent.']);
+        return response()->json(['message' => __('ui.messages.verification_sent')]);
     }
 }

@@ -30,8 +30,8 @@ class AdminPageController extends Controller
     {
         return view('pages.admin.settings', [
             'settingValues' => [
-                'site_name' => $service->get('site_name', config('app.name', '阅境')),
-                'site_tagline' => $service->get('site_tagline', '在故事里相遇'),
+                'site_name' => $service->get('site_name', __('ui.app.name')),
+                'site_tagline' => $service->get('site_tagline', __('ui.messages.site_tagline')),
                 'contact_email' => $service->get('contact_email', config('mail.from.address', '')),
                 'accent_color' => $service->get('accent_color', 'coral'),
                 'email_verification_required' => (bool) $service->get('email_verification_required', false),

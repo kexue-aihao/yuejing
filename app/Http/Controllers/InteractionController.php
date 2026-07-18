@@ -16,10 +16,10 @@ class InteractionController extends Controller
         $rating = Rating::updateOrCreate(['user_id' => $request->user()->id, 'novel_id' => $novel->id], $data);
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '评分已保存。');
+            return back()->with('status', __('ui.messages.rating_saved'));
         }
 
-        return response()->json(['message' => 'Rating saved.', 'rating' => $rating]);
+        return response()->json(['message' => __('ui.messages.rating_saved'), 'rating' => $rating]);
     }
 
     public function favorite(Request $request, Novel $novel)
@@ -28,10 +28,10 @@ class InteractionController extends Controller
         $favorite = Favorite::firstOrCreate(['user_id' => $request->user()->id, 'novel_id' => $novel->id]);
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '已加入收藏。');
+            return back()->with('status', __('ui.messages.favorite_added'));
         }
 
-        return response()->json(['message' => 'Novel favorited.', 'favorite' => $favorite], 201);
+        return response()->json(['message' => __('ui.messages.favorite_added'), 'favorite' => $favorite], 201);
     }
 
     public function unfavorite(Request $request, Novel $novel)
@@ -39,10 +39,10 @@ class InteractionController extends Controller
         Favorite::where('user_id', $request->user()->id)->where('novel_id', $novel->id)->delete();
 
         if (! $this->wantsJson($request)) {
-            return back()->with('status', '已取消收藏。');
+            return back()->with('status', __('ui.messages.favorite_removed'));
         }
 
-        return response()->json(['message' => 'Novel removed from favorites.']);
+        return response()->json(['message' => __('ui.messages.favorite_removed')]);
     }
 
     public function readings(Request $request)

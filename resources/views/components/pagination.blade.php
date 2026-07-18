@@ -1,16 +1,16 @@
 @props(['paginator'])
 
 @if($paginator->hasPages())
-    <nav class="pagination" role="navigation" aria-label="分页导航">
+    <nav class="pagination" role="navigation" aria-label="{{ __('ui.pagination.navigation') }}">
         <span class="pagination-summary">
-            第 {{ $paginator->currentPage() }} / {{ $paginator->lastPage() }} 页，共 {{ $paginator->total() }} 项
+            {{ __('ui.pagination.summary', ['current' => $paginator->currentPage(), 'last' => $paginator->lastPage(), 'total' => $paginator->total()]) }}
         </span>
         <div class="pagination-links">
             {{-- Previous --}}
             @if($paginator->onFirstPage())
-                <span class="pagination-item disabled" aria-disabled="true">‹ 上一页</span>
+                <span class="pagination-item disabled" aria-disabled="true">‹ {{ __('ui.pagination.previous') }}</span>
             @else
-                <a class="pagination-item" href="{{ $paginator->previousPageUrl() }}" rel="prev">‹ 上一页</a>
+                <a class="pagination-item" href="{{ $paginator->previousPageUrl() }}" rel="prev">‹ {{ __('ui.pagination.previous') }}</a>
             @endif
 
             {{-- Numbers --}}
@@ -24,9 +24,9 @@
 
             {{-- Next --}}
             @if($paginator->hasMorePages())
-                <a class="pagination-item" href="{{ $paginator->nextPageUrl() }}" rel="next">下一页 ›</a>
+                <a class="pagination-item" href="{{ $paginator->nextPageUrl() }}" rel="next">{{ __('ui.pagination.next') }} ›</a>
             @else
-                <span class="pagination-item disabled" aria-disabled="true">下一页 ›</span>
+                <span class="pagination-item disabled" aria-disabled="true">{{ __('ui.pagination.next') }} ›</span>
             @endif
         </div>
     </nav>

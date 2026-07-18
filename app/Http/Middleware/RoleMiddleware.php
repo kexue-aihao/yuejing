@@ -12,7 +12,7 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        abort_unless($user && $user->isRole($roles), 403, 'Insufficient permissions.');
+        abort_unless($user && $user->isRole($roles), 403, __('ui.messages.insufficient_permissions'));
 
         return $next($request);
     }

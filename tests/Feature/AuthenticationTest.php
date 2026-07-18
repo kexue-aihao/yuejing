@@ -192,7 +192,7 @@ class AuthenticationTest extends TestCase
 
         $this->get($url)
             ->assertOk()
-            ->assertJson(['message' => 'Email verified successfully.']);
+            ->assertJson(['message' => __('ui.messages.email_verified')]);
         $this->assertNotNull($user->fresh()->email_verified_at);
     }
 }

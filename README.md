@@ -11,6 +11,20 @@
 - [Nginx 站点配置示例](docs/aapanel-nginx.conf.example)
 - [Apache 虚拟主机配置示例](docs/aapanel-apache-vhost.conf.example)
 
+## 多语种支持
+
+站点使用 Laravel 原生翻译系统。语言由 `config/locales.php` 统一注册，用户可以通过页眉语言选择器切换；选择结果保存在 session 和 `yuejing_locale` Cookie 中，缺失的翻译会回退到配置的默认语言。
+
+- 默认语言由 `.env` 的 `APP_LOCALE` 控制，生产环境建议使用 `zh_CN`。
+- 回退语言由 `APP_FALLBACK_LOCALE` 控制。
+- 新增语言时，在 `config/locales.php` 注册语言代码、原生名称、HTML `lang`、文字方向和翻译目录，并在 `lang/<locale>/ui.php`、`lang/<locale>/validation.php` 提供目录。
+- 当前内置 35 个基础语言目录：简体中文、繁體中文、English、Español、Français、Deutsch、Português、Italiano、日本語、한국어、Русский、Українська、العربية、فارسی、עברית、हिन्दी、বাংলা、اردو、Bahasa Indonesia、Bahasa Melayu、Tiếng Việt、ไทย、Türkçe、Polski、Čeština、Nederlands、Svenska、Dansk、Norsk、Suomi、Ελληνικά、Română、Magyar、Kiswahili、አማርኛ。
+- `APP_LOCALE_BROWSER_DETECTION=true` 时会根据浏览器 `Accept-Language` 协商基础语种；关闭后只使用应用默认语言、session 和 Cookie。
+- 浏览器的 BCP-47 区域标签会自动归一化到最近的基础目录，例如 `pt-BR` → `pt`、`fr-CA` → `fr`、`zh-Hant-TW` → `zh_TW`；用户 session 和 Cookie 选择优先于浏览器偏好。区域标签不会伪造独立翻译，只有存在对应目录的基础语种才会使用原生目录。
+- 阿拉伯语、波斯语、希伯来语和乌尔都语会输出 `dir="rtl"`；新增 RTL 语言时必须同时验证布局方向、表单和导航。
+- 页面文案必须使用 `__()`/`trans_choice()`，动态 JavaScript 文案通过布局注入的 `window.YuejingI18n` 获取；不要在新功能中继续直接写固定界面文案。作品标题、作者名和用户投稿内容属于数据，不应被自动翻译。
+- 提交新翻译前运行 `artisan test`、`artisan view:cache`、`node --check resources/js/app.js` 和 `npm run build`。
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

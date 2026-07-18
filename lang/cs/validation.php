@@ -1,0 +1,7 @@
+<?php
+
+return [
+    'accepted' => ':attribute musí být přijato.', 'array' => ':attribute musí být pole.', 'boolean' => 'Pole :attribute musí být pravda nebo nepravda.', 'confirmed' => 'Potvrzení položky :attribute se neshoduje.', 'email' => ':attribute musí být platná e-mailová adresa.', 'exists' => 'Vybraný údaj :attribute je neplatný.', 'integer' => ':attribute musí být celé číslo.',
+    'max' => ['string' => ':attribute nesmí mít více než :max znaků.', 'array' => ':attribute nesmí obsahovat více než :max položek.', 'numeric' => ':attribute nesmí být větší než :max.'], 'min' => ['string' => ':attribute musí mít alespoň :min znaků.', 'numeric' => ':attribute musí být alespoň :min.', 'array' => ':attribute musí obsahovat alespoň :min položek.'], 'nullable' => ':attribute může být prázdné.', 'required' => 'Pole :attribute je povinné.', 'string' => ':attribute musí být text.', 'url' => ':attribute musí být platná URL adresa.', 'unique' => ':attribute již bylo použito.', 'in' => 'Vybraný údaj :attribute je neplatný.',
+    'attributes' => ['name' => 'zobrazované jméno', 'email' => 'e-mail', 'password' => 'heslo', 'password_confirmation' => 'potvrzení hesla', 'role' => 'typ účtu', 'title' => 'název díla', 'summary' => 'anotace', 'content' => 'obsah', 'manuscript' => 'rukopis', 'review_note' => 'poznámka ke kontrole', 'code' => 'kód', 'current_password' => 'aktuální heslo', 'site_name' => 'název webu', 'site_tagline' => 'slogan webu', 'contact_email' => 'kontaktní e-mail', 'rating' => 'hodnocení', 'genre' => 'žánr'],
+];

@@ -17,7 +17,7 @@ class EnsureEmailVerifiedIfRequired
         ), FILTER_VALIDATE_BOOLEAN);
 
         if ($required && ! $request->user()?->hasVerifiedEmail()) {
-            abort(403, 'Email verification is required.');
+            abort(403, __('ui.messages.email_verification_required'));
         }
 
         return $next($request);

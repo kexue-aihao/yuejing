@@ -127,8 +127,8 @@ class PersonalCenterNavigationTest extends TestCase
             ->assertSee('<details class="dashboard-nav-group"', false)
             ->assertSee('<summary class="dashboard-nav-trigger">', false)
             ->assertSee('data-account-social-menu', false)
-            ->assertSee('href="'.route('messages.page').'"', false)
-            ->assertSee('href="'.route('groups.page').'"', false)
+            ->assertSee('href="'.route('dashboard', ['section' => 'messages']).'"', false)
+            ->assertSee('href="'.route('dashboard', ['section' => 'groups']).'"', false)
             ->assertDontSee('<details class="dashboard-nav-group" open', false);
     }
 }

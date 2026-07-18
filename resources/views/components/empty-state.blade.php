@@ -1,4 +1,6 @@
-@props(['icon' => '📚', 'message' => '暂无内容', 'class' => ''])
+@props(['icon' => '📚', 'message' => null, 'class' => ''])
+
+@php($message = $message ?? __('ui.components.no_content'))
 
 <div {{ $attributes->merge(['class' => 'empty-state' . ($class ? " {$class}" : '')]) }}>
     <span class="empty-icon">{{ $icon }}</span>

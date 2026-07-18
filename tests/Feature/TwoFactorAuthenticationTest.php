@@ -65,11 +65,11 @@ class TwoFactorAuthenticationTest extends TestCase
 
         $this->getJson(route('two-factor.challenge'))
             ->assertOk()
-            ->assertJson(['message' => 'Two-factor authentication is required.']);
+            ->assertJson(['message' => __('ui.messages.two_factor_setup')]);
 
         $this->postJsonWithCsrf(route('two-factor.challenge'), [
             'code' => $this->totpCode($this->setupSecret($user)),
-        ])->assertOk()->assertJson(['message' => 'Logged in successfully.']);
+        ])->assertOk()->assertJson(['message' => __('ui.messages.login_success')]);
         $this->assertAuthenticatedAs($user);
     }
 
