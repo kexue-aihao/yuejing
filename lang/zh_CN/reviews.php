@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'rating_label' => '你的评分',
+    'review_label' => '文字点评',
+    'review_placeholder' => '这部作品最打动你的地方是什么？',
+    'criteria_label' => '结构化点评',
+    'plot' => '情节',
+    'writing' => '文笔',
+    'characters' => '人物',
+    'originality' => '原创性',
+    'submit' => '提交点评',
+    'withdraw' => '撤销点评',
+    'withdraw_hint' => '可以先撤销当前点评，再提交修正后的点评。',
+    'no_rating' => '暂时没有评分',
+    'level_standard' => '标准水平',
+    'level_bronze' => '青铜水平',
+    'level_diamond' => '钻石水平',
+    'level_supreme_diamond' => '至尊钻石水平',
+    'recommendations_title' => '根据你的阅读习惯推荐',
+    'recommendations_intro' => '推荐内容来自你经常搜索和阅读的品类。',
+    'recommendations_empty' => '继续搜索或阅读，推荐内容会出现在这里。',
+    'rating_saved' => '点评已保存。',
+    'rating_withdrawn' => '点评已撤销，现在可以重新点评。',
+    'withdraw_before_rerating' => '请先撤销已有点评，再提交新的点评。',
+    'invalid_precision' => '评分最多保留一位小数。',
+    'invalid_range' => '评分必须处于1.0-5.0、6.0-7.0、8.0-9.0或9.1-9.9区间。',
+];

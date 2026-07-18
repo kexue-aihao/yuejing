@@ -156,6 +156,23 @@ function initLanguageSwitcher() {
     });
 }
 
+function initTimezoneLocale() {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!timezone || !token) return;
+
+    fetch('/language/timezone', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ timezone }),
+    }).then((response) => response.ok ? response.json() : null)
+        .then((payload) => {
+            if (payload?.changed && payload.locale) window.location.reload();
+        })
+        .catch(() => { /* Locale detection is an enhancement; page rendering still works. */ });
+}
+
 // ── Reader Controls ──
 function initReaderControls() {
     const reader = document.querySelector('[data-reader-copy]');
@@ -774,6 +791,56 @@ function initGroups() {
 }
 
 // ── Bootstrap ──
+function initRecommendations() {
+    const app = document.querySelector('[data-recommendations-app]');
+    const list = app?.querySelector('[data-recommendation-list]');
+    const streamUrl = app?.dataset.streamUrl;
+    const novelBase = app?.dataset.novelBase;
+    if (!app || !list || !isConfiguredApiUrl(streamUrl) || !isConfiguredApiUrl(novelBase)) return;
+
+    const status = app.querySelector('[data-recommendation-status]');
+    let source = null;
+    let retryTimer = null;
+
+    const render = (items) => {
+        if (!items.length) {
+            list.innerHTML = `<p class="muted" data-recommendation-empty>${escapeHtml(tr('reviews.recommendations_empty'))}</p>`;
+            return;
+        }
+
+        list.innerHTML = items.map((item) => {
+            const categories = Array.isArray(item.categories) ? item.categories.join(' · ') : '';
+            const href = `${novelBase.replace(/\/$/, '')}/${encodeURIComponent(item.slug || item.id || '')}`;
+            return `<a class="recommendation-item" data-recommendation-item href="${escapeHtml(href)}"><span class="recommendation-mark" aria-hidden="true">Y</span><span><strong>${escapeHtml(item.title || tr('frontend.unnamed_group'))}</strong><small>${escapeHtml(item.author || tr('frontend.unnamed_user'))}${categories ? ` · ${escapeHtml(categories)}` : ''}</small></span><span aria-hidden="true">↗</span></a>`;
+        }).join('');
+    };
+
+    const connect = () => {
+        if (source) source.close();
+        window.clearTimeout(retryTimer);
+        const url = new URL(streamUrl, window.location.href);
+        url.searchParams.set('limit', '6');
+        source = new EventSource(url, { withCredentials: true });
+        if (status) status.textContent = tr('frontend.connected');
+        source.addEventListener('recommendations', (event) => {
+            try {
+                const payload = JSON.parse(event.data);
+                render(Array.isArray(payload?.data) ? payload.data : []);
+            } catch {
+                // Ignore a malformed push and keep the current recommendation list.
+            }
+        });
+        source.onerror = () => {
+            source?.close();
+            source = null;
+            if (status) status.textContent = tr('frontend.retrying');
+            retryTimer = window.setTimeout(connect, 60000);
+        };
+    };
+
+    connect();
+}
+
 function initMarkdownEditors() {
     document.querySelectorAll('[data-markdown-editor]').forEach((form) => {
         const textarea = form.querySelector('textarea[data-markdown-source]');
@@ -836,9 +903,11 @@ document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
     initMobileMenu();
     initLanguageSwitcher();
+    initTimezoneLocale();
     initReaderControls();
     initToastDismiss();
     initPrivateMessages();
     initGroups();
+    initRecommendations();
     initMarkdownEditors();
 });

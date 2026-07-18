@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'rating_label' => '你的評分',
+    'review_label' => '文字評論',
+    'review_placeholder' => '這部作品最打動你的地方是什麼？',
+    'criteria_label' => '結構化評論',
+    'plot' => '情節',
+    'writing' => '文筆',
+    'characters' => '人物',
+    'originality' => '原創性',
+    'submit' => '提交評論',
+    'withdraw' => '撤銷評論',
+    'withdraw_hint' => '可以先撤銷目前評論，再提交修正後的評論。',
+    'no_rating' => '暫時沒有評分',
+    'level_standard' => '標準水平',
+    'level_bronze' => '青銅水平',
+    'level_diamond' => '鑽石水平',
+    'level_supreme_diamond' => '至尊鑽石水平',
+    'recommendations_title' => '根據你的閱讀習慣推薦',
+    'recommendations_intro' => '推薦內容來自你經常搜尋和閱讀的品類。',
+    'recommendations_empty' => '繼續搜尋或閱讀，推薦內容會出現在這裡。',
+    'rating_saved' => '評論已保存。',
+    'rating_withdrawn' => '評論已撤銷，現在可以重新評論。',
+    'withdraw_before_rerating' => '請先撤銷已有評論，再提交新的評論。',
+    'invalid_precision' => '評分最多保留一位小數。',
+    'invalid_range' => '評分必須處於1.0-5.0、6.0-7.0、8.0-9.0或9.1-9.9區間。',
+];

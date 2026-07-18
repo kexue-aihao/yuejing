@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'rating_label' => 'Your rating',
+    'review_label' => 'Written review',
+    'review_placeholder' => 'What stood out to you about this work?',
+    'criteria_label' => 'Structured criteria',
+    'plot' => 'Plot',
+    'writing' => 'Writing',
+    'characters' => 'Characters',
+    'originality' => 'Originality',
+    'submit' => 'Submit review',
+    'withdraw' => 'Withdraw review',
+    'withdraw_hint' => 'You can withdraw this review and submit a corrected one.',
+    'no_rating' => 'No rating yet',
+    'level_standard' => 'Standard level',
+    'level_bronze' => 'Bronze level',
+    'level_diamond' => 'Diamond level',
+    'level_supreme_diamond' => 'Supreme diamond level',
+    'recommendations_title' => 'Picked for your reading habits',
+    'recommendations_intro' => 'Recommendations follow the categories you search and read most often.',
+    'recommendations_empty' => 'Keep searching or reading and recommendations will appear here.',
+    'rating_saved' => 'Review saved.',
+    'rating_withdrawn' => 'Review withdrawn. You can submit a new review now.',
+    'withdraw_before_rerating' => 'Withdraw your existing review before submitting a replacement.',
+    'invalid_precision' => 'Rating must use one decimal place at most.',
+    'invalid_range' => 'Rating must be between 1.0-5.0, 6.0-7.0, 8.0-9.0, or 9.1-9.9.',
+];

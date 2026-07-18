@@ -54,6 +54,7 @@ Route::prefix('auth')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::post('/language', [LanguageController::class, 'update'])->name('language.switch');
+Route::post('/language/timezone', [LanguageController::class, 'timezone'])->name('language.timezone');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
@@ -65,6 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/account/reading-records', [InteractionController::class, 'readings'])->name('account.reading-records');
     Route::get('/reading-records', [InteractionController::class, 'readings'])->name('reading-records.index');
     Route::post('/novels/{novel}/rating', [InteractionController::class, 'rate'])->name('novels.rate');
+    Route::delete('/novels/{novel}/rating', [InteractionController::class, 'withdrawRating'])->name('novels.rating.withdraw');
     Route::post('/novels/{novel:slug}/favorite', [InteractionController::class, 'favorite'])->name('novels.favorite');
     Route::delete('/novels/{novel:slug}/favorite', [InteractionController::class, 'unfavorite'])->name('novels.unfavorite');
 

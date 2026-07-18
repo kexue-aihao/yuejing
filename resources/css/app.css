@@ -275,15 +275,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
     color: var(--c-text-muted); font-size: 23px; line-height: 1; cursor: pointer;
 }
 .language-switcher { display: inline-flex; align-items: center; gap: 4px; }
+.language-switch-form { display: inline-flex; align-items: center; }
 .language-switcher select {
     max-width: 92px; padding: 5px 18px 5px 5px; border: 1px solid var(--c-border);
     color: var(--c-text-nav); background: var(--c-bg-card); font-size: 10px; cursor: pointer;
 }
-.language-switcher button {
+.language-switcher > button {
     width: 24px; height: 24px; padding: 0; border: 0; color: var(--c-text-muted);
     background: transparent; font-size: 13px; cursor: pointer;
 }
-.language-switcher button:hover { color: var(--c-accent); }
+.language-switcher > button:hover { color: var(--c-accent); }
 
 /* ── Bidirectional layout support ── */
 [dir="rtl"] {
@@ -1747,6 +1748,31 @@ body input[type="radio"] {
 .member-add-form { display: flex; gap: 8px; margin-top: 13px; }
 .member-add-form select { min-width: 0; flex: 1; }
 
+.review-section { padding-bottom: 80px; }
+.review-form-panel { display: grid; gap: 18px; }
+.review-form-grid { display: grid; grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr); gap: 18px; }
+.review-form-grid textarea { min-height: 112px; }
+.review-criteria { margin: 20px 0 0; padding: 14px 0 0; border: 0; border-top: 1px solid var(--c-border); }
+.review-criteria legend { margin-bottom: 12px; color: var(--c-text-muted); font-size: 11px; font-weight: 600; }
+.review-criteria-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.review-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
+.review-withdraw-form { margin-top: -58px; margin-left: 135px; }
+.review-list { display: grid; gap: 14px; margin-top: 22px; }
+.review-item { padding: 17px 19px; }
+.review-item-head { display: flex; justify-content: space-between; gap: 15px; color: var(--c-text-heading-soft); font-size: 12px; }
+.review-item p { margin: 12px 0 0; color: var(--c-text-body); line-height: 1.7; }
+.review-criteria-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; }
+.review-criteria-summary div { display: flex; justify-content: space-between; gap: 8px; padding-top: 7px; border-top: 1px solid var(--c-border); color: var(--c-text-muted); font-size: 10px; }
+.review-criteria-summary dd { margin: 0; color: var(--c-text); }
+.recommendation-section { padding-top: 0; }
+.recommendation-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.recommendation-item { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 11px; min-height: 70px; padding: 12px 14px; border: 1px solid var(--c-border); color: var(--c-text); background: var(--c-bg-card); transition: border-color .2s ease, transform .2s ease; }
+.recommendation-item:hover { border-color: var(--c-accent); transform: translateY(-2px); }
+.recommendation-item strong, .recommendation-item small { display: block; }
+.recommendation-item strong { overflow: hidden; color: var(--c-text-heading-soft); font-family: var(--font-serif); font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.recommendation-item small { margin-top: 5px; overflow: hidden; color: var(--c-text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.recommendation-mark { display: grid; place-items: center; width: 30px; height: 38px; border: 1px solid var(--c-accent); color: var(--c-accent); font-family: var(--font-serif); }
+
 @media (max-width: 880px) {
     .communication-head { align-items: flex-start; flex-direction: column; }
     .communication-layout { grid-template-columns: 1fr; }
@@ -1764,4 +1790,7 @@ body input[type="radio"] {
     .compose-actions { align-items: stretch; flex-direction: column; }
     .compose-actions .button { width: 100%; }
     .message-bubble { max-width: 90%; }
+    .review-form-grid, .recommendation-grid { grid-template-columns: 1fr; }
+    .review-criteria-grid, .review-criteria-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .review-withdraw-form { margin: 0; }
 }

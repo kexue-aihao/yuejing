@@ -30,6 +30,7 @@
     <script>
         window.YuejingI18n = {
             frontend: @json(trans('ui.frontend')),
+            reviews: @json(trans('reviews')),
             reader: @json(trans('ui.reader')),
             editorLocale: @json($editorLocale),
             editorDirection: @json($editorDirection),

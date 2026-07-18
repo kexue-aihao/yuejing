@@ -38,6 +38,11 @@ class Novel extends Model
         return $this->hasMany(Rating::class);
     }
 
+    public function activeRatings()
+    {
+        return $this->ratings()->whereNull('withdrawn_at');
+    }
+
     public function favorites()
     {
         return $this->hasMany(Favorite::class);

@@ -29,10 +29,17 @@ final class LocaleManager
         $candidates = [];
 
         if ($request?->hasSession()) {
-            $candidates[] = $request->session()->get('locale');
+            $sessionLocale = $request->session()->get('locale');
+            if ($request->session()->get('locale_source') !== 'timezone') {
+                $candidates[] = $sessionLocale;
+            }
         }
 
         $candidates[] = $request?->cookie('yuejing_locale');
+
+        if ($request?->user() && is_string($request->user()->preferred_locale ?? null)) {
+            $candidates[] = $request->user()->preferred_locale;
+        }
 
         foreach ($candidates as $candidate) {
             if (! is_string($candidate)) {
@@ -44,6 +51,19 @@ final class LocaleManager
             if ($resolved !== null) {
                 return $resolved;
             }
+        }
+
+        $timezone = $request?->cookie('yuejing_timezone');
+        if (! is_string($timezone) && $request?->hasSession()) {
+            $timezone = $request->session()->get('timezone');
+        }
+        if (! is_string($timezone) && $request?->user()) {
+            $timezone = $request->user()->timezone;
+        }
+
+        $timezoneLocale = $this->localeForTimezone($timezone, $supported);
+        if ($timezoneLocale !== null) {
+            return $timezoneLocale;
         }
 
         $acceptLanguage = $request?->headers->get('Accept-Language');
@@ -61,6 +81,84 @@ final class LocaleManager
         }
 
         return $fallback;
+    }
+
+    public function localeForTimezone(?string $timezone, ?array $supported = null): ?string
+    {
+        $supported ??= $this->supported();
+        if (! is_string($timezone) || ! in_array($timezone, \DateTimeZone::listIdentifiers(), true)) {
+            return null;
+        }
+
+        // Prefer country/city-specific choices, then fall back to the
+        // language most commonly used for the IANA region. This covers the
+        // full timezone database without pretending every city has its own
+        // translation catalog.
+        $mapping = [
+            'UTC' => 'en', 'Etc/UTC' => 'en', 'Etc/GMT' => 'en',
+            'Asia/Shanghai' => 'zh_CN', 'Asia/Hong_Kong' => 'zh_TW', 'Asia/Taipei' => 'zh_TW',
+            'Asia/Macau' => 'zh_TW', 'Asia/Singapore' => 'zh_CN',
+            'Asia/Tokyo' => 'ja', 'Asia/Seoul' => 'ko', 'Europe/Paris' => 'fr',
+            'Europe/Berlin' => 'de', 'Europe/Vienna' => 'de', 'Europe/Zurich' => 'de',
+            'Europe/Madrid' => 'es', 'Europe/Barcelona' => 'es', 'Europe/Rome' => 'it',
+            'Europe/Lisbon' => 'pt', 'Europe/Amsterdam' => 'nl', 'Europe/Brussels' => 'fr',
+            'Europe/Athens' => 'el', 'Europe/Warsaw' => 'pl', 'Europe/Prague' => 'cs',
+            'Europe/Bucharest' => 'ro', 'Europe/Budapest' => 'hu', 'Europe/Stockholm' => 'sv',
+            'Europe/Copenhagen' => 'da', 'Europe/Oslo' => 'no', 'Europe/Helsinki' => 'fi',
+            'Europe/London' => 'en', 'America/New_York' => 'en', 'America/Chicago' => 'en',
+            'America/Los_Angeles' => 'en', 'America/Toronto' => 'en', 'America/Vancouver' => 'en',
+            'America/Mexico_City' => 'es', 'America/Bogota' => 'es', 'America/Lima' => 'es',
+            'America/Santiago' => 'es', 'America/Argentina/Buenos_Aires' => 'es',
+            'America/Sao_Paulo' => 'pt', 'America/Fortaleza' => 'pt',
+            'Asia/Kolkata' => 'hi', 'Asia/Colombo' => 'hi', 'Asia/Dhaka' => 'bn',
+            'Asia/Jakarta' => 'id', 'Asia/Makassar' => 'id', 'Asia/Kuala_Lumpur' => 'ms',
+            'Asia/Almaty' => 'kk', 'Asia/Aqtobe' => 'kk', 'Asia/Bishkek' => 'ky',
+            'Asia/Riyadh' => 'ar', 'Asia/Dubai' => 'ar', 'Asia/Tehran' => 'fa',
+            'Asia/Kabul' => 'ps', 'Asia/Jerusalem' => 'he', 'Asia/Amman' => 'ar',
+            'Asia/Baghdad' => 'ar', 'Asia/Beirut' => 'ar', 'Asia/Tashkent' => 'uz',
+            'Asia/Ashgabat' => 'tk', 'Asia/Dushanbe' => 'tg', 'Asia/Yangon' => 'en',
+            'Africa/Nairobi' => 'sw', 'Africa/Dar_es_Salaam' => 'sw', 'Africa/Kampala' => 'sw',
+            'Africa/Addis_Ababa' => 'am', 'Africa/Cairo' => 'ar', 'Africa/Tripoli' => 'ar',
+            'Africa/Johannesburg' => 'en', 'Africa/Lagos' => 'en', 'Africa/Accra' => 'en',
+        ];
+
+        $locale = $mapping[$timezone] ?? match (true) {
+            str_starts_with($timezone, 'America/') && preg_match('/Mexico|Bogota|Lima|Santiago|Argentina|Cordoba|Montevideo|Asuncion|Caracas/', $timezone) === 1 => 'es',
+            str_starts_with($timezone, 'America/') && preg_match('/Sao_Paulo|Bahia|Belem|Recife|Manaus|Porto_Velho/', $timezone) === 1 => 'pt',
+            str_starts_with($timezone, 'America/') && preg_match('/Havana|Guatemala|El_Salvador|Managua|Tegucigalpa|Panama|Costa_Rica|Guayaquil/', $timezone) === 1 => 'es',
+            str_starts_with($timezone, 'America/') && preg_match('/Paramaribo/', $timezone) === 1 => 'nl',
+            str_starts_with($timezone, 'America/') && preg_match('/Guyana|Port_of_Spain|Jamaica|Bahia/', $timezone) === 1 => 'en',
+            str_starts_with($timezone, 'Europe/') && preg_match('/Paris|Monaco|Brussels|Luxembourg/', $timezone) === 1 => 'fr',
+            str_starts_with($timezone, 'Europe/') && preg_match('/Berlin|Vienna|Zurich|Busingen/', $timezone) === 1 => 'de',
+            str_starts_with($timezone, 'Europe/') && preg_match('/Madrid|Andorra|Gibraltar/', $timezone) === 1 => 'es',
+            str_starts_with($timezone, 'Europe/') && preg_match('/Rome|Vatican|San_Marino/', $timezone) === 1 => 'it',
+            str_starts_with($timezone, 'Europe/') && preg_match('/Lisbon|Azores/', $timezone) === 1 => 'pt',
+            str_starts_with($timezone, 'Europe/') && preg_match('/Moscow|Kalin|Samar|Volgograd|Astrakhan/', $timezone) === 1 => 'ru',
+            str_starts_with($timezone, 'Europe/') && preg_match('/Kiev|Kyiv/', $timezone) === 1 => 'uk',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Shanghai|Chongqing|Harbin|Urumqi/', $timezone) === 1 => 'zh_CN',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Hong_Kong|Macau|Taipei/', $timezone) === 1 => 'zh_TW',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Kolkata|Calcutta/', $timezone) === 1 => 'hi',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Dhaka/', $timezone) === 1 => 'bn',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Jakarta|Makassar|Jayapura/', $timezone) === 1 => 'id',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Kuala_Lumpur|Kuching/', $timezone) === 1 => 'ms',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Ho_Chi_Minh|Saigon/', $timezone) === 1 => 'vi',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Bangkok/', $timezone) === 1 => 'th',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Manila/', $timezone) === 1 => 'en',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Riyadh|Dubai|Qatar|Kuwait|Bahrain/', $timezone) === 1 => 'ar',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Tehran/', $timezone) === 1 => 'fa',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Jerusalem/', $timezone) === 1 => 'he',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Istanbul/', $timezone) === 1 => 'tr',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Tashkent/', $timezone) === 1 => 'uz',
+            str_starts_with($timezone, 'Asia/') && preg_match('/Almaty|Aqtobe/', $timezone) === 1 => 'kk',
+            str_starts_with($timezone, 'Africa/') && preg_match('/Nairobi|Kampala|Dar_es_Salaam/', $timezone) === 1 => 'sw',
+            default => 'en',
+        };
+
+        if (! is_string($locale)) {
+            return null;
+        }
+
+        return $this->resolve($locale, $supported);
     }
 
     /**

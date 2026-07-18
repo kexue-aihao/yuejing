@@ -16,10 +16,16 @@ class InteractionsAndSubmissionTest extends TestCase
     use CreatesYuejingData;
     use RefreshDatabase;
 
-    public function test_authenticated_reader_can_rate_and_update_a_rating(): void
+    public function test_authenticated_reader_must_withdraw_before_resubmitting_a_rating(): void
     {
         $reader = User::factory()->create();
         $novel = $this->createPublishedNovel();
+
+        $this->actingAs($reader)
+            ->get(route('novels.show', $novel))
+            ->assertOk()
+            ->assertSee('name="criteria[plot]"', false)
+            ->assertSee('name="rating"', false);
 
         $this->actingAs($reader)
             ->postJsonWithCsrf(route('novels.rate', $novel), [
@@ -34,14 +40,27 @@ class InteractionsAndSubmissionTest extends TestCase
                 'rating' => 5,
                 'review' => '值得读完。',
             ])
+            ->assertConflict();
+
+        $this->actingAs($reader)
+            ->deleteJsonWithCsrf(route('novels.rating.withdraw', $novel))
+            ->assertOk();
+
+        $this->actingAs($reader)
+            ->postJsonWithCsrf(route('novels.rate', $novel), [
+                'rating' => 8.5,
+                'review' => 'corrected review',
+                'criteria' => ['plot' => 9, 'writing' => 8],
+            ])
             ->assertOk()
-            ->assertJsonPath('rating.rating', 5);
+            ->assertJsonPath('rating.rating', 8.5)
+            ->assertJsonPath('level', 'diamond');
 
         $this->assertDatabaseHas('ratings', [
             'user_id' => $reader->id,
             'novel_id' => $novel->id,
-            'rating' => 5,
-            'review' => '值得读完。',
+            'rating' => 8.5,
+            'review' => 'corrected review',
         ]);
         $this->assertSame(1, Rating::where('user_id', $reader->id)->where('novel_id', $novel->id)->count());
     }

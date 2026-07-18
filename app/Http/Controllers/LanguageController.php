@@ -6,6 +6,7 @@ use App\Services\LocaleManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class LanguageController extends Controller
 {
@@ -18,6 +19,10 @@ class LanguageController extends Controller
         ]);
 
         $request->session()->put('locale', $data['locale']);
+        $request->session()->put('locale_source', 'manual');
+        if ($request->user()) {
+            $request->user()->forceFill(['preferred_locale' => $data['locale']])->save();
+        }
 
         return redirect()->to($this->localizedRedirectTarget($request))
             ->withCookie(cookie('yuejing_locale', $data['locale'], 60 * 24 * 365))
@@ -31,6 +36,38 @@ class LanguageController extends Controller
                 'Cloudflare-CDN-Cache-Control' => 'no-store',
                 'Surrogate-Control' => 'no-store',
             ]);
+    }
+
+    public function timezone(Request $request, LocaleManager $locales): JsonResponse
+    {
+        $data = $request->validate([
+            'timezone' => ['required', 'string', 'max:64', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! in_array($value, \DateTimeZone::listIdentifiers(), true)) {
+                    $fail('The selected timezone is invalid.');
+                }
+            }],
+        ]);
+
+        $previousLocale = $locales->current($request);
+
+        if ($request->user()) {
+            $request->user()->forceFill(['timezone' => $data['timezone']])->save();
+        }
+
+        $request->session()->put('timezone', $data['timezone']);
+        $explicit = $request->session()->get('locale_source') === 'manual'
+            || $request->cookie('yuejing_locale') !== null
+            || (bool) ($request->user()?->preferred_locale);
+        $locale = $locales->localeForTimezone($data['timezone']);
+        $changed = false;
+
+        if (! $explicit && $locale !== null && $previousLocale !== $locale) {
+            $request->session()->put(['locale' => $locale, 'locale_source' => 'timezone']);
+            $changed = true;
+        }
+
+        return response()->json(['locale' => $locale, 'changed' => $changed])
+            ->withCookie(cookie('yuejing_timezone', $data['timezone'], 60 * 24 * 365));
     }
 
     private function localizedRedirectTarget(Request $request): string

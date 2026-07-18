@@ -3,19 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chapter;
+use App\Models\Category;
 use App\Models\Novel;
 use App\Models\ReadingRecord;
+use App\Models\SearchEvent;
 use App\Services\MarkdownRenderer;
+use App\Services\RatingScale;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
 class PublicController extends Controller
 {
-    public function home(Request $request)
+    public function home(Request $request, RecommendationService $recommendations)
     {
         if (! $this->wantsJson($request)) {
             return response()
-                ->view('welcome')
+                ->view('welcome', [
+                    'recommendationUrl' => url('/api/recommendations/stream'),
+                    'recommendations' => $recommendations->for($request->user(), $request, 6),
+                ])
                 ->withHeaders([
                     // The homepage is localized per session/cookie and must
                     // not be reused from a shared or stale HTML cache.
@@ -35,6 +42,7 @@ class PublicController extends Controller
     public function index(Request $request)
     {
         $paginator = $this->novelPaginator($request);
+        $this->recordSearchEvent($request, $paginator->getCollection());
 
         if ($this->wantsJson($request)) {
             return response()->json($paginator);
@@ -49,11 +57,19 @@ class PublicController extends Controller
     {
         abort_unless($novel->status === 'published', 404);
         $novel->increment('views_count');
-        $novel->load(['author:id,name', 'categories', 'chapters:id,novel_id,chapter_number,title,status,published_at']);
+        $novel->load(['author:id,name', 'categories', 'chapters:id,novel_id,chapter_number,title,status,published_at', 'activeRatings.user:id,name']);
+        $this->recordInterestEvent($request, $novel);
+
+        $ratingScale = app(RatingScale::class);
+        $averageRating = $novel->activeRatings->avg('rating');
+        $currentRating = auth()->check()
+            ? $novel->activeRatings->firstWhere('user_id', auth()->id())
+            : null;
 
         if (! $this->wantsJson($request)) {
             return view('pages.novels.show', [
                 'novel' => $this->novelArray($novel),
+                'novelModel' => $novel,
                 'isFavorited' => auth()->check() && $novel->favorites()->where('user_id', auth()->id())->exists(),
                 'chapters' => $novel->chapters
                     ->where('status', 'published')
@@ -62,10 +78,20 @@ class PublicController extends Controller
                         'title' => $chapter->title,
                         'date' => $chapter->published_at?->format('m-d') ?? __('ui.messages.pending_update'),
                     ])->values(),
+                'ratings' => $novel->activeRatings->map(fn ($rating) => [
+                    'rating' => (float) $rating->rating,
+                    'level' => $ratingScale->key($rating->rating),
+                    'review' => $rating->review,
+                    'criteria' => $rating->criteria ?? [],
+                    'user' => $rating->user?->name,
+                ])->values(),
+                'averageRating' => $averageRating !== null ? round((float) $averageRating, 1) : null,
+                'averageRatingLevel' => $averageRating !== null ? $ratingScale->key($averageRating) : null,
+                'currentRating' => $currentRating,
             ]);
         }
 
-        return response()->json($novel->loadCount('ratings'));
+        return response()->json($novel->loadCount('activeRatings'));
     }
 
     public function chapter(Request $request, Novel $novel, Chapter $chapter, MarkdownRenderer $markdownRenderer)
@@ -79,6 +105,7 @@ class PublicController extends Controller
                 ['chapter_id' => $chapter->id, 'progress' => 100, 'last_read_at' => now()],
             );
         }
+        $this->recordInterestEvent($request, $novel);
 
         if (! $this->wantsJson($request)) {
             return view('pages.novels.read', [
@@ -109,11 +136,79 @@ class PublicController extends Controller
 
         return Novel::query()->with(['author:id,name', 'categories:id,name'])
             ->where('status', 'published')
-            ->when($request->string('q')->toString(), fn ($query, $q) => $query->where('title', 'like', "%{$q}%"))
-            ->when($request->string('genre')->toString(), fn ($query, $genre) => $query->whereHas('categories', fn ($categories) => $categories->where('name', 'like', "%{$genre}%")))
+            ->when(substr($request->string('q')->toString(), 0, 160), function ($query, $q): void {
+                $query->where(function ($search) use ($q): void {
+                    $search->where('title', 'like', "%{$q}%")
+                        ->orWhere('synopsis', 'like', "%{$q}%")
+                        ->orWhereHas('author', fn ($author) => $author->where('name', 'like', "%{$q}%"))
+                        ->orWhereHas('categories', fn ($category) => $category->where('name', 'like', "%{$q}%"));
+                });
+            })
+            ->when(substr($request->string('genre')->toString(), 0, 160), fn ($query, $genre) => $query->whereHas('categories', fn ($categories) => $categories->where('name', 'like', "%{$genre}%")))
             ->when($request->string('sort')->toString() === 'hot', fn ($query) => $query->orderByDesc('views_count'))
             ->when($request->string('sort')->toString() !== 'hot', fn ($query) => $query->latest('published_at'))
             ->paginate(config('yuejing.pagination'));
+    }
+
+    private function recordSearchEvent(Request $request, $novels): void
+    {
+        if (! Schema::hasTable('search_events')) {
+            return;
+        }
+
+        $query = trim(substr($request->string('q')->toString(), 0, 160));
+        $genre = trim(substr($request->string('genre')->toString(), 0, 160));
+        if ($query === '' && $genre === '') {
+            return;
+        }
+
+        $categories = collect();
+        if ($genre !== '' && Schema::hasTable('categories')) {
+            $categories = Category::query()
+                ->where('name', 'like', "%{$genre}%")
+                ->limit(8)
+                ->get();
+        } else {
+            $categories = $novels
+                ->flatMap(fn (Novel $novel) => $novel->categories ?? [])
+                ->unique('id')
+                ->take(8)
+                ->values();
+        }
+
+        $this->storeInterestEvents($request, $categories, $novels->first()?->id, $query !== '' ? $query : null);
+    }
+
+    private function recordInterestEvent(Request $request, Novel $novel): void
+    {
+        if (! Schema::hasTable('search_events')) {
+            return;
+        }
+
+        $novel->loadMissing('categories:id');
+        $this->storeInterestEvents($request, $novel->categories, $novel->id, null);
+    }
+
+    private function storeInterestEvents(Request $request, $categories, ?int $novelId, ?string $query): void
+    {
+        $timezone = $request->cookie('yuejing_timezone') ?: $request->user()?->timezone;
+        $categories = collect($categories)->unique('id')->take(8)->values();
+        $base = [
+            'user_id' => $request->user()?->id,
+            'query' => $query,
+            'locale' => $request->attributes->get('display_locale', app()->getLocale()),
+            'timezone' => is_string($timezone) ? $timezone : null,
+            'session_hash' => hash('sha256', (string) $request->session()->getId()),
+        ];
+
+        if ($categories->isEmpty()) {
+            SearchEvent::create([...$base, 'category_id' => null, 'novel_id' => $novelId]);
+            return;
+        }
+
+        foreach ($categories as $category) {
+            SearchEvent::create([...$base, 'category_id' => $category->id, 'novel_id' => $novelId]);
+        }
     }
 
     private function novelArray(Novel $novel): array

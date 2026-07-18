@@ -9,11 +9,11 @@ class Rating extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'novel_id', 'rating', 'review'];
+    protected $fillable = ['user_id', 'novel_id', 'rating', 'review', 'criteria', 'withdrawn_at'];
 
     protected function casts(): array
     {
-        return ['rating' => 'integer'];
+        return ['rating' => 'float', 'criteria' => 'array', 'withdrawn_at' => 'datetime'];
     }
 
     public function user() { return $this->belongsTo(User::class); }

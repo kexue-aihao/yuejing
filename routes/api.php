@@ -4,9 +4,15 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\GroupChatController;
 use App\Http\Controllers\PrivateMessageController;
+use App\Http\Controllers\RecommendationController;
 use Illuminate\Support\Facades\Route;
 
 /* Messages use browser/session semantics so the same-origin UI can send CSRF-protected JSON. */
+Route::middleware('web')->group(function (): void {
+    Route::get('/recommendations', [RecommendationController::class, 'index'])->name('api.recommendations.index');
+    Route::get('/recommendations/stream', [RecommendationController::class, 'stream'])->name('api.recommendations.stream');
+});
+
 Route::middleware(['web', 'auth'])
     ->group(function (): void {
         Route::get('/messages/users', [PrivateMessageController::class, 'users'])->name('api.messages.users');
