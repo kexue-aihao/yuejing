@@ -14,7 +14,16 @@ class PublicController extends Controller
     public function home(Request $request)
     {
         if (! $this->wantsJson($request)) {
-            return view('welcome');
+            return response()
+                ->view('welcome')
+                ->withHeaders([
+                    // The homepage is localized per session/cookie and must
+                    // not be reused from a shared or stale HTML cache.
+                    'Cache-Control' => 'private, no-store, no-cache, max-age=0, must-revalidate',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
+                    'Vary' => 'Cookie, Accept-Language',
+                ]);
         }
 
         return response()->json($this->novelPaginator($request));

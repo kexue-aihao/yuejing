@@ -19,6 +19,14 @@ class LanguageController extends Controller
 
         $request->session()->put('locale', $data['locale']);
 
-        return back()->withCookie(cookie('yuejing_locale', $data['locale'], 60 * 24 * 365));
+        return back()
+            ->withCookie(cookie('yuejing_locale', $data['locale'], 60 * 24 * 365))
+            ->withHeaders([
+                // Prevent the redirect from restoring a cached homepage
+                // before the new locale cookie is applied.
+                'Cache-Control' => 'private, no-store, no-cache, max-age=0, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
     }
 }

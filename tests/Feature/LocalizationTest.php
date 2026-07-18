@@ -48,6 +48,27 @@ class LocalizationTest extends TestCase
             ->assertSessionHasErrors('locale');
     }
 
+    public function test_switching_locale_from_homepage_survives_the_redirect_and_disables_html_caching(): void
+    {
+        $token = bin2hex(random_bytes(16));
+
+        $this->withSession(['_token' => $token])
+            ->get(route('home'))
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
+            ->assertHeader('Vary', 'Cookie, Accept-Language');
+
+        $response = $this->withSession(['_token' => $token])
+            ->from(route('home'))
+            ->followingRedirects()
+            ->post(route('language.switch'), ['_token' => $token, 'locale' => 'ja']);
+
+        $response
+            ->assertOk()
+            ->assertSee('<html lang="ja"', false)
+            ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private');
+    }
+
     public function test_browser_language_tags_resolve_to_the_closest_catalog(): void
     {
         config(['locales.browser_detection' => true]);
