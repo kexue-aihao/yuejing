@@ -90,4 +90,30 @@ class PersonalCenterNavigationTest extends TestCase
             ->assertSee('aria-label="打开个人中心"', false)
             ->assertSee('title="个人中心"', false);
     }
+
+    public function test_communication_and_submission_links_are_only_in_personal_center_navigation(): void
+    {
+        $author = User::factory()->create(['role' => 'author']);
+
+        $html = $this->actingAs($author)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        preg_match('/<nav class="desktop-nav"[^>]*>(.*?)<\/nav>/s', $html, $desktopMatches);
+        preg_match('/<nav class="site-shell mobile-nav"[^>]*>(.*?)<\/nav>/s', $html, $mobileMatches);
+        $desktopNavigation = $desktopMatches[1] ?? '';
+        $mobileNavigation = $mobileMatches[1] ?? '';
+
+        foreach (['作品投稿', '站内私信', '交流群'] as $label) {
+            $this->assertStringNotContainsString($label, $desktopNavigation);
+            $this->assertStringNotContainsString($label, $mobileNavigation);
+        }
+
+        preg_match('/<nav class="dashboard-nav"[^>]*>(.*?)<\/nav>/s', $html, $accountMatches);
+        $accountNavigation = $accountMatches[1] ?? '';
+        $this->assertStringContainsString('作品投稿', $accountNavigation);
+        $this->assertStringContainsString('站内私信', $accountNavigation);
+        $this->assertStringContainsString('实时交流群', $accountNavigation);
+    }
 }

@@ -30,13 +30,6 @@
                 <a class="nav-link {{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ Route::has('home') ? route('home') : url('/') }}" @if(request()->routeIs('home')) aria-current="page" @endif>首页</a>
                 <a class="nav-link {{ request()->routeIs('novels.*') ? 'is-active' : '' }}" href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}" @if(request()->routeIs('novels.*')) aria-current="page" @endif>书库</a>
                 <a class="nav-link" href="#categories">分类</a>
-                @auth
-                    @if ($canAccessAuthorStudio && Route::has('author.submissions'))
-                        <a class="nav-link {{ request()->routeIs('author.*') ? 'is-active' : '' }}" href="{{ route('author.submissions') }}" @if(request()->routeIs('author.*')) aria-current="page" @endif>作品投稿</a>
-                    @endif
-                    @if (Route::has('messages.page'))<a class="nav-link {{ request()->routeIs('messages.*') ? 'is-active' : '' }}" href="{{ route('messages.page') }}" @if(request()->routeIs('messages.*')) aria-current="page" @endif>站内私信</a>@endif
-                    @if (Route::has('groups.page'))<a class="nav-link {{ request()->routeIs('groups.*') ? 'is-active' : '' }}" href="{{ route('groups.page') }}" @if(request()->routeIs('groups.*')) aria-current="page" @endif>交流群</a>@endif
-                @endauth
             </nav>
             <div class="nav-actions">
                 <form class="nav-search" action="{{ Route::has('novels.index') ? route('novels.index') : '#' }}" method="get" role="search">
@@ -63,7 +56,7 @@
         </div>
         <div id="mobile-menu" class="mobile-menu" data-mobile-menu hidden aria-hidden="true" inert>
             <button class="mobile-menu-close" type="button" data-menu-close aria-label="关闭菜单">✕</button>
-            <nav class="site-shell mobile-nav" aria-label="移动端主导航"><a href="{{ Route::has('home') ? route('home') : url('/') }}">首页</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">书库</a><a href="#categories">分类</a>@auth @if ($canAccessAuthorStudio && Route::has('author.submissions'))<a href="{{ route('author.submissions') }}">作品投稿</a>@endif @if (Route::has('messages.page'))<a href="{{ route('messages.page') }}">站内私信</a>@endif @if (Route::has('groups.page'))<a href="{{ route('groups.page') }}">交流群</a>@endif<a href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}">个人中心</a>@if (auth()->user()->isRole('admin') && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">管理后台</a>@endif @else<a href="{{ Route::has('login') ? route('login') : '#' }}">登录 / 注册</a>@endauth</nav>
+            <nav class="site-shell mobile-nav" aria-label="移动端主导航"><a href="{{ Route::has('home') ? route('home') : url('/') }}">首页</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">书库</a><a href="#categories">分类</a>@auth <a href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}">个人中心</a>@if (auth()->user()->isRole('admin') && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">管理后台</a>@endif @else<a href="{{ Route::has('login') ? route('login') : '#' }}">登录 / 注册</a>@endauth</nav>
         </div>
     </header>
     @if (session('success'))
