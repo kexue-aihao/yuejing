@@ -10,7 +10,7 @@ class Submission extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'novel_id', 'category_id', 'title', 'synopsis', 'manuscript', 'manuscript_format', 'status', 'reviewer_id', 'review_note', 'reviewed_at',
+        'user_id', 'novel_id', 'category_id', 'title', 'synopsis', 'manuscript', 'manuscript_format', 'cover_url', 'status', 'reviewer_id', 'review_note', 'reviewed_at',
     ];
 
     protected function casts(): array

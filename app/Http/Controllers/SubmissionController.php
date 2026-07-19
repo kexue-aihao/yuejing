@@ -6,6 +6,10 @@ use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Submission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class SubmissionController extends Controller
 {
@@ -34,6 +38,8 @@ class SubmissionController extends Controller
             'manuscript_format' => ['nullable', 'in:markdown'],
             'summary' => ['nullable', 'string', 'max:5000'],
             'content' => ['nullable', 'string'],
+            'cover' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'cover_url' => ['nullable', 'url', 'max:500'],
         ]);
 
         $data['synopsis'] = $data['synopsis'] ?? $data['summary'] ?? null;
@@ -52,23 +58,49 @@ class SubmissionController extends Controller
             return back()->withErrors(['content' => __('ui.messages.submission_content_required')])->withInput();
         }
 
-        $submission = $request->user()->submissions()->create($data);
+        if (! $request->hasFile('cover') && blank($data['cover_url'] ?? null)) {
+            throw ValidationException::withMessages([
+                'cover' => [trans('validation.required', ['attribute' => trans('ui.author.cover_label')])],
+            ]);
+        }
 
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'submission.created',
-            'auditable_type' => $submission::class,
-            'auditable_id' => $submission->id,
-            'metadata' => [
-                'submission_id' => $submission->id,
-                'title' => $submission->title,
-                'author_id' => $submission->user_id,
-                'category_id' => $submission->category_id,
-                'status' => $submission->status,
-            ],
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $coverPath = null;
+        try {
+            $data['cover_url'] = $data['cover_url'] ?? null;
+            if ($request->hasFile('cover')) {
+                $coverPath = $request->file('cover')->store('covers', 'public');
+                $data['cover_url'] = Storage::disk('public')->url($coverPath);
+            }
+            unset($data['cover']);
+
+            $submission = DB::transaction(function () use ($data, $request): Submission {
+                $submission = $request->user()->submissions()->create($data);
+
+                AuditLog::create([
+                    'user_id' => $request->user()->id,
+                    'action' => 'submission.created',
+                    'auditable_type' => $submission::class,
+                    'auditable_id' => $submission->id,
+                    'metadata' => [
+                        'submission_id' => $submission->id,
+                        'title' => $submission->title,
+                        'author_id' => $submission->user_id,
+                        'category_id' => $submission->category_id,
+                        'status' => $submission->status,
+                    ],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+
+                return $submission;
+            });
+        } catch (Throwable $exception) {
+            if ($coverPath !== null) {
+                Storage::disk('public')->delete($coverPath);
+            }
+
+            throw $exception;
+        }
 
         if (! $this->wantsJson($request)) {
             return redirect()->route('author.submissions')->with('status', __('ui.messages.submission_created'));

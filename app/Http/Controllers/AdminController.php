@@ -271,6 +271,7 @@ class AdminController extends Controller
                         'title' => $submission->title,
                         'slug' => $this->uniqueSlug($submission->title),
                         'synopsis' => $submission->synopsis,
+                        'cover_url' => $submission->cover_url,
                         'status' => 'published',
                         'published_at' => $reviewedAt,
                     ]);

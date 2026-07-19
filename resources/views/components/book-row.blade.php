@@ -2,7 +2,7 @@
 
 <div {{ $attributes->merge(['class' => 'account-book-row' . ($class ? " {$class}" : '')]) }}>
     <a href="{{ route('novels.show', $novel) }}" class="account-book-cover">
-        <x-book-cover :cover-a="$novel->cover_a ?? '#3a6866'" :cover-b="$novel->cover_b ?? '#284c4a'" :title="$novel->title" :author="$novel->author?->name" size="small" />
+        <x-book-cover :book="$novel" :cover-a="$novel->cover_a ?? '#3a6866'" :cover-b="$novel->cover_b ?? '#284c4a'" :title="$novel->title" :author="$novel->author?->name" size="small" />
     </a>
     <div class="account-book-body">
         <h3><a href="{{ route('novels.show', $novel) }}" class="account-book-title">{{ $novel->title }}</a></h3>

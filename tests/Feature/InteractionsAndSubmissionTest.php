@@ -9,6 +9,8 @@ use App\Models\Rating;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Concerns\CreatesYuejingData;
 use Tests\TestCase;
 
@@ -87,6 +89,7 @@ class InteractionsAndSubmissionTest extends TestCase
 
     public function test_submission_form_returns_html_and_stores_a_submission(): void
     {
+        Storage::fake('public');
         $author = User::factory()->create(['role' => 'author']);
         $category = Category::create(['name' => '校园', 'slug' => 'xiaoyuan']);
 
@@ -103,6 +106,7 @@ class InteractionsAndSubmissionTest extends TestCase
             ->actingAs($author)->postWithCsrf(route('author.submissions.store'), [
             'title' => '潮声之后',
             'category_id' => $category->id,
+            'cover' => UploadedFile::fake()->image('cover.jpg', 300, 400),
             'summary' => '一封信带来的重逢。',
             'content' => '第一章从旧书店开始。',
         ]);
@@ -116,6 +120,9 @@ class InteractionsAndSubmissionTest extends TestCase
             'manuscript' => '第一章从旧书店开始。',
             'status' => 'pending',
         ]);
+        $submission = $author->submissions()->firstOrFail();
+        $this->assertStringContainsString('/storage/covers/', $submission->cover_url);
+        $this->assertCount(1, Storage::disk('public')->files('covers'));
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'submission.created',
             'auditable_type' => Submission::class,

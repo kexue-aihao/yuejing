@@ -14,7 +14,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     ],
     'nav' => [
         'home' => '首頁',
-        'library' => '書庫',
+        'library' => '書庫大全',
         'categories' => '分類',
         'main_navigation' => '主導覽',
         'mobile_navigation' => '行動版主導覽',
@@ -388,7 +388,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
         'draft_saved' => '草稿已儲存在此瀏覽器',
         'title_label' => '作品名稱',
         'title_placeholder' => '為你的故事取個名字',
-        'genre_label' => '類型',
+        'genre_label' => '類型', 'cover_label' => '作品封面', 'cover_help' => '支援 JPG、PNG 或 WebP，大小不超過 5 MB。',
         'summary_label' => '作品簡介',
         'summary_placeholder' => '用幾句話介紹你的故事、角色與主題',
         'first_chapter' => '第一章（Markdown）',

@@ -21,11 +21,12 @@
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
             @if ($errors->any())<div class="alert">{{ $errors->first() }}</div>@endif
 
-            <form class="form-stack" method="POST" action="{{ route('author.submissions.store') }}" data-markdown-editor>
+            <form class="form-stack" method="POST" action="{{ route('author.submissions.store') }}" enctype="multipart/form-data" data-markdown-editor>
                 @csrf
                 <input type="hidden" name="manuscript_format" value="markdown">
                 <div class="form-field"><label for="title">{{ __('ui.author.title_label') }}</label><input id="title" name="title" value="{{ old('title') }}" placeholder="{{ __('ui.author.title_placeholder') }}" required></div>
                 <div class="form-field"><label for="category_id">{{ __('ui.author.genre_label') }}</label><select id="category_id" name="category_id">@foreach ($categories as $category)<option value="{{ $category->id }}" @selected((string) old('category_id') === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></div>
+                <div class="form-field"><label for="cover">{{ __('ui.author.cover_label') }}</label><input id="cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" required><p class="form-help">{{ __('ui.author.cover_help') }}</p></div>
                 <div class="form-field"><label for="summary">{{ __('ui.author.summary_label') }}</label><textarea id="summary" name="summary" placeholder="{{ __('ui.author.summary_placeholder') }}" required>{{ old('summary') }}</textarea></div>
                 <div class="form-field manuscript-editor-field">
                     <div class="editor-label-row"><label for="content">{{ __('ui.author.first_chapter') }}</label><button class="text-button" type="button" data-clear-markdown-draft>{{ __('ui.author.clear_draft') }}</button></div>

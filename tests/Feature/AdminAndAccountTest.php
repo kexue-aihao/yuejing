@@ -67,6 +67,7 @@ class AdminAndAccountTest extends TestCase
         $author = User::factory()->create(['role' => 'user']);
         $category = Category::create(['name' => '都市', 'slug' => 'dushi-admin-test']);
         $submission = Submission::create([
+            'cover_url' => 'https://example.test/covers/approved.jpg',
             'user_id' => $author->id,
             'category_id' => $category->id,
             'title' => '审核后上架的故事',
@@ -84,6 +85,7 @@ class AdminAndAccountTest extends TestCase
 
         $novel = Novel::where('title', '审核后上架的故事')->firstOrFail();
         $this->assertSame('published', $novel->status);
+        $this->assertSame('https://example.test/covers/approved.jpg', $novel->cover_url);
         $this->assertNotNull($novel->published_at);
         $this->assertSame($novel->id, $submission->fresh()->novel_id);
         $this->assertDatabaseHas('chapters', ['novel_id' => $novel->id, 'chapter_number' => 1, 'status' => 'published']);

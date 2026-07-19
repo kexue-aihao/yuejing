@@ -155,4 +155,34 @@ class PersonalCenterNavigationTest extends TestCase
             ->assertSee('href="'.route('dashboard', ['section' => 'groups']).'"', false)
             ->assertDontSee('<details class="dashboard-nav-group" open', false);
     }
+
+    public function test_library_navigation_contains_categories_without_a_separate_top_level_link(): void
+    {
+        $html = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        preg_match('/<nav class="desktop-nav"[^>]*>(.*?)<\/nav>/s', $html, $desktopMatches);
+        preg_match('/<nav class="site-shell mobile-nav"[^>]*>(.*?)<\/nav>/s', $html, $mobileMatches);
+
+        foreach ([$desktopMatches[1] ?? '', $mobileMatches[1] ?? ''] as $navigation) {
+            $this->assertStringContainsString('href="'.route('novels.index').'"', $navigation);
+            $this->assertStringContainsString(__('ui.nav.library'), $navigation);
+            $this->assertStringNotContainsString('href="#categories"', $navigation);
+        }
+    }
+
+    public function test_author_submission_form_requires_a_multilingual_cover_upload(): void
+    {
+        $author = User::factory()->create(['role' => 'author']);
+
+        $this->actingAs($author)
+            ->get(route('author.submissions'))
+            ->assertOk()
+            ->assertSee('enctype="multipart/form-data"', false)
+            ->assertSee('name="cover"', false)
+            ->assertSee('accept="image/jpeg,image/png,image/webp"', false)
+            ->assertSee(__('ui.author.cover_label'))
+            ->assertSee(__('ui.author.cover_help'));
+    }
 }

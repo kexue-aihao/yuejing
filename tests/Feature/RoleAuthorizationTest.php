@@ -55,6 +55,7 @@ class RoleAuthorizationTest extends TestCase
     public function test_submission_api_is_limited_to_authoring_roles(): void
     {
         $payload = [
+            'cover_url' => 'https://example.test/covers/permissions.jpg',
             'title' => '权限矩阵投稿',
             'synopsis' => '权限测试简介',
             'manuscript' => '权限测试正文',
