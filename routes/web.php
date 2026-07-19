@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AuthorNovelController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\LanguageController;
@@ -83,6 +84,10 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'email.required', 'role:author,editor,admin'])->prefix('author')->group(function () {
+    Route::get('/novels', [AuthorNovelController::class, 'index'])->name('author.novels.index');
+    Route::get('/novels/{novel}/edit', [AuthorNovelController::class, 'edit'])->name('author.novels.edit');
+    Route::match(['put', 'patch'], '/novels/{novel}', [AuthorNovelController::class, 'update'])->name('author.novels.update');
+    Route::get('/novels/{novel}/chapters', [AuthorNovelController::class, 'chapters'])->name('author.chapters.index');
     Route::post('/novels/{novel}/chapters', [ChapterController::class, 'store'])->name('author.chapters.store');
     Route::match(['put', 'patch'], '/novels/{novel}/chapters/{chapter}', [ChapterController::class, 'update'])->name('author.chapters.update');
     Route::delete('/novels/{novel}/chapters/{chapter}', [ChapterController::class, 'destroy'])->name('author.chapters.destroy');

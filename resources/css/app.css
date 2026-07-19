@@ -974,9 +974,30 @@ h2 {
     padding: 13px 0; border-bottom: 1px solid var(--c-border-light);
     color: var(--c-text-stat-soft); font-size: 12px;
 }
+.submission-history-row { align-items: center; }
+.submission-history-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; flex-wrap: wrap; }
 .submission-mini-list strong { display: block; color: var(--c-green-stat-strong); font-family: var(--font-serif); font-weight: 600; }
 .submission-mini-list small { display: block; margin-top: 4px; color: var(--c-text-muted); font-size: 10px; }
 .dashboard-note { margin: 18px 0 0; }
+
+/* -- Author Work Studio -- */
+.author-novel-card + .author-novel-card { margin-top: 20px; }
+.author-novel-card-main { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 22px; align-items: start; }
+.author-novel-cover { width: 100px; }
+.author-novel-cover .book-cover { box-shadow: 5px 7px 12px var(--c-shadow); }
+.author-novel-copy { min-width: 0; }
+.author-novel-copy .panel-heading { align-items: start; margin-bottom: 14px; }
+.author-novel-copy .panel-heading h2 { overflow-wrap: anywhere; }
+.author-novel-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 17px; color: var(--c-text-muted); font-size: 10px; }
+.author-edit-layout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 27px; align-items: start; }
+.author-edit-cover { display: grid; gap: 9px; }
+.author-edit-cover .book-cover { width: 180px; box-shadow: 6px 9px 14px var(--c-shadow); }
+.form-field-label { margin: 0; color: var(--c-text-heading); font-size: 11px; font-weight: 600; }
+.cover-upload-field { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--c-border-light); }
+.cover-upload-preview { display: block; width: 130px; aspect-ratio: 3 / 4; margin-top: 12px; object-fit: cover; border: 1px solid var(--c-border-light); box-shadow: 5px 7px 12px var(--c-shadow); }
+.author-chapter-card { margin-top: 20px; }
+.author-chapter-card .panel-heading { align-items: start; }
+.author-chapter-card textarea { min-height: 220px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.7; }
 
 /* ── Settings ── */
 .settings-hint { margin: 19px 0 0; color: var(--c-text-muted); font-size: 10px; }
@@ -1208,7 +1229,12 @@ a.pagination-item:hover { border-color: var(--c-accent); color: var(--c-accent);
     .panel { padding: 19px 15px; }
     .data-list-row { grid-template-columns: 1fr auto; }
     .data-list-row > span:nth-child(2) { display: none; }
-    .author-layout, .settings-grid { grid-template-columns: 1fr; }
+    .author-layout, .settings-grid, .author-edit-layout { grid-template-columns: 1fr; }
+    .author-novel-card-main { grid-template-columns: 78px minmax(0, 1fr); gap: 15px; }
+    .author-novel-cover { width: 78px; }
+    .author-edit-cover .book-cover { width: 150px; }
+    .submission-history-row { align-items: flex-start; }
+    .submission-history-actions { align-items: flex-end; flex-direction: column; gap: 8px; }
     .submission-audit-row { grid-template-columns: 1fr; gap: 9px; }
     .submission-audit-side { align-items: flex-start; text-align: left; white-space: normal; }
     .visitor-ip { right: 10px; bottom: 10px; max-width: calc(100vw - 20px); }

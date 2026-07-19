@@ -938,6 +938,27 @@ function initMarkdownEditors() {
     });
 }
 
+function initCoverPreviews() {
+    document.querySelectorAll('[data-cover-input]').forEach((input) => {
+        const preview = input.closest('form, .form-field')?.querySelector('[data-cover-preview]');
+        if (!preview) return;
+
+        input.addEventListener('change', () => {
+            const file = input.files?.[0];
+            if (!file || !file.type.startsWith('image/')) {
+                preview.hidden = true;
+                preview.removeAttribute('src');
+                return;
+            }
+
+            const objectUrl = URL.createObjectURL(file);
+            preview.src = objectUrl;
+            preview.hidden = false;
+            preview.addEventListener('load', () => URL.revokeObjectURL(objectUrl), { once: true });
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
     initMobileMenu();
@@ -950,4 +971,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initGroups();
     initRecommendations();
     initMarkdownEditors();
+    initCoverPreviews();
 });
