@@ -169,11 +169,26 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         $this->audit($request, $user, 'auth.logged_out');
 
+        $noCacheHeaders = [
+            'Cache-Control' => 'private, no-store, no-cache, max-age=0, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'CDN-Cache-Control' => 'no-store',
+            'Cloudflare-CDN-Cache-Control' => 'no-store',
+            'Surrogate-Control' => 'no-store',
+            'Vary' => 'Cookie, Accept-Language',
+        ];
+
         if (! $this->wantsJson($request)) {
-            return redirect()->route('home')->with('status', __('ui.messages.logout'));
+            return redirect()
+                ->route('home')
+                ->with('status', __('ui.messages.logout'))
+                ->withHeaders($noCacheHeaders);
         }
 
-        return response()->json(['message' => __('ui.messages.logout')]);
+        return response()
+            ->json(['message' => __('ui.messages.logout')])
+            ->withHeaders($noCacheHeaders);
     }
 
     public function me(Request $request)

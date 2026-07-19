@@ -151,6 +151,29 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_web_logout_returns_homepage_in_guest_state(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-auth-state="authenticated"', false);
+
+        $this->postWithCsrf(route('logout'))
+            ->assertRedirect(route('home'))
+            ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
+            ->assertHeader('CDN-Cache-Control', 'no-store')
+            ->assertHeader('Cloudflare-CDN-Cache-Control', 'no-store');
+
+        $this->assertGuest();
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('data-auth-state="authenticated"', false)
+            ->assertSee('href="'.route('login').'"', false)
+            ->assertSee('href="'.route('register').'"', false);
+    }
+
     public function test_email_verification_requirement_blocks_unverified_submission_pages_when_enabled(): void
     {
         $user = User::factory()->unverified()->create(['role' => 'author']);
