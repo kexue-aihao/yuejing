@@ -84,7 +84,7 @@ class LocalizationTest extends TestCase
             ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
             ->assertHeader('CDN-Cache-Control', 'no-store')
             ->assertHeader('Cloudflare-CDN-Cache-Control', 'no-store')
-            ->assertHeader('Vary', 'Cookie, Accept-Language');
+            ->assertHeader('Vary', 'Cookie, Accept-Language, User-Agent');
 
         $response = $this->withSession(['_token' => $token])
             ->from(route('home'))

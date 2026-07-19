@@ -1,5 +1,6 @@
 <!doctype html>
 @php
+    $device = request()->attributes->get('device', []);
     $localeManager = app(\App\Services\LocaleManager::class);
     $displayLocale = $localeManager->current();
     $localeDefinition = $localeManager->definition($displayLocale);
@@ -46,7 +47,7 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="site-body" data-server-auth-state="{{ auth()->check() ? 'authenticated' : 'guest' }}">
+<body class="site-body device-{{ $device['platform'] ?? 'desktop' }} device-type-{{ $device['device_type'] ?? 'desktop' }}" data-server-auth-state="{{ auth()->check() ? 'authenticated' : 'guest' }}" data-device-platform="{{ $device['platform'] ?? 'desktop' }}" data-device-type="{{ $device['device_type'] ?? 'desktop' }}" data-device-mobile="{{ ! empty($device['is_mobile']) ? '1' : '0' }}" data-device-webview="{{ ! empty($device['is_webview']) ? '1' : '0' }}">
     <a class="skip-link" href="#main-content">{{ __('ui.common.skip_to_content') }}</a>
     <header class="site-header">
         @php

@@ -185,7 +185,7 @@ class AuthenticationTest extends TestCase
             ->get('/auth/me', ['Accept' => 'application/json'])
             ->assertOk()
             ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
-            ->assertHeader('Vary', 'Cookie');
+            ->assertHeader('Vary', 'Cookie, User-Agent');
     }
 
     public function test_email_verification_requirement_blocks_unverified_submission_pages_when_enabled(): void

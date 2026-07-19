@@ -269,6 +269,17 @@ button, a { -webkit-tap-highlight-color: transparent; }
     width: 100%; min-width: 0; padding: 8px 0; border: 0; outline: 0;
     background: transparent; color: var(--c-text); font-size: 13px;
 }
+/* Platform-specific mobile browser adjustments. */
+@media (max-width: 680px) {
+    body.device-ios .site-header { padding-top: env(safe-area-inset-top, 0px); }
+    body.device-ios .mobile-menu { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    body.device-ios input,
+    body.device-ios textarea,
+    body.device-ios select { font-size: 16px; }
+    body.device-android button,
+    body.device-android a { touch-action: manipulation; }
+}
+
 .nav-search input::placeholder { color: var(--c-text-disabled); }
 .nav-search button {
     flex: 0 0 auto; padding: 5px 8px 5px 0; border: 0; background: transparent;

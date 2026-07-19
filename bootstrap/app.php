@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureEmailVerifiedIfRequired;
+use App\Http\Middleware\DetectDevice;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) use ($trustedProxies): void {
+        $middleware->append(DetectDevice::class);
         $middleware->web(append: [SetLocale::class]);
         $middleware->trustProxies(
             $trustedProxies ?: null,
