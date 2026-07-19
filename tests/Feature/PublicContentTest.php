@@ -30,7 +30,24 @@ class PublicContentTest extends TestCase
             ->assertSee('与故事相遇。')
             ->assertSee($novel->title)
             ->assertDontSee('8,642')
+            ->assertSee(__('ui.home.updated_to', ['count' => 2]))
             ->assertSee(route('novels.index'));
+    }
+
+    public function test_homepage_uses_the_latest_published_chapter_number(): void
+    {
+        $novel = $this->createPublishedNovel();
+        $novel->chapters()->create([
+            'chapter_number' => 4,
+            'title' => 'Published chapter four',
+            'content' => 'Published content',
+            'status' => 'published',
+            'published_at' => now(),
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee(__('ui.home.updated_to', ['count' => 4]));
     }
 
     public function test_library_returns_published_novels_as_html(): void

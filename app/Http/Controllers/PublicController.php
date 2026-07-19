@@ -63,15 +63,24 @@ class PublicController extends Controller
                 'favorites',
                 'activeRatings as reviews_count',
             ])
+            ->withMax('publishedChapters', 'chapter_number')
             ->withAvg('activeRatings', 'rating');
 
-        $toBook = fn (Novel $novel): array => array_merge($this->novelArray($novel), [
-            'desc' => $novel->synopsis,
-            'score' => $novel->active_ratings_avg_rating !== null
-                ? number_format((float) $novel->active_ratings_avg_rating, 1)
-                : null,
-            'tag' => $novel->categories->first()?->name,
-        ]);
+        $toBook = function (Novel $novel): array {
+            $book = array_merge($this->novelArray($novel), [
+                'desc' => $novel->synopsis,
+                'score' => $novel->active_ratings_avg_rating !== null
+                    ? number_format((float) $novel->active_ratings_avg_rating, 1)
+                    : null,
+                'tag' => $novel->categories->first()?->name,
+            ]);
+
+            $book['latest_chapter_number'] = $novel->published_chapters_max_chapter_number !== null
+                ? (int) $novel->published_chapters_max_chapter_number
+                : (int) $book['chapters'];
+
+            return $book;
+        };
 
         $featured = (clone $baseQuery)
             ->orderByDesc('views_count')
