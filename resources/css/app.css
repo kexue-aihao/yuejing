@@ -2195,6 +2195,17 @@ body select { border-radius: var(--radius-sm); }
 .reader-controls .ui-icon-button { background: transparent; }
 .connection-status { border-radius: 999px; padding: 5px 9px; background: var(--c-surface-inset); }
 .live-dot { box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-status-success-text) 16%, transparent); }
+.button.button-outline.button-small {
+    border-color: var(--c-border-form);
+    color: var(--c-text-control);
+    background: var(--c-bg-card);
+    box-shadow: none;
+}
+.button.button-outline.button-small:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent-hover);
+    background: var(--c-bg-card-alt);
+}
 
 @keyframes ui-spin { to { transform: rotate(360deg); } }
 
