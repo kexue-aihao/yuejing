@@ -1,6 +1,23 @@
 <?php
 
 return [
+    'eyebrow' => '讀者評論',
+    'title' => '評分與評論',
+    'read_cta' => '閱讀評論',
+    'statistics' => '作品統計',
+    'chapters' => '章節',
+    'views' => '瀏覽',
+    'favorites' => '收藏人數',
+    'average_rating' => '平均評分',
+    'rating_count' => '共 :count 人評分',
+    'chapter_total' => '共 :count 章',
+    'no_chapters' => '暫時沒有已發布章節。',
+    'no_update' => '尚未更新',
+    'anonymous_user' => '匿名讀者',
+    'updated' => '評論已更新。',
+    'network_error' => '評論刷新失敗，請檢查網路連線。',
+    'request_failed' => '評論儲存失敗，請檢查表單後再試。',
+    'login_to_review' => '登入後即可留下評論。',
     'rating_label' => '你的評分',
     'review_label' => '文字評論',
     'review_placeholder' => '這部作品最打動你的地方是什麼？',

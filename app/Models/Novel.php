@@ -33,6 +33,11 @@ class Novel extends Model
         return $this->hasMany(Chapter::class)->orderBy('chapter_number');
     }
 
+    public function publishedChapters()
+    {
+        return $this->chapters()->where('status', 'published');
+    }
+
     public function ratings()
     {
         return $this->hasMany(Rating::class);

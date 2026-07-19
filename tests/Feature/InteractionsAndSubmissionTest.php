@@ -87,6 +87,18 @@ class InteractionsAndSubmissionTest extends TestCase
         $this->assertSame(0, Favorite::where('user_id', $reader->id)->where('novel_id', $novel->id)->count());
     }
 
+    public function test_reader_cannot_withdraw_a_rating_from_an_unpublished_work(): void
+    {
+        $reader = User::factory()->create();
+        $novel = $this->createPublishedNovel();
+        $novel->update(['status' => 'draft']);
+        Rating::create(['user_id' => $reader->id, 'novel_id' => $novel->id, 'rating' => 7]);
+
+        $this->actingAs($reader)
+            ->deleteJsonWithCsrf(route('novels.rating.withdraw', $novel))
+            ->assertNotFound();
+    }
+
     public function test_submission_form_returns_html_and_stores_a_submission(): void
     {
         Storage::fake('public');

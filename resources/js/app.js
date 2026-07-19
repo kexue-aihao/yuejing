@@ -3,8 +3,6 @@ import Vditor from 'vditor';
 import 'vditor/dist/index.css';
 import '@fontsource/noto-sans-sc/400.css';
 import '@fontsource/noto-sans-sc/600.css';
-import '@fontsource/noto-serif-sc/400.css';
-import '@fontsource/noto-serif-sc/600.css';
 
 const I18N = window.YuejingI18n || {};
 
@@ -303,7 +301,7 @@ async function apiRequest(url, options = {}) {
         credentials: 'same-origin',
         ...options,
         headers: {
-            ...csrfHeaders(Boolean(options.body)),
+            ...csrfHeaders(typeof options.body === 'string'),
             ...(options.headers || {}),
         },
     });
@@ -959,6 +957,173 @@ function initCoverPreviews() {
     });
 }
 
+function initNovelReviews() {
+    const app = document.querySelector('[data-reviews-app]');
+    const list = app?.querySelector('[data-review-list]');
+    const url = app?.dataset.reviewsUrl;
+    if (!app || !list || !isConfiguredApiUrl(url)) return;
+
+    const status = app.querySelector('[data-reviews-status]');
+    const reviewForm = app.querySelector('[data-review-form]');
+    const withdrawForm = app.querySelector('[data-review-withdraw-form]');
+    let isLoading = false;
+
+    const setStatus = (message, isError = false) => {
+        if (!status) return;
+        status.textContent = message;
+        status.classList.toggle('is-error', isError);
+    };
+
+    const formatCount = (value) => new Intl.NumberFormat(document.documentElement.lang || 'en').format(Number(value) || 0);
+
+    const formatStat = (key, value) => {
+        if (key === 'last_updated_at') return value ? formatTime(value) : tr('reviews.no_update');
+        return ['views_count', 'published_chapters_count', 'favorites_count', 'reviews_count', 'rating_count', 'word_count'].includes(key)
+            ? formatCount(value)
+            : String(value ?? '');
+    };
+
+    const updateStatistics = (statistics) => {
+        const hasAverage = statistics.average_rating !== null && statistics.average_rating !== undefined && statistics.average_rating !== '';
+        const average = Number(statistics.average_rating);
+        const averageText = hasAverage && Number.isFinite(average) ? average.toFixed(1) : tr('reviews.no_rating');
+        const level = statistics.average_rating_level ? tr(`reviews.level_${statistics.average_rating_level}`) : '';
+        const count = Number(statistics.rating_count ?? statistics.reviews_count ?? 0);
+        document.querySelectorAll('[data-review-average]').forEach((element) => { element.textContent = averageText; });
+        document.querySelectorAll('[data-review-stat]').forEach((element) => {
+            const key = element.dataset.reviewStat;
+            if (Object.prototype.hasOwnProperty.call(statistics, key)) element.textContent = formatStat(key, statistics[key]);
+        });
+        const summary = app.querySelector('[data-review-summary]');
+        if (summary) summary.textContent = hasAverage && Number.isFinite(average) ? `${average.toFixed(1)} / 9.9${level ? ` · ${level}` : ''}` : tr('reviews.no_rating');
+        const countLabel = app.querySelector('[data-review-rating-count]');
+        if (countLabel) countLabel.textContent = tr('reviews.rating_count', { count });
+        const chapterTotal = app.querySelector('[data-review-chapter-total]');
+        if (chapterTotal && Object.prototype.hasOwnProperty.call(statistics, 'published_chapters_count')) {
+            chapterTotal.textContent = tr('reviews.chapter_total', { count: statistics.published_chapters_count });
+        }
+    };
+
+    const appendCriteria = (article, criteria) => {
+        if (!criteria || typeof criteria !== 'object') return;
+        const entries = Object.entries(criteria).filter(([key, value]) => ['plot', 'writing', 'characters', 'originality'].includes(key) && value !== null && value !== '');
+        if (!entries.length) return;
+        const summary = document.createElement('dl');
+        summary.className = 'review-criteria-summary';
+        entries.forEach(([key, value]) => {
+            const row = document.createElement('div');
+            const label = document.createElement('dt');
+            label.textContent = tr(`reviews.${key}`);
+            const score = document.createElement('dd');
+            score.textContent = `${String(value ?? '')}/10`;
+            row.append(label, score);
+            summary.append(row);
+        });
+        article.append(summary);
+    };
+
+    const renderReviews = (reviews) => {
+        if (!reviews.length) {
+            const empty = document.createElement('p');
+            empty.className = 'muted';
+            empty.textContent = tr('reviews.no_rating');
+            list.replaceChildren(empty);
+            return;
+        }
+
+        const items = reviews.map((review) => {
+            const article = document.createElement('article');
+            article.className = 'panel review-item';
+            const head = document.createElement('div');
+            head.className = 'review-item-head';
+            const user = document.createElement('strong');
+            user.textContent = review.user || tr('reviews.anonymous_user');
+            const rating = document.createElement('span');
+            const numericRating = Number(review.rating);
+            const ratingText = Number.isFinite(numericRating) ? numericRating.toFixed(1) : '';
+            const level = review.level ? tr(`reviews.level_${review.level}`) : '';
+            rating.textContent = level ? `${ratingText} · ${level}` : ratingText;
+            head.append(user, rating);
+            article.append(head);
+            if (review.review) {
+                const body = document.createElement('p');
+                body.textContent = review.review;
+                article.append(body);
+            }
+            appendCriteria(article, review.criteria);
+            if (review.created_at) {
+                const time = document.createElement('time');
+                time.className = 'review-item-date';
+                time.dateTime = String(review.created_at);
+                time.textContent = formatTime(review.created_at);
+                article.append(time);
+            }
+            return article;
+        });
+        list.replaceChildren(...items);
+    };
+
+    const loadReviews = async () => {
+        if (isLoading) return false;
+        isLoading = true;
+        app.setAttribute('aria-busy', 'true');
+        try {
+            const payload = await apiRequest(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const statistics = payload?.statistics && typeof payload.statistics === 'object' ? payload.statistics : {};
+            const reviews = Array.isArray(payload?.reviews) ? payload.reviews : [];
+            updateStatistics(statistics);
+            renderReviews(reviews);
+            setStatus(tr('reviews.updated'));
+            return true;
+        } catch {
+            setStatus(tr('reviews.network_error'), true);
+            return false;
+        } finally {
+            isLoading = false;
+            app.removeAttribute('aria-busy');
+        }
+    };
+
+    const setFormBusy = (form, busy) => {
+        form?.querySelectorAll('button, input, textarea').forEach((control) => { control.disabled = busy; });
+    };
+
+    const enhanceForm = (form, successMessage, onSuccess) => {
+        if (!form || !isConfiguredApiUrl(form.action)) return;
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            setFormBusy(form, true);
+            try {
+                await apiRequest(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (await loadReviews()) {
+                    onSuccess?.();
+                    setStatus(successMessage);
+                }
+            } catch {
+                setStatus(tr('reviews.request_failed'), true);
+            } finally {
+                setFormBusy(form, false);
+            }
+        });
+    };
+
+    enhanceForm(reviewForm, tr('reviews.rating_saved'), () => {
+        if (withdrawForm) withdrawForm.hidden = false;
+    });
+    enhanceForm(withdrawForm, tr('reviews.rating_withdrawn'), () => {
+        reviewForm?.reset();
+        if (withdrawForm) withdrawForm.hidden = true;
+    });
+
+    loadReviews();
+    window.setInterval(loadReviews, 30000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
     initMobileMenu();
@@ -972,4 +1137,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initRecommendations();
     initMarkdownEditors();
     initCoverPreviews();
+    initNovelReviews();
 });

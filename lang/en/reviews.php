@@ -1,6 +1,23 @@
 <?php
 
 return [
+    'eyebrow' => 'READER REVIEWS',
+    'title' => 'Reviews and ratings',
+    'read_cta' => 'Read reviews',
+    'statistics' => 'Work statistics',
+    'chapters' => 'Chapters',
+    'views' => 'Views',
+    'favorites' => 'Saves',
+    'average_rating' => 'Average rating',
+    'rating_count' => ':count ratings',
+    'chapter_total' => ':count chapters',
+    'no_chapters' => 'No published chapters yet.',
+    'no_update' => 'No update yet',
+    'anonymous_user' => 'Anonymous reader',
+    'updated' => 'Reviews updated.',
+    'network_error' => 'Reviews could not be refreshed. Please check your connection.',
+    'request_failed' => 'The review could not be saved. Please check the form and try again.',
+    'login_to_review' => 'Sign in to leave a review.',
     'rating_label' => 'Your rating',
     'review_label' => 'Written review',
     'review_placeholder' => 'What stood out to you about this work?',

@@ -18,10 +18,13 @@ class PublicController extends Controller
     public function home(Request $request, RecommendationService $recommendations)
     {
         if (! $this->wantsJson($request)) {
+            $editorial = $this->homeEditorialData();
+
             return response()
                 ->view('welcome', [
                     'recommendationUrl' => url('/api/recommendations/stream'),
                     'recommendations' => $recommendations->for($request->user(), $request, 6),
+                    ...$editorial,
                 ])
                 ->withHeaders([
                     // The homepage is localized per session/cookie and must
@@ -37,6 +40,86 @@ class PublicController extends Controller
         }
 
         return response()->json($this->novelPaginator($request));
+    }
+
+    private function homeEditorialData(): array
+    {
+        if (! Schema::hasTable('novels')) {
+            return [
+                'featured' => collect(),
+                'newBooks' => collect(),
+                'ranking' => collect(),
+                'categories' => collect(),
+                'homeStats' => ['works_count' => 0, 'readers_count' => 0],
+            ];
+        }
+
+        $baseQuery = Novel::query()
+            ->with(['author:id,name', 'categories:id,name'])
+            ->where('status', 'published')
+            ->withCount([
+                'publishedChapters',
+                'favorites',
+                'activeRatings as reviews_count',
+            ])
+            ->withAvg('activeRatings', 'rating');
+
+        $toBook = fn (Novel $novel): array => array_merge($this->novelArray($novel), [
+            'desc' => $novel->synopsis,
+            'score' => $novel->active_ratings_avg_rating !== null
+                ? number_format((float) $novel->active_ratings_avg_rating, 1)
+                : null,
+            'tag' => $novel->categories->first()?->name,
+        ]);
+
+        $featured = (clone $baseQuery)
+            ->orderByDesc('views_count')
+            ->latest('published_at')
+            ->limit(3)
+            ->get()
+            ->map($toBook)
+            ->values();
+        $newBooks = (clone $baseQuery)
+            ->latest('published_at')
+            ->limit(4)
+            ->get()
+            ->map($toBook)
+            ->values();
+        $ranking = (clone $baseQuery)
+            ->whereHas('activeRatings')
+            ->orderByDesc('active_ratings_avg_rating')
+            ->orderByDesc('views_count')
+            ->limit(5)
+            ->get()
+            ->map($toBook)
+            ->values();
+        $categories = Schema::hasTable('categories')
+            ? Category::query()
+                ->where('is_active', true)
+                ->withCount(['novels' => fn ($query) => $query->where('status', 'published')])
+                ->orderByDesc('novels_count')
+                ->limit(5)
+                ->get(['id', 'name', 'slug'])
+            : collect();
+
+        $readersCount = Schema::hasTable('reading_records')
+            ? ReadingRecord::query()
+                ->whereHas('novel', fn ($query) => $query->where('status', 'published'))
+                ->distinct()
+                ->count('user_id')
+            : 0;
+        $worksCount = Novel::where('status', 'published')->count();
+
+        return [
+            'featured' => $featured,
+            'newBooks' => $newBooks,
+            'ranking' => $ranking,
+            'categories' => $categories,
+            'homeStats' => [
+                'works_count' => $worksCount,
+                'readers_count' => $readersCount,
+            ],
+        ];
     }
 
     public function index(Request $request)
@@ -56,20 +139,39 @@ class PublicController extends Controller
     public function novel(Request $request, Novel $novel)
     {
         abort_unless($novel->status === 'published', 404);
-        $novel->increment('views_count');
-        $novel->load(['author:id,name', 'categories', 'chapters:id,novel_id,chapter_number,title,status,published_at', 'activeRatings.user:id,name']);
+        if (! $this->wantsJson($request)) {
+            $novel->increment('views_count');
+        }
+        $novel->load([
+            'author:id,name',
+            'categories',
+            'chapters' => fn ($query) => $query
+                ->where('status', 'published')
+                ->select('id', 'novel_id', 'chapter_number', 'title', 'content', 'status', 'published_at', 'updated_at'),
+        ])->loadCount([
+            'publishedChapters',
+            'favorites',
+            'activeRatings as reviews_count',
+        ]);
         $this->recordInterestEvent($request, $novel);
 
+        $statistics = $this->novelStatistics($novel);
         $ratingScale = app(RatingScale::class);
-        $averageRating = $novel->activeRatings->avg('rating');
+        $activeRatings = $novel->activeRatings()
+            ->with('user:id,name')
+            ->latest()
+            ->limit(20)
+            ->get();
+        $averageRating = $novel->activeRatings()->avg('rating');
         $currentRating = auth()->check()
-            ? $novel->activeRatings->firstWhere('user_id', auth()->id())
+            ? $novel->activeRatings()->where('user_id', auth()->id())->first()
             : null;
 
         if (! $this->wantsJson($request)) {
             return view('pages.novels.show', [
-                'novel' => $this->novelArray($novel),
+                'novel' => $this->novelArray($novel, $statistics),
                 'novelModel' => $novel,
+                'statistics' => $statistics,
                 'isFavorited' => auth()->check() && $novel->favorites()->where('user_id', auth()->id())->exists(),
                 'chapters' => $novel->chapters
                     ->where('status', 'published')
@@ -78,7 +180,7 @@ class PublicController extends Controller
                         'title' => $chapter->title,
                         'date' => $chapter->published_at?->format('m-d') ?? __('ui.messages.pending_update'),
                     ])->values(),
-                'ratings' => $novel->activeRatings->map(fn ($rating) => [
+                'ratings' => $activeRatings->map(fn ($rating) => [
                     'rating' => (float) $rating->rating,
                     'level' => $ratingScale->key($rating->rating),
                     'review' => $rating->review,
@@ -91,7 +193,60 @@ class PublicController extends Controller
             ]);
         }
 
-        return response()->json($novel->loadCount('activeRatings'));
+        return response()->json([
+            ...$this->novelArray($novel, $statistics),
+            ...$statistics,
+            'active_ratings' => $activeRatings->map(fn ($rating) => [
+                'id' => $rating->id,
+                'rating' => (float) $rating->rating,
+                'review' => $rating->review,
+                'criteria' => $rating->criteria ?? [],
+                'user' => $rating->user?->name,
+                'created_at' => $rating->created_at?->toISOString(),
+            ])->values(),
+            'statistics' => $statistics,
+        ]);
+    }
+
+    public function reviews(Request $request, Novel $novel)
+    {
+        abort_unless($novel->status === 'published', 404);
+
+        $novel->load([
+            'chapters' => fn ($query) => $query
+                ->where('status', 'published')
+                ->select('id', 'novel_id', 'content', 'status', 'published_at', 'updated_at'),
+        ])->loadCount([
+            'publishedChapters',
+            'favorites',
+            'activeRatings as reviews_count',
+        ]);
+
+        $ratingScale = app(RatingScale::class);
+        $statistics = $this->novelStatistics($novel);
+        $ratings = $novel->activeRatings()
+            ->with('user:id,name')
+            ->latest()
+            ->limit(20)
+            ->get();
+        $averageRating = $novel->activeRatings()->avg('rating');
+
+        return response()->json([
+            'statistics' => array_merge($statistics, [
+                'average_rating' => $averageRating !== null ? round((float) $averageRating, 1) : null,
+                'average_rating_level' => $averageRating !== null ? $ratingScale->key($averageRating) : null,
+                'rating_count' => $statistics['reviews_count'],
+            ]),
+            'reviews' => $ratings->map(fn ($rating) => [
+                'id' => $rating->id,
+                'rating' => (float) $rating->rating,
+                'level' => $ratingScale->key($rating->rating),
+                'review' => $rating->review,
+                'criteria' => $rating->criteria ?? [],
+                'user' => $rating->user?->name,
+                'created_at' => $rating->created_at?->toISOString(),
+            ])->values(),
+        ]);
     }
 
     public function chapter(Request $request, Novel $novel, Chapter $chapter, MarkdownRenderer $markdownRenderer)
@@ -211,13 +366,18 @@ class PublicController extends Controller
         }
     }
 
-    private function novelArray(Novel $novel): array
+    private function novelArray(Novel $novel, ?array $statistics = null): array
     {
-        $chaptersCount = $novel->relationLoaded('chapters')
-            ? $novel->chapters->where('status', 'published')->count()
-            : $novel->chapters()->where('status', 'published')->count();
+        $statistics ??= [
+            'published_chapters_count' => $novel->published_chapters_count ?? ($novel->relationLoaded('chapters')
+                ? $novel->chapters->where('status', 'published')->count()
+                : $novel->chapters()->where('status', 'published')->count()),
+            'favorites_count' => (int) ($novel->favorites_count ?? 0),
+            'reviews_count' => (int) ($novel->reviews_count ?? 0),
+        ];
+        $chaptersCount = $statistics['published_chapters_count'];
 
-        return [
+        return array_merge([
             'id' => $novel->id,
             'title' => $novel->title,
             'slug' => $novel->slug,
@@ -231,6 +391,42 @@ class PublicController extends Controller
             'cover_url' => $novel->cover_url,
             'cover_a' => '#355c5d',
             'cover_b' => '#d6aa67',
+        ], $statistics);
+    }
+
+    private function novelStatistics(Novel $novel): array
+    {
+        $publishedChapters = $novel->relationLoaded('chapters')
+            ? $novel->chapters->where('status', 'published')
+            : $novel->publishedChapters()->get(['id', 'content', 'updated_at']);
+        // Viewing a work updates its counter and may also touch updated_at;
+        // published chapter timestamps are the content update signal.
+        $lastUpdatedAt = null;
+
+        foreach ($publishedChapters as $chapter) {
+            foreach ([$chapter->published_at, $chapter->updated_at] as $timestamp) {
+                if ($timestamp !== null && ($lastUpdatedAt === null || $timestamp->gt($lastUpdatedAt))) {
+                    $lastUpdatedAt = $timestamp;
+                }
+            }
+        }
+
+        $lastUpdatedAt ??= $novel->published_at ?? $novel->created_at;
+
+        return [
+            'views_count' => (int) $novel->views_count,
+            'published_chapters_count' => (int) ($novel->published_chapters_count ?? $publishedChapters->count()),
+            'favorites_count' => (int) ($novel->favorites_count ?? $novel->favorites()->count()),
+            'reviews_count' => (int) ($novel->reviews_count ?? $novel->activeRatings->count()),
+            'word_count' => $publishedChapters->sum(fn (Chapter $chapter): int => $this->wordCount($chapter->content)),
+            'last_updated_at' => $lastUpdatedAt,
         ];
+    }
+
+    private function wordCount(?string $content): int
+    {
+        $content = preg_replace('/\s+/u', '', strip_tags($content ?? '')) ?? '';
+
+        return mb_strlen($content, 'UTF-8');
     }
 }

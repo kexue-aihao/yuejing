@@ -1,6 +1,23 @@
 <?php
 
 return [
+    'eyebrow' => '读者点评',
+    'title' => '评分与点评',
+    'read_cta' => '阅读点评',
+    'statistics' => '作品统计',
+    'chapters' => '章节',
+    'views' => '浏览',
+    'favorites' => '收藏人数',
+    'average_rating' => '平均评分',
+    'rating_count' => '共 :count 人评分',
+    'chapter_total' => '共 :count 章',
+    'no_chapters' => '暂时没有已发布章节。',
+    'no_update' => '暂未更新',
+    'anonymous_user' => '匿名读者',
+    'updated' => '点评已更新。',
+    'network_error' => '点评刷新失败，请检查网络连接。',
+    'request_failed' => '点评保存失败，请检查表单后重试。',
+    'login_to_review' => '登录后即可留下点评。',
     'rating_label' => '你的评分',
     'review_label' => '文字点评',
     'review_placeholder' => '这部作品最打动你的地方是什么？',

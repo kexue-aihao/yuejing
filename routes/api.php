@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\GroupChatController;
 use App\Http\Controllers\PrivateMessageController;
+use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RecommendationController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('web')->group(function (): void {
     Route::get('/recommendations', [RecommendationController::class, 'index'])->name('api.recommendations.index');
     Route::get('/recommendations/stream', [RecommendationController::class, 'stream'])->name('api.recommendations.stream');
+    Route::get('/novels/{novel:slug}/reviews', [PublicController::class, 'reviews'])->name('api.novels.reviews');
 });
 
 Route::middleware(['web', 'auth'])

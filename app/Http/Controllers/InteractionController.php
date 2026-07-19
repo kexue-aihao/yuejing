@@ -24,6 +24,9 @@ class InteractionController extends Controller
             'criteria.originality' => ['nullable', 'integer', 'min:1', 'max:10'],
         ]);
         $data['rating'] = $scale->normalize($data['rating']);
+        $data['criteria'] = collect($data['criteria'] ?? [])
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->all();
         $rating = DB::transaction(function () use ($request, $novel, $data) {
             $rating = Rating::query()
                 ->where('user_id', $request->user()->id)
@@ -50,6 +53,8 @@ class InteractionController extends Controller
 
     public function withdrawRating(Request $request, Novel $novel)
     {
+        abort_unless($novel->status === 'published', 404);
+
         Rating::query()
             ->where('user_id', $request->user()->id)
             ->where('novel_id', $novel->id)
