@@ -42,6 +42,7 @@ class PublicContentTest extends TestCase
 
         $response->assertOk()
             ->assertViewIs('pages.novels.index')
+            ->assertSee('<section class="site-shell page-content">', false)
             ->assertSee($novel->title)
             ->assertSee($novel->slug)
             ->assertDontSee('未发布作品');
