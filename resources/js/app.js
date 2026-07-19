@@ -878,12 +878,47 @@ function initRecommendations() {
     connect();
 }
 
+async function readManuscriptFile(file) {
+    const buffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    if (typeof TextDecoder === 'undefined') throw new Error('TextDecoder unavailable');
+    let encoding = 'utf-8';
+    let offset = 0;
+
+    if (bytes[0] === 0xff && bytes[1] === 0xfe) {
+        encoding = 'utf-16le';
+        offset = 2;
+    } else if (bytes[0] === 0xfe && bytes[1] === 0xff) {
+        encoding = 'utf-16be';
+        offset = 2;
+    } else if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+        offset = 3;
+    }
+
+    const encodings = offset > 0 ? [encoding] : ['utf-8', 'gb18030', 'big5', 'windows-1252'];
+    for (const candidate of encodings) {
+        try {
+            return new TextDecoder(candidate, { fatal: true }).decode(bytes.slice(offset)).replace(/\r\n?/g, '\n');
+        } catch {
+            // Try the next supported text encoding. The server remains the
+            // fallback when the browser cannot decode the selected file.
+        }
+    }
+
+    throw new Error('Unsupported manuscript encoding');
+}
+
+function manuscriptFormatFor(file) {
+    return /\.txt$/i.test(file.name) ? 'text' : 'markdown';
+}
+
 function initMarkdownEditors() {
     document.querySelectorAll('[data-markdown-editor]').forEach((form) => {
         const textarea = form.querySelector('textarea[data-markdown-source]');
         const editor = form.querySelector('[data-vditor-editor]');
         const manuscriptFile = form.querySelector('[data-manuscript-file]');
         const manuscriptFileName = form.querySelector('[data-manuscript-file-name]');
+        const manuscriptFormat = form.querySelector('[data-manuscript-format]');
         if (!textarea || !editor) return;
 
         const storageKey = `yuejing-markdown-draft:${window.location.pathname}`;
@@ -923,32 +958,33 @@ function initMarkdownEditors() {
             },
         });
 
-        let clearingEditorForFile = false;
-        const clearManuscriptFile = () => {
-            if (clearingEditorForFile) return;
-            if (!manuscriptFile?.files?.length) return;
-            manuscriptFile.value = '';
-            if (manuscriptFileName) manuscriptFileName.textContent = '';
-        };
-
-        manuscriptFile?.addEventListener('change', () => {
+        let fileLoadedIntoEditor = false;
+        manuscriptFile?.addEventListener('change', async () => {
             const file = manuscriptFile.files?.[0];
             if (!file) {
+                fileLoadedIntoEditor = false;
                 if (manuscriptFileName) manuscriptFileName.textContent = '';
                 return;
             }
 
-            clearingEditorForFile = true;
-            instance.setValue('');
-            clearingEditorForFile = false;
-            syncSource('');
             if (manuscriptFileName) manuscriptFileName.textContent = file.name;
+            try {
+                const content = await readManuscriptFile(file);
+                instance.setValue(content);
+                syncSource(content);
+                if (manuscriptFormat) manuscriptFormat.value = manuscriptFormatFor(file);
+                fileLoadedIntoEditor = true;
+            } catch {
+                fileLoadedIntoEditor = false;
+            }
         });
-
-        editor.addEventListener('input', clearManuscriptFile);
 
         form.addEventListener('submit', () => {
             syncSource(instance.getValue());
+            // The editor is the authoritative source after a successful local
+            // file read. Clear the file input before the browser builds FormData
+            // so the server does not receive two manuscript sources.
+            if (fileLoadedIntoEditor && manuscriptFile?.files?.length) manuscriptFile.value = '';
             try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
         });
 
@@ -956,9 +992,46 @@ function initMarkdownEditors() {
             try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
             instance.setValue('');
             syncSource('');
+            fileLoadedIntoEditor = false;
+            if (manuscriptFile) manuscriptFile.value = '';
+            if (manuscriptFileName) manuscriptFileName.textContent = '';
         });
 
         textarea.hidden = true;
+    });
+}
+
+function initChapterManuscriptUploads() {
+    document.querySelectorAll('[data-chapter-manuscript-form]').forEach((form) => {
+        const textarea = form.querySelector('[data-manuscript-content]');
+        const manuscriptFile = form.querySelector('[data-manuscript-file]');
+        const manuscriptFileName = form.querySelector('[data-manuscript-file-name]');
+        const manuscriptFormat = form.querySelector('[data-manuscript-format]');
+        if (!textarea || !manuscriptFile) return;
+
+        let fileLoadedIntoEditor = false;
+        manuscriptFile.addEventListener('change', async () => {
+            const file = manuscriptFile.files?.[0];
+            if (!file) {
+                fileLoadedIntoEditor = false;
+                if (manuscriptFileName) manuscriptFileName.textContent = '';
+                return;
+            }
+
+            if (manuscriptFileName) manuscriptFileName.textContent = file.name;
+            try {
+                textarea.value = await readManuscriptFile(file);
+                if (manuscriptFormat) manuscriptFormat.value = manuscriptFormatFor(file);
+                fileLoadedIntoEditor = true;
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            } catch {
+                fileLoadedIntoEditor = false;
+            }
+        });
+
+        form.addEventListener('submit', () => {
+            if (fileLoadedIntoEditor && manuscriptFile.files?.length) manuscriptFile.value = '';
+        });
     });
 }
 
@@ -1162,6 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGroups();
     initRecommendations();
     initMarkdownEditors();
+    initChapterManuscriptUploads();
     initCoverPreviews();
     initNovelReviews();
 });

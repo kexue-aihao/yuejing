@@ -21,7 +21,7 @@
             @elseif ($activeSection === 'groups')
                 @include('pages.groups._content', ['api' => $groupsApi, 'currentUserId' => $currentUserId, 'embedded' => true])
             @elseif ($activeSection === 'submissions')
-                @include('pages.author._content', ['categories' => $categories, 'submissions' => $submissionHistory, 'embedded' => true])
+                @include('pages.author._content', ['categories' => $categories, 'submissions' => $submissionHistory, 'requiresSynopsis' => $requiresSynopsis, 'embedded' => true])
             @else
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
             <div class="metric-grid">

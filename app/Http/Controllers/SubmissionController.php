@@ -27,7 +27,11 @@ class SubmissionController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug']);
 
-            return view('pages.author.submissions', compact('submissions', 'categories'));
+            return view('pages.author.submissions', [
+                'submissions' => $submissions,
+                'categories' => $categories,
+                'requiresSynopsis' => $request->user()->submissions()->doesntExist(),
+            ]);
         }
 
         $submissions = $request->user()->submissions()->with('reviewer:id,name')->latest()->paginate(config('yuejing.pagination'));
@@ -37,6 +41,7 @@ class SubmissionController extends Controller
 
     public function store(Request $request, ManuscriptFileParser $fileParser)
     {
+        $requiresSynopsis = $request->user()->submissions()->doesntExist();
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
@@ -50,7 +55,9 @@ class SubmissionController extends Controller
             'cover_url' => ['nullable', 'url', 'max:500'],
         ]);
 
-        $data['synopsis'] = $data['synopsis'] ?? $data['summary'] ?? null;
+        $data['synopsis'] = filled($data['synopsis'] ?? null)
+            ? $data['synopsis']
+            : ($data['summary'] ?? null);
         $editorContent = $data['manuscript'] ?? $data['content'] ?? null;
         $hasEditorContent = is_string($editorContent) && trim($editorContent) !== '';
         $hasUploadedFile = $request->hasFile('manuscript_file');
@@ -81,6 +88,12 @@ class SubmissionController extends Controller
             }
 
             return back()->withErrors(['content' => __('ui.messages.submission_content_required')])->withInput();
+        }
+
+        if ($requiresSynopsis && blank($data['synopsis'])) {
+            throw ValidationException::withMessages([
+                'summary' => [__('ui.messages.submission_synopsis_required')],
+            ]);
         }
 
         if (! $request->hasFile('cover') && blank($data['cover_url'] ?? null)) {

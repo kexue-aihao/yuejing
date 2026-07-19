@@ -32,6 +32,7 @@ class PageController extends Controller
             ->get();
 
         $submissions = $user->submissions()->latest()->limit(5)->get();
+        $requiresSynopsis = $submissions->isEmpty();
         $submissionCounts = $user->submissions()
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
@@ -59,6 +60,7 @@ class PageController extends Controller
             'readingCount' => $user->readingRecords()->count(),
             'submissionCounts' => $submissionCounts,
             'submissionHistory' => $submissionHistory,
+            'requiresSynopsis' => $requiresSynopsis,
             'categories' => $categories,
             'activeSection' => $activeSection,
             'messagesApi' => [
