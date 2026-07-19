@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -16,6 +17,7 @@ class AuthenticationTest extends TestCase
     public function test_registration_creates_and_logs_in_a_user_without_external_mail_delivery(): void
     {
         Notification::fake();
+        Config::set('yuejing.email_verification.required', true);
         Setting::create([
             'key' => 'email_verification_required',
             'value' => '1',
@@ -58,6 +60,7 @@ class AuthenticationTest extends TestCase
 
     public function test_registration_email_failure_does_not_return_server_error(): void
     {
+        Config::set('yuejing.email_verification.required', true);
         Setting::create([
             'key' => 'email_verification_required',
             'value' => '1',
@@ -187,6 +190,7 @@ class AuthenticationTest extends TestCase
 
     public function test_email_verification_requirement_blocks_unverified_submission_pages_when_enabled(): void
     {
+        Config::set('yuejing.email_verification.required', true);
         $user = User::factory()->unverified()->create(['role' => 'author']);
         Setting::create([
             'key' => 'email_verification_required',
@@ -203,6 +207,7 @@ class AuthenticationTest extends TestCase
 
     public function test_email_verification_requirement_allows_unverified_submission_pages_when_disabled(): void
     {
+        Config::set('yuejing.email_verification.required', false);
         Setting::query()->where('key', 'email_verification_required')->delete();
         $user = User::factory()->unverified()->create(['role' => 'author']);
         Setting::create([
@@ -214,6 +219,27 @@ class AuthenticationTest extends TestCase
         $this->actingAs($user)
             ->get(route('author.submissions'))
             ->assertRedirect(route('dashboard', ['section' => 'submissions']));
+    }
+
+    public function test_database_setting_cannot_enable_email_verification_without_env_switch(): void
+    {
+        Config::set('yuejing.email_verification.required', false);
+        Notification::fake();
+        Setting::create([
+            'key' => 'email_verification_required',
+            'value' => '1',
+            'type' => 'boolean',
+        ]);
+
+        $response = $this->postJsonWithCsrf(route('register'), [
+            'name' => '环境开关读者',
+            'email' => 'env-switch@example.test',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertCreated()->assertJsonPath('email_verification_required', false);
+        Notification::assertNothingSent();
     }
 
     public function test_verification_link_marks_an_unverified_user_as_verified(): void

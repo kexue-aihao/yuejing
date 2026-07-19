@@ -1023,6 +1023,13 @@ h2 {
 
 /* ── Settings ── */
 .settings-hint { margin: 19px 0 0; color: var(--c-text-muted); font-size: 10px; }
+.environment-config-panel { margin-top: 20px; }
+.environment-config-list { display: grid; gap: 0; margin-top: 18px; border-top: 1px solid var(--c-border); }
+.environment-config-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 13px 0; border-bottom: 1px solid var(--c-border); }
+.environment-config-row > div { min-width: 0; }
+.environment-config-row strong { color: var(--c-text-heading-soft); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }
+.environment-config-row p { margin: 5px 0 0; color: var(--c-text-muted); font-size: 11px; line-height: 1.6; }
+.environment-config-row code { flex-shrink: 0; max-width: 42%; padding: 5px 8px; overflow-wrap: anywhere; color: var(--c-text-heading-soft); background: var(--c-bg-soft); font-size: 10px; }
 .security-panel { margin-top: 20px; }
 .security-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .security-row strong { display: block; color: var(--c-green-stat-strong); font-family: var(--font-serif); font-size: 15px; }
@@ -1917,6 +1924,8 @@ body input[type="radio"] {
     .review-form-grid, .recommendation-grid { grid-template-columns: 1fr; }
     .review-criteria-grid, .review-criteria-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .review-withdraw-form { margin: 0; }
+    .environment-config-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+    .environment-config-row code { max-width: 100%; }
     .info-page, .info-page-header { padding-top: 34px; }
     .info-content, .category-directory { grid-template-columns: 1fr; }
     .info-page { padding-bottom: 55px; }

@@ -27,6 +27,28 @@ class AdminAndAccountTest extends TestCase
         $this->actingAs($admin)->getJson('/api/admin')->assertOk()->assertJsonStructure(['users', 'novels', 'chapters', 'pending_submissions']);
     }
 
+    public function test_admin_settings_explains_environment_configuration_and_respects_env_email_gate(): void
+    {
+        Config::set('yuejing.email_verification.required', false);
+        $admin = User::factory()->create(['role' => 'admin']);
+        \App\Models\Setting::create([
+            'key' => 'email_verification_required',
+            'value' => '1',
+            'type' => 'boolean',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.settings'));
+
+        $response->assertOk()
+            ->assertViewIs('pages.admin.settings')
+            ->assertSee(__('ui.admin.environment_config'))
+            ->assertSee(__('ui.admin.env_config_descriptions.email_verification'))
+            ->assertSee('APP_ENV')
+            ->assertSee('disabled', false);
+        $this->assertFalse($response->viewData('settingValues')['email_verification_required']);
+        $this->assertFalse($response->viewData('environmentConfig')['email_verification_enabled']);
+    }
+
     public function test_admin_must_provide_a_category_slug(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

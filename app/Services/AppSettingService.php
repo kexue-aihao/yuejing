@@ -8,6 +8,17 @@ use Illuminate\Support\Facades\Auth;
 
 class AppSettingService
 {
+    public function emailVerificationRequired(): bool
+    {
+        // The environment flag is the hard safety gate. A stale database
+        // setting must never enable email verification by itself.
+        if (! (bool) config('yuejing.email_verification.required', false)) {
+            return false;
+        }
+
+        return filter_var($this->get('email_verification_required', true), FILTER_VALIDATE_BOOLEAN);
+    }
+
     public function get(string $key, mixed $default = null): mixed
     {
         $setting = Setting::query()->where('key', $key)->first();

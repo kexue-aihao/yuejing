@@ -69,10 +69,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        $verificationRequired = filter_var($settings->get(
-            'email_verification_required',
-            config('yuejing.email_verification.required', false),
-        ), FILTER_VALIDATE_BOOLEAN);
+        $verificationRequired = $settings->emailVerificationRequired();
 
         if ($verificationRequired) {
             try {

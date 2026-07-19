@@ -11,10 +11,7 @@ class EnsureEmailVerifiedIfRequired
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $required = filter_var(app(AppSettingService::class)->get(
-            'email_verification_required',
-            config('yuejing.email_verification.required', false),
-        ), FILTER_VALIDATE_BOOLEAN);
+        $required = app(AppSettingService::class)->emailVerificationRequired();
 
         if ($required && ! $request->user()?->hasVerifiedEmail()) {
             abort(403, __('ui.messages.email_verification_required'));

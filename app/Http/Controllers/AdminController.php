@@ -44,13 +44,8 @@ class AdminController extends Controller
         $settings = Setting::query()->orderBy('key')->get();
 
         if (! $this->wantsJson($request)) {
-            $settingValues = $settings->mapWithKeys(fn (Setting $setting) => [$setting->key => match ($setting->type) {
-                'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),
-                'integer' => (int) $setting->value,
-                default => $setting->value,
-            }]);
             $settingValues = collect([
-                'email_verification_required' => $service->get('email_verification_required', false),
+                'email_verification_required' => $service->emailVerificationRequired(),
                 'site_name' => $service->get('site_name', __('ui.app.name')),
                 'site_tagline' => $service->get('site_tagline', __('ui.messages.site_tagline')),
                 'contact_email' => $service->get('contact_email', 'hello@yuejing.local'),
@@ -58,9 +53,14 @@ class AdminController extends Controller
                 'show_rank' => $service->get('show_rank', true),
                 'show_new' => $service->get('show_new', true),
                 'allow_comments' => $service->get('allow_comments', true),
-            ])->merge($settingValues);
+            ]);
 
-            return view('pages.admin.settings', compact('settings', 'settingValues'));
+            $environmentConfig = [
+                'email_verification_enabled' => (bool) config('yuejing.email_verification.required', false),
+                'items' => $this->environmentConfigItems(),
+            ];
+
+            return view('pages.admin.settings', compact('settings', 'settingValues', 'environmentConfig'));
         }
 
         return response()->json(['settings' => $settings]);
@@ -88,6 +88,54 @@ class AdminController extends Controller
         }
 
         return response()->json(['message' => __('ui.messages.settings_updated')]);
+    }
+
+    private function environmentConfigItems(): array
+    {
+        $databaseConnection = (string) config('database.default');
+        $database = (array) config("database.connections.{$databaseConnection}", []);
+        $mailer = (string) config('mail.default');
+        $mail = (array) config("mail.mailers.{$mailer}", []);
+        $mask = static fn (mixed $value): string => filled($value)
+            ? __('ui.admin.configured')
+            : __('ui.admin.not_configured');
+        $boolean = static fn (mixed $value): string => filter_var($value, FILTER_VALIDATE_BOOLEAN)
+            ? __('ui.admin.enabled')
+            : __('ui.admin.disabled');
+        $value = static fn (mixed $value): string => is_scalar($value) && (string) $value !== ''
+            ? (string) $value
+            : __('ui.admin.not_configured');
+
+        return [
+            ['key' => 'APP_NAME', 'value' => $value(config('app.name')), 'description' => __('ui.admin.env_config_descriptions.app_name')],
+            ['key' => 'APP_ENV', 'value' => $value(config('app.env')), 'description' => __('ui.admin.env_config_descriptions.app_env')],
+            ['key' => 'APP_URL', 'value' => $value(config('app.url')), 'description' => __('ui.admin.env_config_descriptions.app_url')],
+            ['key' => 'APP_KEY', 'value' => $mask(config('app.key')), 'description' => __('ui.admin.env_config_descriptions.app_key')],
+            ['key' => 'APP_LOCALE', 'value' => $value(config('app.locale')), 'description' => __('ui.admin.env_config_descriptions.app_locale')],
+            ['key' => 'APP_FALLBACK_LOCALE', 'value' => $value(config('app.fallback_locale')), 'description' => __('ui.admin.env_config_descriptions.app_fallback_locale')],
+            ['key' => 'DB_CONNECTION', 'value' => $value($databaseConnection), 'description' => __('ui.admin.env_config_descriptions.db_connection')],
+            ['key' => 'DB_HOST', 'value' => $value($database['host'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_host')],
+            ['key' => 'DB_DATABASE', 'value' => $value($database['database'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_database')],
+            ['key' => 'DB_USERNAME', 'value' => $value($database['username'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_username')],
+            ['key' => 'DB_PASSWORD', 'value' => $mask($database['password'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_password')],
+            ['key' => 'SESSION_DRIVER', 'value' => $value(config('session.driver')), 'description' => __('ui.admin.env_config_descriptions.session_driver')],
+            ['key' => 'SESSION_LIFETIME', 'value' => $value(config('session.lifetime')), 'description' => __('ui.admin.env_config_descriptions.session_lifetime')],
+            ['key' => 'SESSION_ENCRYPT', 'value' => $boolean(config('session.encrypt')), 'description' => __('ui.admin.env_config_descriptions.session_encrypt')],
+            ['key' => 'CACHE_STORE', 'value' => $value(config('cache.default')), 'description' => __('ui.admin.env_config_descriptions.cache_store')],
+            ['key' => 'QUEUE_CONNECTION', 'value' => $value(config('queue.default')), 'description' => __('ui.admin.env_config_descriptions.queue_connection')],
+            ['key' => 'FILESYSTEM_DISK', 'value' => $value(config('filesystems.default')), 'description' => __('ui.admin.env_config_descriptions.filesystem_disk')],
+            ['key' => 'MAIL_MAILER', 'value' => $value($mailer), 'description' => __('ui.admin.env_config_descriptions.mail_mailer')],
+            ['key' => 'MAIL_HOST', 'value' => $value($mail['host'] ?? null), 'description' => __('ui.admin.env_config_descriptions.mail_host')],
+            ['key' => 'MAIL_USERNAME', 'value' => $mask($mail['username'] ?? null), 'description' => __('ui.admin.env_config_descriptions.mail_username')],
+            ['key' => 'MAIL_PASSWORD', 'value' => $mask($mail['password'] ?? null), 'description' => __('ui.admin.env_config_descriptions.mail_password')],
+            ['key' => 'MAIL_FROM_ADDRESS', 'value' => $value(config('mail.from.address')), 'description' => __('ui.admin.env_config_descriptions.mail_from_address')],
+            ['key' => 'YUEJING_EMAIL_VERIFICATION_REQUIRED', 'value' => $boolean(config('yuejing.email_verification.required')), 'description' => __('ui.admin.env_config_descriptions.email_verification')],
+            ['key' => 'YUEJING_PAGINATION', 'value' => $value(config('yuejing.pagination')), 'description' => __('ui.admin.env_config_descriptions.pagination')],
+            ['key' => 'YUEJING_TOTP_PERIOD', 'value' => $value(config('yuejing.two_factor.totp_period')), 'description' => __('ui.admin.env_config_descriptions.totp_period')],
+            ['key' => 'YUEJING_TOTP_WINDOW', 'value' => $value(config('yuejing.two_factor.totp_window')), 'description' => __('ui.admin.env_config_descriptions.totp_window')],
+            ['key' => 'YUEJING_TOTP_CHALLENGE_LIFETIME', 'value' => $value(config('yuejing.two_factor.challenge_lifetime')), 'description' => __('ui.admin.env_config_descriptions.totp_lifetime')],
+            ['key' => 'YUEJING_TOTP_MAX_ATTEMPTS', 'value' => $value(config('yuejing.two_factor.max_attempts')), 'description' => __('ui.admin.env_config_descriptions.totp_attempts')],
+        ];
     }
 
     public function testEmail(Request $request)
