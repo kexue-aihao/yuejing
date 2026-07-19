@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\Submission;
 use App\Models\User;
 use App\Services\AppSettingService;
+use App\Services\EnvironmentConfigService;
 use App\Services\MarkdownRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,7 @@ class AdminController extends Controller
         return response()->json($data);
     }
 
-    public function settings(Request $request, AppSettingService $service)
+    public function settings(Request $request, AppSettingService $service, EnvironmentConfigService $environment)
     {
         $settings = Setting::query()->orderBy('key')->get();
 
@@ -57,7 +58,7 @@ class AdminController extends Controller
 
             $environmentConfig = [
                 'email_verification_enabled' => (bool) config('yuejing.email_verification.required', false),
-                'items' => $this->environmentConfigItems(),
+                'items' => $environment->items(),
             ];
 
             return view('pages.admin.settings', compact('settings', 'settingValues', 'environmentConfig'));
@@ -66,7 +67,7 @@ class AdminController extends Controller
         return response()->json(['settings' => $settings]);
     }
 
-    public function updateSettings(Request $request, AppSettingService $service)
+    public function updateSettings(Request $request, AppSettingService $service, EnvironmentConfigService $environment)
     {
         $data = $request->validate([
             'email_verification_required' => ['sometimes', 'boolean'],
@@ -77,65 +78,65 @@ class AdminController extends Controller
             'show_rank' => ['sometimes', 'boolean'],
             'show_new' => ['sometimes', 'boolean'],
             'allow_comments' => ['sometimes', 'boolean'],
+            'environment' => ['sometimes', 'array'],
+            'environment.APP_NAME' => ['sometimes', 'string', 'max:255'],
+            'environment.APP_ENV' => ['sometimes', 'string', 'in:local,production,testing'],
+            'environment.APP_URL' => ['sometimes', 'url', 'max:255'],
+            'environment.APP_KEY' => ['nullable', 'string', 'max:255'],
+            'environment.APP_LOCALE' => ['sometimes', 'string', 'in:'.implode(',', array_keys(config('locales.supported', [])))],
+            'environment.APP_FALLBACK_LOCALE' => ['sometimes', 'string', 'in:'.implode(',', array_keys(config('locales.supported', [])))],
+            'environment.DB_CONNECTION' => ['sometimes', 'string', 'in:sqlite,mysql,mariadb,pgsql,sqlsrv'],
+            'environment.DB_HOST' => ['sometimes', 'string', 'max:255'],
+            'environment.DB_DATABASE' => ['sometimes', 'string', 'max:255'],
+            'environment.DB_USERNAME' => ['sometimes', 'string', 'max:255'],
+            'environment.DB_PASSWORD' => ['nullable', 'string', 'max:255'],
+            'environment.SESSION_DRIVER' => ['sometimes', 'string', 'in:array,cookie,database,file,memcached,redis,dynamodb'],
+            'environment.SESSION_LIFETIME' => ['sometimes', 'integer', 'min:1', 'max:525600'],
+            'environment.SESSION_ENCRYPT' => ['sometimes', 'boolean'],
+            'environment.CACHE_STORE' => ['sometimes', 'string', 'in:array,database,file,memcached,redis,dynamodb,octane,storage,session,failover,null'],
+            'environment.QUEUE_CONNECTION' => ['sometimes', 'string', 'in:sync,database,beanstalk,redis,sqs,null'],
+            'environment.FILESYSTEM_DISK' => ['sometimes', 'string', 'in:local,public,s3'],
+            'environment.MAIL_MAILER' => ['sometimes', 'string', 'in:smtp,sendmail,mailgun,ses,ses-v2,postmark,resend,log,array,failover,roundrobin'],
+            'environment.MAIL_HOST' => ['sometimes', 'string', 'max:255'],
+            'environment.MAIL_USERNAME' => ['nullable', 'string', 'max:255'],
+            'environment.MAIL_PASSWORD' => ['nullable', 'string', 'max:255'],
+            'environment.MAIL_FROM_ADDRESS' => ['nullable', 'email', 'max:255'],
+            'environment.YUEJING_EMAIL_VERIFICATION_REQUIRED' => ['sometimes', 'boolean'],
+            'environment.YUEJING_PAGINATION' => ['sometimes', 'integer', 'min:1', 'max:1000'],
+            'environment.YUEJING_TOTP_PERIOD' => ['sometimes', 'integer', 'min:1', 'max:3600'],
+            'environment.YUEJING_TOTP_WINDOW' => ['sometimes', 'integer', 'min:0', 'max:10'],
+            'environment.YUEJING_TOTP_CHALLENGE_LIFETIME' => ['sometimes', 'integer', 'min:1', 'max:1440'],
+            'environment.YUEJING_TOTP_MAX_ATTEMPTS' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
+
+        $environmentValues = $data['environment'] ?? null;
+        unset($data['environment']);
 
         foreach ($data as $key => $value) {
             $service->set($key, $value, $request->user()->id);
         }
 
-        if (! $this->wantsJson($request)) {
-            return back()->with('status', __('ui.messages.settings_updated'));
+        if (is_array($environmentValues)) {
+            try {
+                $environment->update($environmentValues);
+            } catch (\RuntimeException $exception) {
+                if (! $this->wantsJson($request)) {
+                    return back()->withErrors(['environment' => $exception->getMessage()])->withInput();
+                }
+
+                return response()->json(['message' => $exception->getMessage()], 422);
+            }
         }
 
-        return response()->json(['message' => __('ui.messages.settings_updated')]);
-    }
+        $statusMessage = is_array($environmentValues)
+            ? __('ui.messages.environment_config_updated')
+            : __('ui.messages.settings_updated');
 
-    private function environmentConfigItems(): array
-    {
-        $databaseConnection = (string) config('database.default');
-        $database = (array) config("database.connections.{$databaseConnection}", []);
-        $mailer = (string) config('mail.default');
-        $mail = (array) config("mail.mailers.{$mailer}", []);
-        $mask = static fn (mixed $value): string => filled($value)
-            ? __('ui.admin.configured')
-            : __('ui.admin.not_configured');
-        $boolean = static fn (mixed $value): string => filter_var($value, FILTER_VALIDATE_BOOLEAN)
-            ? __('ui.admin.enabled')
-            : __('ui.admin.disabled');
-        $value = static fn (mixed $value): string => is_scalar($value) && (string) $value !== ''
-            ? (string) $value
-            : __('ui.admin.not_configured');
+        if (! $this->wantsJson($request)) {
+            return back()->with('status', $statusMessage);
+        }
 
-        return [
-            ['key' => 'APP_NAME', 'value' => $value(config('app.name')), 'description' => __('ui.admin.env_config_descriptions.app_name')],
-            ['key' => 'APP_ENV', 'value' => $value(config('app.env')), 'description' => __('ui.admin.env_config_descriptions.app_env')],
-            ['key' => 'APP_URL', 'value' => $value(config('app.url')), 'description' => __('ui.admin.env_config_descriptions.app_url')],
-            ['key' => 'APP_KEY', 'value' => $mask(config('app.key')), 'description' => __('ui.admin.env_config_descriptions.app_key')],
-            ['key' => 'APP_LOCALE', 'value' => $value(config('app.locale')), 'description' => __('ui.admin.env_config_descriptions.app_locale')],
-            ['key' => 'APP_FALLBACK_LOCALE', 'value' => $value(config('app.fallback_locale')), 'description' => __('ui.admin.env_config_descriptions.app_fallback_locale')],
-            ['key' => 'DB_CONNECTION', 'value' => $value($databaseConnection), 'description' => __('ui.admin.env_config_descriptions.db_connection')],
-            ['key' => 'DB_HOST', 'value' => $value($database['host'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_host')],
-            ['key' => 'DB_DATABASE', 'value' => $value($database['database'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_database')],
-            ['key' => 'DB_USERNAME', 'value' => $value($database['username'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_username')],
-            ['key' => 'DB_PASSWORD', 'value' => $mask($database['password'] ?? null), 'description' => __('ui.admin.env_config_descriptions.db_password')],
-            ['key' => 'SESSION_DRIVER', 'value' => $value(config('session.driver')), 'description' => __('ui.admin.env_config_descriptions.session_driver')],
-            ['key' => 'SESSION_LIFETIME', 'value' => $value(config('session.lifetime')), 'description' => __('ui.admin.env_config_descriptions.session_lifetime')],
-            ['key' => 'SESSION_ENCRYPT', 'value' => $boolean(config('session.encrypt')), 'description' => __('ui.admin.env_config_descriptions.session_encrypt')],
-            ['key' => 'CACHE_STORE', 'value' => $value(config('cache.default')), 'description' => __('ui.admin.env_config_descriptions.cache_store')],
-            ['key' => 'QUEUE_CONNECTION', 'value' => $value(config('queue.default')), 'description' => __('ui.admin.env_config_descriptions.queue_connection')],
-            ['key' => 'FILESYSTEM_DISK', 'value' => $value(config('filesystems.default')), 'description' => __('ui.admin.env_config_descriptions.filesystem_disk')],
-            ['key' => 'MAIL_MAILER', 'value' => $value($mailer), 'description' => __('ui.admin.env_config_descriptions.mail_mailer')],
-            ['key' => 'MAIL_HOST', 'value' => $value($mail['host'] ?? null), 'description' => __('ui.admin.env_config_descriptions.mail_host')],
-            ['key' => 'MAIL_USERNAME', 'value' => $mask($mail['username'] ?? null), 'description' => __('ui.admin.env_config_descriptions.mail_username')],
-            ['key' => 'MAIL_PASSWORD', 'value' => $mask($mail['password'] ?? null), 'description' => __('ui.admin.env_config_descriptions.mail_password')],
-            ['key' => 'MAIL_FROM_ADDRESS', 'value' => $value(config('mail.from.address')), 'description' => __('ui.admin.env_config_descriptions.mail_from_address')],
-            ['key' => 'YUEJING_EMAIL_VERIFICATION_REQUIRED', 'value' => $boolean(config('yuejing.email_verification.required')), 'description' => __('ui.admin.env_config_descriptions.email_verification')],
-            ['key' => 'YUEJING_PAGINATION', 'value' => $value(config('yuejing.pagination')), 'description' => __('ui.admin.env_config_descriptions.pagination')],
-            ['key' => 'YUEJING_TOTP_PERIOD', 'value' => $value(config('yuejing.two_factor.totp_period')), 'description' => __('ui.admin.env_config_descriptions.totp_period')],
-            ['key' => 'YUEJING_TOTP_WINDOW', 'value' => $value(config('yuejing.two_factor.totp_window')), 'description' => __('ui.admin.env_config_descriptions.totp_window')],
-            ['key' => 'YUEJING_TOTP_CHALLENGE_LIFETIME', 'value' => $value(config('yuejing.two_factor.challenge_lifetime')), 'description' => __('ui.admin.env_config_descriptions.totp_lifetime')],
-            ['key' => 'YUEJING_TOTP_MAX_ATTEMPTS', 'value' => $value(config('yuejing.two_factor.max_attempts')), 'description' => __('ui.admin.env_config_descriptions.totp_attempts')],
-        ];
+        return response()->json(['message' => $statusMessage]);
     }
 
     public function testEmail(Request $request)

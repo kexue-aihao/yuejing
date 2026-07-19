@@ -27,15 +27,27 @@
                     <label class="check-row"><input type="hidden" name="allow_comments" value="0"><input type="checkbox" name="allow_comments" value="1" @checked(old('allow_comments', $settingValues['allow_comments']))> {{ __('ui.admin.allow_comments') }}</label>
                 </div>
             </form>
-            <section class="panel environment-config-panel">
-                <div class="panel-heading"><div><h2>{{ __('ui.admin.environment_config') }}</h2><p class="panel-description">{{ __('ui.admin.environment_config_intro') }}</p></div><span class="status">{{ __('ui.admin.environment_read_only') }}</span></div>
+            <form class="panel form-stack environment-config-panel" method="POST" action="{{ route('admin.settings.update') }}">
+                @csrf @method('PUT')
+                <div class="panel-heading"><div><h2>{{ __('ui.admin.environment_config') }}</h2><p class="panel-description">{{ __('ui.admin.environment_config_intro') }}</p></div><button class="button button-primary button-small" type="submit">{{ __('ui.admin.save_environment_config') }}</button></div>
                 <div class="environment-config-list">
                     @foreach ($environmentConfig['items'] as $item)
-                        <div class="environment-config-row"><div><strong>{{ $item['key'] }}</strong><p>{{ $item['description'] }}</p></div><code>{{ $item['value'] }}</code></div>
+                        <div class="environment-config-row">
+                            <div class="environment-config-copy"><strong>{{ $item['key'] }}</strong><p>{{ $item['description'] }}</p></div>
+                            <div class="environment-config-control">
+                                @if ($item['type'] === 'boolean')
+                                    <input type="hidden" name="environment[{{ $item['key'] }}]" value="0">
+                                    <label class="check-row"><input type="checkbox" name="environment[{{ $item['key'] }}]" value="1" @checked(old('environment.'.$item['key'], $item['checked']))> {{ $item['value'] }}</label>
+                                @else
+                                    <input class="environment-config-input" id="environment-{{ strtolower($item['key']) }}" name="environment[{{ $item['key'] }}]" type="{{ $item['type'] === 'secret' ? 'password' : $item['type'] }}" value="{{ old('environment.'.$item['key'], $item['current']) }}" @if ($item['type'] === 'secret') placeholder="{{ __('ui.admin.environment_secret_placeholder') }}" autocomplete="new-password" @endif>
+                                    @if ($item['type'] === 'secret')<small>{{ __('ui.admin.environment_secret_hint') }}</small>@endif
+                                @endif
+                            </div>
+                        </div>
                     @endforeach
                 </div>
                 <p class="settings-hint">{{ __('ui.admin.environment_config_hint') }}</p>
-            </section>
+            </form>
             <section class="panel">
                 <div class="panel-heading"><div><h2>{{ __('ui.admin.smtp_status') }}</h2><p class="panel-description">{{ __('ui.admin.smtp_intro') }}</p></div><span class="status">{{ __('ui.admin.testable') }}</span></div>
                 <form class="inline-form" method="POST" action="{{ route('admin.settings.email-test') }}">@csrf<div class="form-field"><label for="smtp_email">{{ __('ui.admin.test_email') }}</label><input id="smtp_email" name="email" type="email" value="{{ old('email', $settingValues['contact_email']) }}" required></div><button class="button button-dark" type="submit">{{ __('ui.admin.send_test_email') }}</button></form>

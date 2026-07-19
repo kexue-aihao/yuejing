@@ -7,8 +7,10 @@ use App\Models\AuditLog;
 use App\Models\Novel;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\EnvironmentConfigService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Mockery;
 use Tests\Feature\Concerns\CreatesYuejingData;
 use Tests\TestCase;
 
@@ -44,9 +46,33 @@ class AdminAndAccountTest extends TestCase
             ->assertSee(__('ui.admin.environment_config'))
             ->assertSee(__('ui.admin.env_config_descriptions.email_verification'))
             ->assertSee('APP_ENV')
+            ->assertSee('name="environment[APP_NAME]"', false)
+            ->assertSee('name="environment[APP_KEY]"', false)
             ->assertSee('disabled', false);
         $this->assertFalse($response->viewData('settingValues')['email_verification_required']);
         $this->assertFalse($response->viewData('environmentConfig')['email_verification_enabled']);
+    }
+
+    public function test_admin_can_submit_environment_configuration_without_writing_the_real_env_file(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $environment = Mockery::mock(EnvironmentConfigService::class);
+        $environment->shouldReceive('update')->once()->with([
+            'APP_NAME' => 'Updated Yuejing',
+            'SESSION_ENCRYPT' => false,
+        ]);
+        $this->app->instance(EnvironmentConfigService::class, $environment);
+
+        $this->from(route('admin.settings'))
+            ->actingAs($admin)
+            ->put(route('admin.settings.update'), [
+                'environment' => [
+                    'APP_NAME' => 'Updated Yuejing',
+                    'SESSION_ENCRYPT' => '0',
+                ],
+            ])
+            ->assertRedirect(route('admin.settings'))
+            ->assertSessionHas('status', __('ui.messages.environment_config_updated'));
     }
 
     public function test_admin_must_provide_a_category_slug(): void
