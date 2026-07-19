@@ -156,6 +156,36 @@ function initLanguageSwitcher() {
     });
 }
 
+function initAuthStateRefresh() {
+    const serverState = document.body?.dataset.serverAuthState;
+    if (!['authenticated', 'guest'].includes(serverState)) return;
+
+    const refreshKey = `yuejing-auth-refresh:${window.location.pathname}`;
+    fetch('/auth/me', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        redirect: 'manual',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    })
+        .then((response) => response.ok ? 'authenticated' : 'guest')
+        .then((actualState) => {
+            if (actualState === serverState) {
+                try { sessionStorage.removeItem(refreshKey); } catch { /* Ignore unavailable storage. */ }
+                return;
+            }
+
+            let alreadyRefreshed = false;
+            try { alreadyRefreshed = sessionStorage.getItem(refreshKey) === serverState; } catch { /* Continue without refresh tracking. */ }
+            if (alreadyRefreshed) return;
+
+            try { sessionStorage.setItem(refreshKey, serverState); } catch { /* The unique URL still prevents a normal cache hit. */ }
+            const refreshUrl = new URL(window.location.href);
+            refreshUrl.searchParams.set('_auth_refresh', String(Date.now()));
+            window.location.replace(refreshUrl.toString());
+        })
+        .catch(() => { /* Auth refresh is defensive; server-rendered navigation remains usable. */ });
+}
+
 function initTimezoneLocale() {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const token = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -912,6 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
     initMobileMenu();
     initLanguageSwitcher();
+    initAuthStateRefresh();
     initTimezoneLocale();
     initReaderControls();
     initToastDismiss();

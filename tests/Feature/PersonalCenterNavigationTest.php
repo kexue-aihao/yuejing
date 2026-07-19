@@ -26,6 +26,7 @@ class PersonalCenterNavigationTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('data-auth-state="authenticated"', $authenticatedHtml);
+        $this->assertStringContainsString('data-server-auth-state="authenticated"', $authenticatedHtml);
         $this->assertStringContainsString('>'.__('ui.nav.logged_in').'</span>', $authenticatedHtml);
         $this->assertStringContainsString('href="'.route('dashboard').'"', $authenticatedHtml);
         $this->assertStringContainsString('action="'.route('logout').'"', $authenticatedHtml);

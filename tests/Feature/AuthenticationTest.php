@@ -174,6 +174,17 @@ class AuthenticationTest extends TestCase
             ->assertSee('href="'.route('register').'"', false);
     }
 
+    public function test_authenticated_state_endpoint_cannot_be_cached(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/auth/me', ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private')
+            ->assertHeader('Vary', 'Cookie');
+    }
+
     public function test_email_verification_requirement_blocks_unverified_submission_pages_when_enabled(): void
     {
         $user = User::factory()->unverified()->create(['role' => 'author']);

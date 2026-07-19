@@ -46,7 +46,7 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="site-body">
+<body class="site-body" data-server-auth-state="{{ auth()->check() ? 'authenticated' : 'guest' }}">
     <a class="skip-link" href="#main-content">{{ __('ui.common.skip_to_content') }}</a>
     <header class="site-header">
         @php
