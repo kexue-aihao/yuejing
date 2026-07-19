@@ -137,7 +137,7 @@ class AdminController extends Controller
             'description' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
-        $data['slug'] ??= Str::slug($data['name']);
+        $data['slug'] = $this->uniqueCategorySlug($data['slug'] ?? '', $data['name']);
         $category = Category::create($data);
 
         if (! $this->wantsJson($request)) {
@@ -145,6 +145,24 @@ class AdminController extends Controller
         }
 
         return response()->json($category, 201);
+    }
+
+    private function uniqueCategorySlug(string $requestedSlug, string $name): string
+    {
+        $baseSlug = Str::slug(trim($requestedSlug !== '' ? $requestedSlug : $name));
+        if ($baseSlug === '') {
+            $baseSlug = 'category-'.Str::lower(Str::random(12));
+        }
+
+        $candidate = $baseSlug;
+        $suffix = 2;
+        while (Category::query()->where('slug', $candidate)->exists()) {
+            $suffixText = '-'.$suffix;
+            $candidate = substr($baseSlug, 0, 100 - strlen($suffixText)).$suffixText;
+            $suffix++;
+        }
+
+        return $candidate;
     }
 
     public function updateCategory(Request $request, Category $category)

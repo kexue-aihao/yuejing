@@ -27,6 +27,23 @@ class AdminAndAccountTest extends TestCase
         $this->actingAs($admin)->getJson('/api/admin')->assertOk()->assertJsonStructure(['users', 'novels', 'chapters', 'pending_submissions']);
     }
 
+    public function test_admin_can_create_a_category_without_a_slug(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->from(route('admin.categories.index'))
+            ->actingAs($admin)
+            ->postWithCsrf(route('admin.categories.store'), [
+                'name' => '校园',
+                'slug' => '',
+            ])
+            ->assertRedirect(route('admin.categories.index'));
+
+        $category = Category::where('name', '校园')->firstOrFail();
+        $this->assertNotSame('', $category->slug);
+        $this->assertNotNull($category->slug);
+    }
+
     public function test_approved_submission_creates_published_novel_and_first_chapter(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
