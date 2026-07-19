@@ -131,9 +131,21 @@ class PublicController extends Controller
             return response()->json($paginator);
         }
 
-        $novels = $paginator->getCollection()->map(fn (Novel $novel) => $this->novelArray($novel));
+        $paginator
+            ->through(fn (Novel $novel) => $this->novelArray($novel))
+            ->appends($request->only(['q', 'genre', 'sort']));
 
-        return view('pages.novels.index', compact('novels'));
+        $categories = Schema::hasTable('categories')
+            ? Category::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug'])
+            : collect();
+
+        return view('pages.novels.index', [
+            'novels' => $paginator,
+            'categories' => $categories,
+        ]);
     }
 
     public function novel(Request $request, Novel $novel)
@@ -289,6 +301,9 @@ class PublicController extends Controller
             );
         }
 
+        $sort = $request->string('sort')->toString();
+        $genre = trim(substr($request->string('genre')->toString(), 0, 160));
+
         return Novel::query()->with(['author:id,name', 'categories:id,name'])
             ->where('status', 'published')
             ->when(substr($request->string('q')->toString(), 0, 160), function ($query, $q): void {
@@ -299,10 +314,14 @@ class PublicController extends Controller
                         ->orWhereHas('categories', fn ($category) => $category->where('name', 'like', "%{$q}%"));
                 });
             })
-            ->when(substr($request->string('genre')->toString(), 0, 160), fn ($query, $genre) => $query->whereHas('categories', fn ($categories) => $categories->where('name', 'like', "%{$genre}%")))
-            ->when($request->string('sort')->toString() === 'hot', fn ($query) => $query->orderByDesc('views_count'))
-            ->when($request->string('sort')->toString() !== 'hot', fn ($query) => $query->latest('published_at'))
-            ->paginate(config('yuejing.pagination'));
+            ->when($genre !== '', fn ($query) => $query->whereHas('categories', function ($categories) use ($genre): void {
+                $categories->where('slug', $genre)
+                    ->orWhere('name', 'like', "%{$genre}%");
+            }))
+            ->when($sort === 'hot', fn ($query) => $query->orderByDesc('views_count'))
+            ->when($sort !== 'hot', fn ($query) => $query->latest('published_at'))
+            ->paginate(config('yuejing.pagination'))
+            ->appends($request->only(['q', 'genre', 'sort']));
     }
 
     private function recordSearchEvent(Request $request, $novels): void
@@ -320,7 +339,10 @@ class PublicController extends Controller
         $categories = collect();
         if ($genre !== '' && Schema::hasTable('categories')) {
             $categories = Category::query()
-                ->where('name', 'like', "%{$genre}%")
+                ->where(function ($query) use ($genre): void {
+                    $query->where('slug', $genre)
+                        ->orWhere('name', 'like', "%{$genre}%");
+                })
                 ->limit(8)
                 ->get();
         } else {

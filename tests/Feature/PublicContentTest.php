@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Favorite;
+use App\Models\Category;
 use App\Models\Novel;
 use App\Models\Rating;
 use App\Models\ReadingRecord;
@@ -42,10 +43,73 @@ class PublicContentTest extends TestCase
 
         $response->assertOk()
             ->assertViewIs('pages.novels.index')
-            ->assertSee('<section class="site-shell page-content">', false)
+            ->assertSee('<section class="site-shell page-content library-page">', false)
             ->assertSee($novel->title)
             ->assertSee($novel->slug)
             ->assertDontSee('未发布作品');
+    }
+
+    public function test_library_json_applies_combined_search_category_and_sort_conditions(): void
+    {
+        $category = Category::create(['name' => 'Stable genre', 'slug' => 'stable-genre']);
+        $matched = $this->createPublishedNovel(null, [
+            'title' => 'Signal in the Stable genre',
+            'slug' => 'signal-stable-genre',
+            'views_count' => 80,
+        ]);
+        $matched->categories()->attach($category);
+
+        $wrongCategory = $this->createPublishedNovel(null, [
+            'title' => 'Signal in another genre',
+            'slug' => 'signal-another-genre',
+            'views_count' => 100,
+        ]);
+        $this->createCategoryFor($wrongCategory, 'Other genre');
+
+        $wrongQuery = $this->createPublishedNovel(null, [
+            'title' => 'Different title in the Stable genre',
+            'slug' => 'different-stable-genre',
+            'views_count' => 120,
+        ]);
+        $wrongQuery->categories()->attach($category);
+
+        $response = $this->getJson(route('novels.index', [
+            'q' => 'Signal',
+            'genre' => $category->name,
+            'sort' => 'hot',
+        ]));
+
+        $response->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('data.0.slug', $matched->slug);
+    }
+
+    public function test_library_json_page_two_is_reachable_for_category_and_sort(): void
+    {
+        $category = Category::create(['name' => 'Page genre', 'slug' => 'page-genre']);
+        $perPage = (int) config('yuejing.pagination');
+
+        for ($index = 1; $index <= $perPage + 1; $index++) {
+            $novel = $this->createPublishedNovel(null, [
+                'title' => "Page work {$index}",
+                'slug' => "page-work-{$index}",
+                'views_count' => $perPage + 1 - $index,
+            ]);
+            $novel->categories()->attach($category);
+        }
+
+        $response = $this->getJson(route('novels.index', [
+            'genre' => $category->name,
+            'sort' => 'hot',
+            'page' => 2,
+        ]));
+
+        $response->assertOk()
+            ->assertJsonPath('current_page', 2)
+            ->assertJsonPath('last_page', 2)
+            ->assertJsonPath('total', $perPage + 1)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.slug', 'page-work-'.($perPage + 1));
     }
 
     public function test_home_reader_stat_counts_only_readers_of_published_works(): void
