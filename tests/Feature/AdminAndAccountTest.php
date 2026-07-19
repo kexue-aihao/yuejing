@@ -27,7 +27,7 @@ class AdminAndAccountTest extends TestCase
         $this->actingAs($admin)->getJson('/api/admin')->assertOk()->assertJsonStructure(['users', 'novels', 'chapters', 'pending_submissions']);
     }
 
-    public function test_admin_can_create_a_category_without_a_slug(): void
+    public function test_admin_must_provide_a_category_slug(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
@@ -37,11 +37,28 @@ class AdminAndAccountTest extends TestCase
                 'name' => '校园',
                 'slug' => '',
             ])
+            ->assertRedirect(route('admin.categories.index'))
+            ->assertSessionHasErrors('slug');
+
+        $this->assertDatabaseMissing('categories', ['name' => '校园']);
+    }
+
+    public function test_admin_can_create_a_category_with_a_pinyin_slug(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->from(route('admin.categories.index'))
+            ->actingAs($admin)
+            ->postWithCsrf(route('admin.categories.store'), [
+                'name' => '校园',
+                'slug' => 'xiaoyuan',
+            ])
             ->assertRedirect(route('admin.categories.index'));
 
-        $category = Category::where('name', '校园')->firstOrFail();
-        $this->assertNotSame('', $category->slug);
-        $this->assertNotNull($category->slug);
+        $this->assertDatabaseHas('categories', [
+            'name' => '校园',
+            'slug' => 'xiaoyuan',
+        ]);
     }
 
     public function test_approved_submission_creates_published_novel_and_first_chapter(): void

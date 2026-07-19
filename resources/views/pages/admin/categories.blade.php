@@ -12,7 +12,7 @@
             @if ($errors->any())<div class="alert">{{ $errors->first() }}</div>@endif
             <section class="panel">
                 <div class="panel-heading"><h2>{{ __('ui.admin.new_category') }}</h2></div>
-                <form class="inline-form category-create-form" method="POST" action="{{ route('admin.categories.store') }}">@csrf<div class="form-field"><label for="name">{{ __('ui.admin.category_name') }}</label><input id="name" name="name" value="{{ old('name') }}" required></div><div class="form-field"><label for="slug">{{ __('ui.admin.slug_optional') }}</label><input id="slug" name="slug" value="{{ old('slug') }}"></div><button class="button button-primary" type="submit">{{ __('ui.admin.create_category') }}</button></form>
+                <form class="inline-form category-create-form" method="POST" action="{{ route('admin.categories.store') }}">@csrf<div class="form-field"><label for="name">{{ __('ui.admin.category_name') }}</label><input id="name" name="name" value="{{ old('name') }}" required></div><div class="form-field"><label for="slug">{{ __('ui.admin.category_slug') }}</label><input id="slug" name="slug" value="{{ old('slug') }}" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required></div><button class="button button-primary" type="submit">{{ __('ui.admin.create_category') }}</button></form>
             </section>
             <section class="panel">
                 <div class="panel-heading"><h2>{{ __('ui.admin.category_list') }}</h2><span class="muted">{{ __('ui.admin.category_count', ['count' => $categories->total()]) }}</span></div>

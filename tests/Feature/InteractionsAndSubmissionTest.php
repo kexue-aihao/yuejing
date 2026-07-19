@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Favorite;
 use App\Models\AuditLog;
+use App\Models\Category;
 use App\Models\Rating;
 use App\Models\Submission;
 use App\Models\User;
@@ -87,17 +88,21 @@ class InteractionsAndSubmissionTest extends TestCase
     public function test_submission_form_returns_html_and_stores_a_submission(): void
     {
         $author = User::factory()->create(['role' => 'author']);
+        $category = Category::create(['name' => '校园', 'slug' => 'xiaoyuan']);
 
         $this->actingAs($author)
             ->get(route('author.submissions'))
             ->assertOk()
             ->assertSee('新建投稿')
-            ->assertSee(route('author.submissions.store'));
+            ->assertSee(route('author.submissions.store'))
+            ->assertSee('name="category_id"', false)
+            ->assertSee('value="'.$category->id.'"', false)
+            ->assertSee('校园');
 
         $response = $this->withHeader('User-Agent', 'Yuejing-Test/1.0')
             ->actingAs($author)->postWithCsrf(route('author.submissions.store'), [
             'title' => '潮声之后',
-            'genre' => '都市情感',
+            'category_id' => $category->id,
             'summary' => '一封信带来的重逢。',
             'content' => '第一章从旧书店开始。',
         ]);
@@ -106,6 +111,7 @@ class InteractionsAndSubmissionTest extends TestCase
         $this->assertDatabaseHas('submissions', [
             'user_id' => $author->id,
             'title' => '潮声之后',
+            'category_id' => $category->id,
             'synopsis' => '一封信带来的重逢。',
             'manuscript' => '第一章从旧书店开始。',
             'status' => 'pending',

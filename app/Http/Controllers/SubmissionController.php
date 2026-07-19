@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Category;
 use App\Models\Submission;
 use Illuminate\Http\Request;
 
@@ -11,9 +12,13 @@ class SubmissionController extends Controller
     public function index(Request $request)
     {
         $submissions = $request->user()->submissions()->with('reviewer:id,name')->latest()->paginate(config('yuejing.pagination'));
+        $categories = Category::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
 
         if (! $this->wantsJson($request)) {
-            return view('pages.author.submissions', compact('submissions'));
+            return view('pages.author.submissions', compact('submissions', 'categories'));
         }
 
         return response()->json($submissions);

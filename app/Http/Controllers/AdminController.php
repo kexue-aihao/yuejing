@@ -133,11 +133,10 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'slug' => ['nullable', 'string', 'max:100', 'unique:categories,slug'],
+            'slug' => ['required', 'string', 'max:100', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:categories,slug'],
             'description' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
-        $data['slug'] = $this->uniqueCategorySlug($data['slug'] ?? '', $data['name']);
         $category = Category::create($data);
 
         if (! $this->wantsJson($request)) {
@@ -147,29 +146,11 @@ class AdminController extends Controller
         return response()->json($category, 201);
     }
 
-    private function uniqueCategorySlug(string $requestedSlug, string $name): string
-    {
-        $baseSlug = Str::slug(trim($requestedSlug !== '' ? $requestedSlug : $name));
-        if ($baseSlug === '') {
-            $baseSlug = 'category-'.Str::lower(Str::random(12));
-        }
-
-        $candidate = $baseSlug;
-        $suffix = 2;
-        while (Category::query()->where('slug', $candidate)->exists()) {
-            $suffixText = '-'.$suffix;
-            $candidate = substr($baseSlug, 0, 100 - strlen($suffixText)).$suffixText;
-            $suffix++;
-        }
-
-        return $candidate;
-    }
-
     public function updateCategory(Request $request, Category $category)
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:100'],
-            'slug' => ['sometimes', 'string', 'max:100', 'unique:categories,slug,'.$category->id],
+            'slug' => ['sometimes', 'required', 'string', 'max:100', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:categories,slug,'.$category->id],
             'description' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
