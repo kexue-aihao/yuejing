@@ -2,12 +2,22 @@
     $embedded = $embedded ?? false;
     $messagesUrl = $embedded ? route('dashboard', ['section' => 'messages']) : route('messages.page');
     $groupsUrl = $embedded ? route('dashboard', ['section' => 'groups']) : route('groups.page');
+    $vueTranslations = array_merge(trans('ui.frontend'), trans('ui.communication'), [
+        'messages' => __('ui.account.messages'),
+        'groups' => __('ui.account.groups'),
+    ]);
 @endphp
 
 <div class="communication-page messages-page {{ $embedded ? 'embedded-communication-page' : '' }}"
      data-messages-app
-     data-api='@json($api)'
-     data-current-user-id="{{ $currentUserId }}">
+     data-vue-private-messages
+     data-api='@json($api, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)'
+     data-translations='@json($vueTranslations, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)'
+     data-current-user-id="{{ $currentUserId }}"
+     data-csrf-token="{{ csrf_token() }}"
+     data-messages-url="{{ $messagesUrl }}"
+     data-groups-url="{{ $groupsUrl }}"
+     data-embedded="{{ $embedded ? '1' : '0' }}">
     <div class="communication-head">
         <div>
             <p class="eyebrow">{{ __('ui.communication.messages_eyebrow') }}</p>

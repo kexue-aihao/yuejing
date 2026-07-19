@@ -16,10 +16,24 @@ class LocalizationTest extends TestCase
 
         $response->assertOk()
             ->assertSee('data-language-switcher', false)
+            ->assertSee('data-vue-language-switcher', false)
+            ->assertSee('data-vue-mobile-menu', false)
+            ->assertSee('data-vue-timezone-sync', false)
             ->assertSee('name="locale"', false)
             ->assertSee('value="en"', false)
             ->assertSee('value="ar"', false)
             ->assertSee('value="ja"', false);
+    }
+
+    public function test_dismissible_alert_preserves_vue_marker_native_button_and_localized_label(): void
+    {
+        $this->withSession(['success' => 'Saved successfully'])
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-vue-toast-dismiss', false)
+            ->assertSee('data-toast-dismiss', false)
+            ->assertSee('type="button"', false)
+            ->assertSee('aria-label="'.__('ui.components.close_notification').'"', false);
     }
 
     public function test_locale_switch_persists_and_updates_html_language(): void

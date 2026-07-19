@@ -23,15 +23,26 @@
 
     <section id="categories" class="site-shell category-strip"><p class="eyebrow">{{ __('ui.home.category_eyebrow') }}</p><div class="category-links">@forelse ($categories as $category)<a href="{{ route('novels.index', ['genre' => $category->name]) }}">{{ $category->name }} <span>{{ number_format((int) $category->novels_count) }}</span></a>@empty<p class="muted">{{ __('ui.library.empty_intro') }}</p>@endforelse</div></section>
 
-    @php($recommendationItems = collect($recommendations ?? []))
+    @php
+        $recommendationItems = collect($recommendations ?? []);
+        $recommendationInitialItems = $recommendationItems->map(fn ($recommendation) => [
+            'id' => $recommendation->id,
+            'title' => $recommendation->title,
+            'slug' => $recommendation->slug,
+            'author' => $recommendation->author?->name,
+            'categories' => $recommendation->categories->pluck('name')->values()->all(),
+        ])->values();
+    @endphp
     <section class="site-shell section-block recommendation-section" data-recommendations-app data-api-url="{{ $recommendationApiUrl ?? url('/api/recommendations') }}" data-novel-base="{{ url('/novels') }}">
-        <div class="section-heading"><div><p class="eyebrow">{{ __('ui.home.ranking_eyebrow') }}</p><h2>{{ __('reviews.recommendations_title') }}</h2><p class="panel-subtitle">{{ __('reviews.recommendations_intro') }}</p></div><span class="recommendation-status muted" data-recommendation-status aria-live="polite"></span></div>
+        <div class="section-heading"><div><p class="eyebrow">{{ __('ui.home.ranking_eyebrow') }}</p><h2>{{ __('reviews.recommendations_title') }}</h2><p class="panel-subtitle">{{ __('reviews.recommendations_intro') }}</p></div></div>
+        <div class="recommendation-feed" data-vue-recommendations data-api-url="{{ $recommendationApiUrl ?? url('/api/recommendations') }}" data-novel-base="{{ url('/novels') }}" data-initial-items='@json($recommendationInitialItems, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-empty-text="{{ __('reviews.recommendations_empty') }}" data-loading-text="{{ __('ui.frontend.loading') }}" data-connected-text="{{ __('ui.frontend.connected') }}" data-retrying-text="{{ __('ui.frontend.retrying') }}" data-anonymous-author="{{ __('ui.components.anonymous_author') }}" data-unnamed-title="{{ __('ui.frontend.unnamed_group') }}">
         <div class="recommendation-grid" data-recommendation-list>
             @forelse ($recommendationItems as $recommendation)
                 <a class="recommendation-item" data-recommendation-item href="{{ route('novels.show', ['novel' => $recommendation->slug]) }}"><span class="recommendation-mark" aria-hidden="true">Y</span><span><strong>{{ $recommendation->title }}</strong><small>{{ $recommendation->author?->name ?? __('ui.components.anonymous_author') }} · {{ $recommendation->categories->pluck('name')->join(' · ') }}</small></span><span aria-hidden="true">→</span></a>
             @empty
                 <p class="muted" data-recommendation-empty>{{ __('reviews.recommendations_empty') }}</p>
             @endforelse
+        </div>
         </div>
     </section>
 </main>

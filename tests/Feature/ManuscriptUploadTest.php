@@ -78,6 +78,33 @@ class ManuscriptUploadTest extends TestCase
             ->assertDontSee('<textarea id="summary" name="summary" placeholder="'.__('ui.author.summary_placeholder').'" required', false);
     }
 
+    public function test_author_submission_page_preserves_markdown_editor_contract_for_vue_handoff(): void
+    {
+        $author = User::factory()->create(['role' => 'author']);
+
+        $response = $this->actingAs($author)
+            ->get(route('dashboard', ['section' => 'submissions']))
+            ->assertOk();
+
+        $html = $response->getContent();
+
+        $this->assertStringContainsString(
+            'action="'.route('author.submissions.store').'"',
+            $html,
+            'The no-JavaScript submission action must remain available.',
+        );
+        $this->assertStringContainsString('data-markdown-editor', $html);
+        $this->assertMatchesRegularExpression(
+            '/<textarea\\b[^>]*data-markdown-source(?:\\s|>)/',
+            $html,
+            'The original manuscript textarea must remain available as the form source.',
+        );
+        $this->assertStringContainsString('data-manuscript-file', $html);
+        $this->assertStringContainsString('data-manuscript-format', $html);
+        $this->assertStringContainsString('data-vditor-editor', $html);
+        $this->assertStringContainsString('data-vue-markdown-editor', $html);
+    }
+
     public function test_author_can_create_and_update_chapters_from_local_manuscript_files(): void
     {
         $author = User::factory()->create(['role' => 'author']);
@@ -108,6 +135,53 @@ class ManuscriptUploadTest extends TestCase
 
         $this->assertSame('markdown', $chapter->fresh()->content_format);
         $this->assertSame("# Updated\n\nMarkdown", $chapter->fresh()->content);
+    }
+
+    public function test_chapter_management_page_preserves_manuscript_form_contract_for_new_and_existing_chapters(): void
+    {
+        $author = User::factory()->create(['role' => 'author']);
+        $novel = $this->createPublishedNovel($author);
+        $existingChapter = $novel->chapters()->firstOrFail();
+
+        $response = $this->actingAs($author)
+            ->get(route('author.chapters.index', $novel))
+            ->assertOk();
+
+        $html = $response->getContent();
+        $this->assertStringContainsString('data-vue-chapter-list', $html);
+
+        preg_match_all(
+            '/<form\\b(?=[^>]*data-chapter-manuscript-form)[^>]*>.*?<\\/form>/s',
+            $html,
+            $matches,
+        );
+
+        $this->assertCount(4, $matches[0], 'The page should expose one new-chapter form and three existing-chapter forms.');
+
+        $requiredAttributes = [
+            'data-chapter-manuscript-form',
+            'data-manuscript-content',
+            'data-manuscript-file',
+            'data-manuscript-format',
+        ];
+
+        foreach ($matches[0] as $form) {
+            foreach ($requiredAttributes as $attribute) {
+                $this->assertStringContainsString($attribute, $form);
+            }
+            $this->assertStringContainsString('data-vue-chapter-manuscript-upload', $form);
+        }
+
+        $this->assertStringContainsString(
+            'action="'.route('author.chapters.store', $novel).'"',
+            $matches[0][0],
+            'The new-chapter form must keep the chapter creation action.',
+        );
+        $this->assertStringContainsString(
+            'action="'.route('author.chapters.update', [$novel, $existingChapter]).'"',
+            $matches[0][1],
+            'The existing-chapter form must keep the chapter update action.',
+        );
     }
 
     public function test_markdown_upload_is_stored_without_persisting_the_original_file(): void

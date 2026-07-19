@@ -14,6 +14,7 @@ $icon = $icons[$type] ?? $icons['info'];
     <span class="toast-icon" aria-hidden="true">{{ $icon }}</span>
     <span class="toast-text">{{ $message ?: $slot }}</span>
     @if($dismissible)
+        <span class="toast-dismiss-vue-island" data-vue-toast-dismiss aria-hidden="true"></span>
         <button type="button" class="toast-close" data-toast-dismiss aria-label="{{ __('ui.components.close_notification') }}">✕</button>
     @endif
 </div>

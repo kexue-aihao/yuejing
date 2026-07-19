@@ -4,6 +4,7 @@
 @endphp
 
 <div class="language-switcher">
+    <span data-vue-language-switcher aria-hidden="true"></span>
     <form id="language-switch-form" class="language-switch-form" method="POST" action="{{ route('language.switch') }}" data-language-switcher>
         @csrf
         <label class="sr-only" for="site-language">{{ __('ui.locale.choose') }}</label>

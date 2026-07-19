@@ -29,6 +29,20 @@
     $readUrl = Route::has('novels.read') && filled($book['slug'] ?? null)
         ? route('novels.read', ['novel' => $book['slug'], 'chapter' => 1])
         : null;
+    $vueReviewTranslations = array_merge(trans('reviews'), ['login' => __('ui.nav.login')]);
+    $vueReviewForm = [
+        'rating' => old('rating', $currentRating?->rating),
+        'review' => old('review', $currentRating?->review),
+        'criteria' => collect(['plot', 'writing', 'characters', 'originality'])
+            ->mapWithKeys(fn ($criterion) => [$criterion => old('criteria.'.$criterion, data_get($currentRating?->criteria, $criterion))])
+            ->all(),
+    ];
+    $vueRateUrl = Route::has('novels.rate') && filled($book['slug'] ?? null)
+        ? route('novels.rate', $novelModel ?? $book['slug'])
+        : '';
+    $vueWithdrawUrl = Route::has('novels.rating.withdraw') && filled($book['slug'] ?? null)
+        ? route('novels.rating.withdraw', $novelModel ?? $book['slug'])
+        : '';
 @endphp
 
 @section('title', $book['title'].' · '.__('ui.novel_detail.title_suffix'))
@@ -96,6 +110,7 @@
     </section>
 
     <section id="reviews" class="site-shell page-content review-section" data-reviews-app data-reviews-url="{{ $reviewApiUrl }}">
+        <div class="review-vue-island" data-vue-reviews data-api-url="{{ $reviewApiUrl }}" data-rate-url="{{ $vueRateUrl }}" data-withdraw-url="{{ $vueWithdrawUrl }}" data-login-url="{{ route('login.page') }}" data-csrf-token="{{ csrf_token() }}" data-authenticated="{{ auth()->check() ? '1' : '0' }}" data-current-rating="{{ $currentRating ? '1' : '0' }}" data-initial-statistics='@json($statistics, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-initial-reviews='@json($ratings->values(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-initial-form='@json($vueReviewForm, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-translations='@json($vueReviewTranslations, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)'>
         <div class="section-heading">
             <div><p class="eyebrow">{{ __('reviews.eyebrow') }}</p><h2>{{ __('reviews.title') }}</h2></div>
             <div class="review-summary" aria-live="polite">
@@ -132,6 +147,7 @@
             @empty
                 <p class="muted">{{ __('reviews.no_rating') }}</p>
             @endforelse
+        </div>
         </div>
     </section>
 </main>

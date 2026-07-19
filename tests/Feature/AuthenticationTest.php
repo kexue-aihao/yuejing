@@ -177,6 +177,20 @@ class AuthenticationTest extends TestCase
             ->assertSee('href="'.route('register').'"', false);
     }
 
+    public function test_layout_exposes_auth_state_vue_island_for_guest_and_authenticated_pages(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-server-auth-state="guest"', false)
+            ->assertSee('data-vue-auth-state-sync', false);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-server-auth-state="authenticated"', false)
+            ->assertSee('data-vue-auth-state-sync', false);
+    }
+
     public function test_authenticated_state_endpoint_cannot_be_cached(): void
     {
         $user = User::factory()->create();

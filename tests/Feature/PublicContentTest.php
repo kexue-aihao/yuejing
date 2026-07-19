@@ -211,7 +211,9 @@ class PublicContentTest extends TestCase
         $response = $this->get(route('novels.show', $novel));
 
         $response->assertOk()
-            ->assertSee(__('reviews.no_rating'));
+            ->assertSee(__('reviews.no_rating'))
+            ->assertSee('data-vue-reviews', false)
+            ->assertSee('data-initial-statistics=', false);
         $this->assertSame(0, $response->viewData('statistics')['reviews_count']);
         $this->assertCount(0, $response->viewData('ratings'));
     }

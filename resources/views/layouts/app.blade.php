@@ -45,9 +45,9 @@
             }
         })();
     </script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/vue-bootstrap.js'])
 </head>
-<body class="site-body device-{{ $device['platform'] ?? 'desktop' }} device-type-{{ $device['device_type'] ?? 'desktop' }}" data-server-auth-state="{{ auth()->check() ? 'authenticated' : 'guest' }}" data-device-platform="{{ $device['platform'] ?? 'desktop' }}" data-device-type="{{ $device['device_type'] ?? 'desktop' }}" data-device-mobile="{{ ! empty($device['is_mobile']) ? '1' : '0' }}" data-device-webview="{{ ! empty($device['is_webview']) ? '1' : '0' }}">
+<body class="site-body device-{{ $device['platform'] ?? 'desktop' }} device-type-{{ $device['device_type'] ?? 'desktop' }}" data-server-auth-state="{{ auth()->check() ? 'authenticated' : 'guest' }}" data-vue-auth-state-sync data-vue-timezone-sync data-device-platform="{{ $device['platform'] ?? 'desktop' }}" data-device-type="{{ $device['device_type'] ?? 'desktop' }}" data-device-mobile="{{ ! empty($device['is_mobile']) ? '1' : '0' }}" data-device-webview="{{ ! empty($device['is_webview']) ? '1' : '0' }}">
     <a class="skip-link" href="#main-content">{{ __('ui.common.skip_to_content') }}</a>
     <header class="site-header">
         @php
@@ -85,6 +85,7 @@
             </div>
         </div>
         <div id="mobile-menu" class="mobile-menu" data-mobile-menu hidden aria-hidden="true" inert>
+            <span data-vue-mobile-menu aria-hidden="true"></span>
             <button class="mobile-menu-close" type="button" data-menu-close aria-label="{{ __('ui.nav.close_menu') }}">✕</button>
             <nav class="site-shell mobile-nav" aria-label="{{ __('ui.nav.mobile_navigation') }}"><a href="{{ Route::has('home') ? route('home') : url('/') }}">{{ __('ui.nav.home') }}</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">{{ __('ui.nav.library') }}</a>@auth <a href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}">{{ __('ui.nav.logged_in') }}</a>@if (auth()->user()->isRole('admin') && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">{{ __('ui.nav.admin') }}</a>@endif @if (Route::has('logout'))<form class="mobile-nav-logout" method="POST" action="{{ route('logout') }}"><button type="submit">{{ __('ui.nav.logout') }}</button>@csrf</form>@endif @else<a href="{{ Route::has('login') ? route('login') : '#' }}">{{ __('ui.nav.login') }} / {{ __('ui.nav.register') }}</a>@endauth</nav>
         </div>

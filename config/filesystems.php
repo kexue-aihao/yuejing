@@ -40,8 +40,10 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Keep public uploads under the web root so they remain reachable even
+            // when a deployment cannot create the conventional storage symlink.
+            'root' => env('FILESYSTEM_PUBLIC_ROOT', public_path('storage')),
+            'url' => env('FILESYSTEM_PUBLIC_URL', '/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

@@ -15,6 +15,9 @@ class CommunicationPageContractTest extends TestCase
     {
         $response = $this->actingAs(User::factory()->create())->get(route('groups.page'));
         $response->assertOk();
+        $response->assertSee('data-vue-groups', false)
+            ->assertSee('data-translations=', false)
+            ->assertSee('data-group-create-form', false);
         $config = $this->extractApiConfig($response->getContent());
 
         $this->assertSame([
@@ -36,6 +39,9 @@ class CommunicationPageContractTest extends TestCase
     {
         $response = $this->actingAs(User::factory()->create())->get(route('messages.page'));
         $response->assertOk();
+        $response->assertSee('data-vue-private-messages', false)
+            ->assertSee('data-translations=', false)
+            ->assertSee('data-private-send-form', false);
         $config = $this->extractApiConfig($response->getContent());
 
         $this->assertSame([

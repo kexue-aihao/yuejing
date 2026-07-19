@@ -1,6 +1,4 @@
 // ── Theme Manager ──
-import Vditor from 'vditor';
-import 'vditor/dist/index.css';
 import '@fontsource/noto-sans-sc/400.css';
 import '@fontsource/noto-sans-sc/600.css';
 
@@ -28,7 +26,9 @@ class ThemeManager {
     constructor() {
         this.STORAGE_KEY = 'yuejing-theme';
         this.validThemes = ['light', 'dark', 'eye-care', 'system'];
-        this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        this.mediaQuery = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(prefers-color-scheme: dark)')
+            : null;
         this.currentTheme = this.getStoredTheme();
         this.applyTheme(this.currentTheme);
         this.initializeToggles();
@@ -91,6 +91,7 @@ class ThemeManager {
     }
 
     listenToSystemChanges() {
+        if (!this.mediaQuery) return;
         const update = () => {
             if (this.currentTheme === 'system') this.updateToggleUI();
         };
@@ -102,8 +103,20 @@ class ThemeManager {
     }
 }
 
+let themeFallbackStarted = false;
+function initThemeFallback() {
+    const marker = document.querySelector('[data-vue-theme-toggle]');
+    if (marker?.dataset.vueThemeHandoff === '1' || marker?.dataset.vueThemeMounted === '1') return;
+    if (themeFallbackStarted) return;
+    themeFallbackStarted = true;
+    new ThemeManager();
+}
+window.YuejingThemeFallback = initThemeFallback;
+
 // ── Mobile Menu ──
 function initMobileMenu() {
+    const vueMarker = document.querySelector('[data-vue-mobile-menu]');
+    if (vueMarker?.dataset.vueCommunicationHandoff === '1' || vueMarker?.dataset.vueCommunicationMounted === '1') return;
     const toggle = document.querySelector('[data-menu-toggle]');
     const menu = document.querySelector('[data-mobile-menu]');
     if (!toggle || !menu) return;
@@ -144,6 +157,8 @@ function initMobileMenu() {
 
 // ── Language Switcher ──
 function initLanguageSwitcher() {
+    const vueMarker = document.querySelector('[data-vue-language-switcher]');
+    if (vueMarker?.dataset.vueCommunicationHandoff === '1' || vueMarker?.dataset.vueCommunicationMounted === '1') return;
     document.querySelectorAll('[data-language-switcher]').forEach((form) => {
         const select = form.querySelector('select[name="locale"]');
         if (!select) return;
@@ -155,7 +170,11 @@ function initLanguageSwitcher() {
 }
 
 function initAuthStateRefresh() {
-    const serverState = document.body?.dataset.serverAuthState;
+    const authMarker = document.body;
+    if (authMarker?.dataset.vueAuthStateSyncHandoff === '1'
+        || authMarker?.dataset.vueAuthStateSyncMounted === '1') return;
+
+    const serverState = authMarker?.dataset.serverAuthState;
     if (!['authenticated', 'guest'].includes(serverState)) return;
 
     const refreshKey = `yuejing-auth-refresh:${window.location.pathname}`;
@@ -185,6 +204,9 @@ function initAuthStateRefresh() {
 }
 
 function initTimezoneLocale() {
+    const timezoneMarker = document.body;
+    if (timezoneMarker?.dataset.vueTimezoneHandoff === '1'
+        || timezoneMarker?.dataset.vueTimezoneMounted === '1') return;
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const token = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!timezone || !token) return;
@@ -203,6 +225,8 @@ function initTimezoneLocale() {
 
 // ── Reader Controls ──
 function initReaderControls() {
+    const controls = document.querySelector('.reader-controls');
+    if (controls?.dataset.vueCommunicationHandoff === '1' || controls?.dataset.vueCommunicationMounted === '1') return;
     const reader = document.querySelector('[data-reader-copy]');
     if (!reader) return;
     const sizeKey = 'yuejing-reader-size';
@@ -253,9 +277,18 @@ function initReaderControls() {
 }
 
 // ── Toast Dismiss ──
-function initToastDismiss() {
-    document.querySelectorAll('[data-toast-dismiss]').forEach((btn) => {
-        btn.addEventListener('click', () => btn.closest('.toast')?.remove());
+function initToastDismiss(root = document) {
+    const toasts = root.matches?.('.toast') ? [root] : root.querySelectorAll('.toast');
+    toasts.forEach((toast) => {
+        const marker = toast.querySelector('[data-vue-toast-dismiss]');
+        if (toast.dataset.toastDismissInitialized === '1'
+            || marker?.dataset.vueToastDismissHandoff === '1'
+            || marker?.dataset.vueToastDismissMounted === '1') return;
+
+        const btn = toast.querySelector('[data-toast-dismiss]');
+        if (!btn) return;
+        toast.dataset.toastDismissInitialized = '1';
+        btn.addEventListener('click', () => toast.remove());
     });
 }
 
@@ -420,9 +453,20 @@ function setPanelStatus(element, text, state = '') {
     element.dataset.state = state;
 }
 
+function vueCommunicationOwns(app) {
+    return app?.dataset.vueCommunicationHandoff === '1'
+        || app?.dataset.vueCommunicationMounted === '1';
+}
+
+function vueReviewsOwns(app) {
+    const island = app?.querySelector('[data-vue-reviews]');
+    return island?.dataset.vueCommunicationHandoff === '1'
+        || island?.dataset.vueCommunicationMounted === '1';
+}
+
 function initPrivateMessages() {
     const app = document.querySelector('[data-messages-app]');
-    if (!app) return;
+    if (!app || vueCommunicationOwns(app)) return;
 
     const api = readApiConfig(app);
     const currentUserId = app.dataset.currentUserId;
@@ -560,9 +604,9 @@ function initPrivateMessages() {
         const url = `${api.stream}/${encodeURIComponent(id)}/stream?after_id=${encodeURIComponent(lastId)}`;
         source = new EventSource(url, { withCredentials: true });
         source.onopen = () => setPanelStatus(status, tr('frontend.connected'), 'connected');
-        source.onmessage = (event) => {
+        source.addEventListener('message', (event) => {
             try { appendStreamPayload(JSON.parse(event.data)); } catch { /* Ignore keep-alive or malformed events. */ }
-        };
+        });
         source.onerror = () => {
             stopStream();
             setPanelStatus(status, tr('frontend.retrying'), 'retrying');
@@ -631,7 +675,7 @@ function initPrivateMessages() {
 
 function initGroups() {
     const app = document.querySelector('[data-groups-app]');
-    if (!app) return;
+    if (!app || vueCommunicationOwns(app)) return;
 
     const api = readApiConfig(app);
     const currentUserId = app.dataset.currentUserId;
@@ -750,9 +794,9 @@ function initGroups() {
         if (!id) return;
         source = new EventSource(`${api.stream}/${encodeURIComponent(id)}/stream?after_id=${encodeURIComponent(lastId)}`, { withCredentials: true });
         source.onopen = () => setPanelStatus(status, tr('frontend.connected'), 'connected');
-        source.onmessage = (event) => {
+        source.addEventListener('message', (event) => {
             try { appendStreamPayload(JSON.parse(event.data)); } catch { /* Ignore keep-alive or malformed events. */ }
-        };
+        });
         source.onerror = () => {
             stopStream();
             setPanelStatus(status, tr('frontend.retrying'), 'retrying');
@@ -830,10 +874,13 @@ function initGroups() {
 // ── Bootstrap ──
 function initRecommendations() {
     const app = document.querySelector('[data-recommendations-app]');
+    const vueMarker = app?.querySelector('[data-vue-recommendations]');
     const list = app?.querySelector('[data-recommendation-list]');
     const apiUrl = app?.dataset.apiUrl;
     const novelBase = app?.dataset.novelBase;
-    if (!app || !list || !isConfiguredApiUrl(apiUrl) || !isConfiguredApiUrl(novelBase)) return;
+    if (!app || vueMarker?.dataset.vueRecommendationsHandoff === '1'
+        || vueMarker?.dataset.vueRecommendationsMounted === '1'
+        || !list || !isConfiguredApiUrl(apiUrl) || !isConfiguredApiUrl(novelBase)) return;
 
     const status = app.querySelector('[data-recommendation-status]');
     let pollTimer = null;
@@ -915,102 +962,164 @@ function manuscriptFormatFor(file) {
     return /\.txt$/i.test(file.name) ? 'text' : 'markdown';
 }
 
-function initMarkdownEditors() {
-    document.querySelectorAll('[data-markdown-editor]').forEach((form) => {
+let legacyVditorPromise;
+
+function loadLegacyVditor() {
+    legacyVditorPromise ??= Promise.all([
+        import('vditor'),
+        import('vditor/dist/index.css'),
+    ]).then(([module]) => module.default ?? module);
+
+    return legacyVditorPromise;
+}
+
+async function initMarkdownEditors(root = document) {
+    const candidates = root.matches?.('[data-markdown-editor]')
+        ? [root]
+        : [...root.querySelectorAll('[data-markdown-editor]')];
+    const forms = candidates.filter((form) => {
+        const vueMarker = form.querySelector('[data-vue-markdown-editor]');
+        if (form.dataset.vueMarkdownHandoff === '1'
+            || form.dataset.vueMarkdownMounted === '1'
+            || vueMarker?.dataset.vueMarkdownHandoff === '1'
+            || vueMarker?.dataset.vueMarkdownMounted === '1'
+            || form.dataset.legacyMarkdownLoading === '1'
+            || form.dataset.legacyMarkdownInitialized === '1') return false;
+        return true;
+    });
+    if (!forms.length) return;
+
+    forms.forEach((form) => { form.dataset.legacyMarkdownLoading = '1'; });
+
+    let Vditor;
+    try {
+        Vditor = await loadLegacyVditor();
+    } catch {
+        // Keep the native textarea and multipart form usable when the
+        // optional editor chunk cannot be downloaded or initialized.
+        forms.forEach((form) => { delete form.dataset.legacyMarkdownLoading; });
+        return;
+    }
+
+    forms.forEach((form) => {
         const textarea = form.querySelector('textarea[data-markdown-source]');
         const editor = form.querySelector('[data-vditor-editor]');
         const manuscriptFile = form.querySelector('[data-manuscript-file]');
         const manuscriptFileName = form.querySelector('[data-manuscript-file-name]');
         const manuscriptFormat = form.querySelector('[data-manuscript-format]');
-        if (!textarea || !editor) return;
-
-        const storageKey = `yuejing-markdown-draft:${window.location.pathname}`;
-        let initialValue = textarea.value;
-        try {
-            const draft = localStorage.getItem(storageKey);
-            if (draft && !initialValue.trim()) initialValue = draft;
-        } catch {
-            // Editing still works when local storage is unavailable.
+        if (!textarea || !editor) {
+            delete form.dataset.legacyMarkdownLoading;
+            return;
         }
 
-        const syncSource = (value) => {
-            textarea.value = value;
-            try { localStorage.setItem(storageKey, value); } catch { /* Ignore unavailable storage. */ }
-        };
+        try {
 
-        // Vditor measures its container during initialization, so make it
-        // visible before constructing the editor. The plain textarea remains
-        // available until this succeeds, preserving the no-JavaScript fallback.
-        editor.hidden = false;
-        const instance = new Vditor(editor, {
-            lang: I18N.editorLocale || 'en_US',
-            rtl: I18N.editorDirection === 'rtl' || document.documentElement.dir === 'rtl',
-            mode: 'sv',
-            height: 460,
-            value: initialValue,
-            cache: { enable: false },
-            counter: { enable: true },
-            toolbar: [
-                'headings', 'bold', 'italic', 'strike', '|', 'quote', 'line',
-                'list', 'ordered-list', 'check', 'link', 'code', 'table', '|',
-                'undo', 'redo', '|', 'fullscreen', 'edit-mode', 'preview',
-            ],
-            after: () => {
-                editor.addEventListener('input', () => syncSource(instance.getValue()));
-                syncSource(instance.getValue());
-            },
-        });
-
-        let fileLoadedIntoEditor = false;
-        manuscriptFile?.addEventListener('change', async () => {
-            const file = manuscriptFile.files?.[0];
-            if (!file) {
-                fileLoadedIntoEditor = false;
-                if (manuscriptFileName) manuscriptFileName.textContent = '';
-                return;
-            }
-
-            if (manuscriptFileName) manuscriptFileName.textContent = file.name;
+            const storageKey = `yuejing-markdown-draft:${window.location.pathname}`;
+            let initialValue = textarea.value;
             try {
-                const content = await readManuscriptFile(file);
-                instance.setValue(content);
-                syncSource(content);
-                if (manuscriptFormat) manuscriptFormat.value = manuscriptFormatFor(file);
-                fileLoadedIntoEditor = true;
+                const draft = localStorage.getItem(storageKey);
+                if (draft && !initialValue.trim()) initialValue = draft;
             } catch {
-                fileLoadedIntoEditor = false;
+                // Editing still works when local storage is unavailable.
             }
-        });
 
-        form.addEventListener('submit', () => {
-            syncSource(instance.getValue());
-            // The editor is the authoritative source after a successful local
-            // file read. Clear the file input before the browser builds FormData
-            // so the server does not receive two manuscript sources.
-            if (fileLoadedIntoEditor && manuscriptFile?.files?.length) manuscriptFile.value = '';
-            try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
-        });
+            const syncSource = (value) => {
+                textarea.value = value;
+                try { localStorage.setItem(storageKey, value); } catch { /* Ignore unavailable storage. */ }
+            };
 
-        form.querySelector('[data-clear-markdown-draft]')?.addEventListener('click', () => {
-            try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
-            instance.setValue('');
-            syncSource('');
-            fileLoadedIntoEditor = false;
-            if (manuscriptFile) manuscriptFile.value = '';
-            if (manuscriptFileName) manuscriptFileName.textContent = '';
-        });
+            // Vditor measures its container during initialization, so make it
+            // visible before constructing the editor. The plain textarea remains
+            // available until this succeeds, preserving the no-JavaScript fallback.
+            editor.hidden = false;
+            const instance = new Vditor(editor, {
+                lang: I18N.editorLocale || 'en_US',
+                rtl: I18N.editorDirection === 'rtl' || document.documentElement.dir === 'rtl',
+                mode: 'sv',
+                height: 460,
+                value: initialValue,
+                cache: { enable: false },
+                counter: { enable: true },
+                toolbar: [
+                    'headings', 'bold', 'italic', 'strike', '|', 'quote', 'line',
+                    'list', 'ordered-list', 'check', 'link', 'code', 'table', '|',
+                    'undo', 'redo', '|', 'fullscreen', 'edit-mode', 'preview',
+                ],
+                after: () => {
+                    editor.addEventListener('input', () => syncSource(instance.getValue()));
+                    syncSource(instance.getValue());
+                },
+            });
 
-        textarea.hidden = true;
+            let fileLoadedIntoEditor = false;
+            manuscriptFile?.addEventListener('change', async () => {
+                const file = manuscriptFile.files?.[0];
+                if (!file) {
+                    fileLoadedIntoEditor = false;
+                    if (manuscriptFileName) manuscriptFileName.textContent = '';
+                    return;
+                }
+
+                if (manuscriptFileName) manuscriptFileName.textContent = file.name;
+                try {
+                    const content = await readManuscriptFile(file);
+                    instance.setValue(content);
+                    syncSource(content);
+                    if (manuscriptFormat) manuscriptFormat.value = manuscriptFormatFor(file);
+                    fileLoadedIntoEditor = true;
+                } catch {
+                    fileLoadedIntoEditor = false;
+                }
+            });
+
+            form.addEventListener('submit', () => {
+                syncSource(instance.getValue());
+                // The editor is the authoritative source after a successful local
+                // file read. Clear the file input before the browser builds FormData
+                // so the server does not receive two manuscript sources.
+                if (fileLoadedIntoEditor && manuscriptFile?.files?.length) manuscriptFile.value = '';
+                try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
+            });
+
+            form.querySelector('[data-clear-markdown-draft]')?.addEventListener('click', () => {
+                try { localStorage.removeItem(storageKey); } catch { /* Ignore unavailable storage. */ }
+                instance.setValue('');
+                syncSource('');
+                fileLoadedIntoEditor = false;
+                if (manuscriptFile) manuscriptFile.value = '';
+                if (manuscriptFileName) manuscriptFileName.textContent = '';
+            });
+
+            textarea.hidden = true;
+            form.dataset.legacyMarkdownInitialized = '1';
+        } catch {
+            // A failed optional editor must never prevent the native form from
+            // submitting its textarea content.
+            editor.hidden = true;
+        } finally {
+            delete form.dataset.legacyMarkdownLoading;
+        }
     });
 }
 
-function initChapterManuscriptUploads() {
-    document.querySelectorAll('[data-chapter-manuscript-form]').forEach((form) => {
+function initChapterManuscriptUploads(root = document) {
+    const forms = root.matches?.('[data-chapter-manuscript-form]')
+        ? [root]
+        : root.querySelectorAll('[data-chapter-manuscript-form]');
+
+    forms.forEach((form) => {
         const textarea = form.querySelector('[data-manuscript-content]');
         const manuscriptFile = form.querySelector('[data-manuscript-file]');
         const manuscriptFileName = form.querySelector('[data-manuscript-file-name]');
         const manuscriptFormat = form.querySelector('[data-manuscript-format]');
         if (!textarea || !manuscriptFile) return;
+        if (form.dataset.chapterUploadInitialized === '1') return;
+        const vueMarker = form.querySelector('[data-vue-chapter-manuscript-upload]');
+        if (form.dataset.vueChapterManuscriptHandoff === '1'
+            || form.dataset.vueChapterManuscriptMounted === '1'
+            || vueMarker?.dataset.vueChapterManuscriptHandoff === '1'
+            || vueMarker?.dataset.vueChapterManuscriptMounted === '1') return;
+        form.dataset.chapterUploadInitialized = '1';
 
         let fileLoadedIntoEditor = false;
         manuscriptFile.addEventListener('change', async () => {
@@ -1038,8 +1147,11 @@ function initChapterManuscriptUploads() {
     });
 }
 
-function initCoverPreviews() {
-    document.querySelectorAll('[data-cover-input]').forEach((input) => {
+function initCoverPreviews(root = document) {
+    const inputs = root.matches?.('[data-cover-input]') ? [root] : root.querySelectorAll('[data-cover-input]');
+    inputs.forEach((input) => {
+        const vueMarker = input.closest('[data-vue-cover-preview]');
+        if (vueMarker?.dataset.vueCoverHandoff === '1' || vueMarker?.dataset.vueCoverMounted === '1') return;
         const preview = input.closest('form, .form-field')?.querySelector('[data-cover-preview]');
         if (!preview) return;
 
@@ -1061,6 +1173,7 @@ function initCoverPreviews() {
 
 function initNovelReviews() {
     const app = document.querySelector('[data-reviews-app]');
+    if (vueReviewsOwns(app)) return;
     const list = app?.querySelector('[data-review-list]');
     const url = app?.dataset.reviewsUrl;
     if (!app || !list || !isConfiguredApiUrl(url)) return;
@@ -1226,8 +1339,58 @@ function initNovelReviews() {
     window.setInterval(loadReviews, 30000);
 }
 
+document.addEventListener('yuejing:vue-chapter-manuscript-failed', (event) => {
+    const form = event.detail?.marker?.closest?.('[data-chapter-manuscript-form]');
+    if (!form) return;
+    delete form.dataset.vueChapterManuscriptHandoff;
+    delete form.dataset.vueChapterManuscriptMounted;
+    initChapterManuscriptUploads(form);
+});
+document.addEventListener('yuejing:vue-recommendations-failed', () => {
+    initRecommendations();
+});
+document.addEventListener('yuejing:vue-cover-preview-failed', () => {
+    initCoverPreviews();
+});
+document.addEventListener('yuejing:vue-theme-failed', () => {
+    initThemeFallback();
+});
+document.addEventListener('yuejing:vue-markdown-editor-failed', (event) => {
+    const form = event.detail?.marker?.closest?.('[data-markdown-editor]');
+    if (!form) return;
+    delete form.dataset.vueMarkdownHandoff;
+    delete form.dataset.vueMarkdownMounted;
+    void initMarkdownEditors(form);
+});
+document.addEventListener('yuejing:vue-communication-failed', (event) => {
+    if (event.detail?.type === 'messages') initPrivateMessages();
+    if (event.detail?.type === 'groups') initGroups();
+    if (event.detail?.type === 'reviews') initNovelReviews();
+    if (event.detail?.type === 'reader') initReaderControls();
+    if (event.detail?.type === 'mobile-menu') initMobileMenu();
+    if (event.detail?.type === 'language') initLanguageSwitcher();
+});
+document.addEventListener('yuejing:vue-auth-state-failed', () => {
+    const authMarker = document.body;
+    delete authMarker?.dataset.vueAuthStateSyncHandoff;
+    delete authMarker?.dataset.vueAuthStateSyncMounted;
+    initAuthStateRefresh();
+});
+document.addEventListener('yuejing:vue-toast-dismiss-failed', (event) => {
+    const toast = event.detail?.marker?.closest?.('.toast');
+    if (!toast) return;
+    delete toast.dataset.toastDismissInitialized;
+    initToastDismiss(toast);
+});
+document.addEventListener('yuejing:vue-timezone-failed', () => {
+    const timezoneMarker = document.body;
+    delete timezoneMarker?.dataset.vueTimezoneHandoff;
+    delete timezoneMarker?.dataset.vueTimezoneMounted;
+    initTimezoneLocale();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
-    new ThemeManager();
+    if (!document.querySelector('[data-vue-theme-toggle]')) initThemeFallback();
     initMobileMenu();
     initLanguageSwitcher();
     initAuthStateRefresh();
@@ -1236,8 +1399,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initToastDismiss();
     initPrivateMessages();
     initGroups();
-    initRecommendations();
-    initMarkdownEditors();
+    void initMarkdownEditors();
     initChapterManuscriptUploads();
     initCoverPreviews();
     initNovelReviews();
