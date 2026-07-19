@@ -281,7 +281,7 @@ class PublicController extends Controller
                     'number' => $chapter->chapter_number,
                     'title' => $chapter->title,
                     'content' => $chapter->content,
-                    'content_html' => $markdownRenderer->render($chapter->content),
+                    'content_html' => $markdownRenderer->render($chapter->content, $chapter->content_format ?? 'markdown'),
                 ],
             ]);
         }

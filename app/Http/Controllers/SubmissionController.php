@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Submission;
+use App\Services\ManuscriptFileParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -34,14 +35,15 @@ class SubmissionController extends Controller
         return response()->json($submissions);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ManuscriptFileParser $fileParser)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'synopsis' => ['nullable', 'string', 'max:5000'],
             'manuscript' => ['nullable', 'string'],
-            'manuscript_format' => ['nullable', 'in:markdown'],
+            'manuscript_format' => ['nullable', 'in:markdown,text'],
+            'manuscript_file' => ['nullable', 'file', 'max:5120'],
             'summary' => ['nullable', 'string', 'max:5000'],
             'content' => ['nullable', 'string'],
             'cover' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
@@ -49,11 +51,28 @@ class SubmissionController extends Controller
         ]);
 
         $data['synopsis'] = $data['synopsis'] ?? $data['summary'] ?? null;
-        $data['manuscript'] = $data['manuscript'] ?? $data['content'] ?? null;
-        $data['manuscript_format'] = 'markdown';
-        unset($data['summary'], $data['content']);
+        $editorContent = $data['manuscript'] ?? $data['content'] ?? null;
+        $hasEditorContent = is_string($editorContent) && trim($editorContent) !== '';
+        $hasUploadedFile = $request->hasFile('manuscript_file');
 
-        if ($data['manuscript'] === null) {
+        if ($hasEditorContent && $hasUploadedFile) {
+            throw ValidationException::withMessages([
+                'manuscript_file' => [__('ui.messages.manuscript_source_conflict')],
+            ]);
+        }
+
+        if ($hasUploadedFile) {
+            $parsed = $fileParser->parse($request->file('manuscript_file'));
+            $data['manuscript'] = $parsed['content'];
+            $data['manuscript_format'] = $parsed['format'];
+        } else {
+            $data['manuscript'] = $editorContent;
+            $data['manuscript_format'] = 'markdown';
+        }
+
+        unset($data['summary'], $data['content'], $data['manuscript_file']);
+
+        if (! is_string($data['manuscript']) || trim($data['manuscript']) === '') {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'message' => trans('validation.required', ['attribute' => trans('validation.attributes.manuscript')]),

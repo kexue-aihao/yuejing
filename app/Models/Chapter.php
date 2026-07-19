@@ -9,7 +9,7 @@ class Chapter extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['novel_id', 'chapter_number', 'title', 'content', 'status', 'published_at'];
+    protected $fillable = ['novel_id', 'chapter_number', 'title', 'content', 'content_format', 'status', 'published_at'];
 
     protected function casts(): array
     {

@@ -239,7 +239,7 @@ class AdminController extends Controller
 
         $submissions = $query->paginate(config('yuejing.pagination'))->withQueryString();
         $submissions->getCollection()->each(function (Submission $submission) use ($markdownRenderer): void {
-            $submission->setAttribute('manuscript_html', $markdownRenderer->render($submission->manuscript));
+            $submission->setAttribute('manuscript_html', $markdownRenderer->render($submission->manuscript, $submission->manuscript_format ?? 'markdown'));
         });
 
         if (! $this->wantsJson($request)) {
@@ -285,6 +285,7 @@ class AdminController extends Controller
                         'chapter_number' => 1,
                         'title' => __('ui.messages.untitled_chapter'),
                         'content' => $submission->manuscript,
+                        'content_format' => $submission->manuscript_format ?? 'markdown',
                         'status' => 'published',
                         'published_at' => $reviewedAt,
                     ]);

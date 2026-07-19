@@ -882,6 +882,8 @@ function initMarkdownEditors() {
     document.querySelectorAll('[data-markdown-editor]').forEach((form) => {
         const textarea = form.querySelector('textarea[data-markdown-source]');
         const editor = form.querySelector('[data-vditor-editor]');
+        const manuscriptFile = form.querySelector('[data-manuscript-file]');
+        const manuscriptFileName = form.querySelector('[data-manuscript-file-name]');
         if (!textarea || !editor) return;
 
         const storageKey = `yuejing-markdown-draft:${window.location.pathname}`;
@@ -920,6 +922,30 @@ function initMarkdownEditors() {
                 syncSource(instance.getValue());
             },
         });
+
+        let clearingEditorForFile = false;
+        const clearManuscriptFile = () => {
+            if (clearingEditorForFile) return;
+            if (!manuscriptFile?.files?.length) return;
+            manuscriptFile.value = '';
+            if (manuscriptFileName) manuscriptFileName.textContent = '';
+        };
+
+        manuscriptFile?.addEventListener('change', () => {
+            const file = manuscriptFile.files?.[0];
+            if (!file) {
+                if (manuscriptFileName) manuscriptFileName.textContent = '';
+                return;
+            }
+
+            clearingEditorForFile = true;
+            instance.setValue('');
+            clearingEditorForFile = false;
+            syncSource('');
+            if (manuscriptFileName) manuscriptFileName.textContent = file.name;
+        });
+
+        editor.addEventListener('input', clearManuscriptFile);
 
         form.addEventListener('submit', () => {
             syncSource(instance.getValue());

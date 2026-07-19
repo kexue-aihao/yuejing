@@ -36,6 +36,12 @@
                     <div data-vditor-editor hidden aria-label="{{ __('ui.author.editor_label') }}"></div>
                     <p class="form-help">{{ __('ui.author.editor_help') }}</p>
                 </div>
+                <div class="form-field manuscript-upload-field">
+                    <label for="manuscript_file">{{ __('ui.author.upload_manuscript') }}</label>
+                    <input id="manuscript_file" name="manuscript_file" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" data-manuscript-file>
+                    <span class="form-help" data-manuscript-file-name aria-live="polite"></span>
+                    <p class="form-help">{{ __('ui.author.upload_manuscript_help') }}</p>
+                </div>
                 <button class="button button-primary" type="submit">{{ __('ui.author.submit_review') }} <span aria-hidden="true">→</span></button>
             </form>
         </section>

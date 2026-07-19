@@ -16,10 +16,20 @@ class MarkdownRenderer
         ]);
     }
 
-    public function render(?string $markdown): string
+    public function render(?string $markdown, string $format = 'markdown'): string
     {
         if ($markdown === null || trim($markdown) === '') {
             return '';
+        }
+
+        if ($format === 'text') {
+            $text = str_replace(["\r\n", "\r"], "\n", $markdown);
+            $paragraphs = preg_split('/\n{2,}/', trim($text)) ?: [];
+
+            return collect($paragraphs)
+                ->filter(static fn (string $paragraph): bool => trim($paragraph) !== '')
+                ->map(static fn (string $paragraph): string => '<p>'.nl2br(htmlspecialchars(trim($paragraph), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), false).'</p>')
+                ->implode('');
         }
 
         return (string) $this->converter->convert($markdown);
