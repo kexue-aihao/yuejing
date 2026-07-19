@@ -451,7 +451,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
         'new_message' => '送出第一則訊息後才會建立對話。',
         'send_read' => '送出後訊息會標記為已讀。',
         'choose_user' => '請先選擇使用者再送出訊息。',
-        'connected' => '即時連線',
+        'connected' => '運行中',
         'retrying' => '連線中斷，正在重試',
         'loading' => '載入中',
         'waiting_send' => '等待送出',

@@ -477,8 +477,10 @@ function initPrivateMessages() {
         try {
             conversations = collection(await apiRequest(api.index), ['conversations', 'items']);
             renderConversations();
+            setPanelStatus(status, tr('frontend.connected'), 'connected');
         } catch (error) {
             list.innerHTML = `<p class="communication-error">${escapeHtml(error.message)}</p>`;
+            setPanelStatus(status, tr('frontend.retrying'), 'retrying');
         }
     };
 
@@ -529,7 +531,7 @@ function initPrivateMessages() {
         if (!id) return;
         const url = `${api.stream}/${encodeURIComponent(id)}/stream?after_id=${encodeURIComponent(lastId)}`;
         source = new EventSource(url, { withCredentials: true });
-        setPanelStatus(status, tr('frontend.connected'), 'connected');
+        source.onopen = () => setPanelStatus(status, tr('frontend.connected'), 'connected');
         source.onmessage = (event) => {
             try { appendStreamPayload(JSON.parse(event.data)); } catch { /* Ignore keep-alive or malformed events. */ }
         };
@@ -554,7 +556,7 @@ function initPrivateMessages() {
         renderConversations();
         if (!id) {
             messageList.innerHTML = `<p class="communication-empty">${escapeHtml(tr('frontend.empty_messages'))}</p>`;
-            setPanelStatus(status, tr('frontend.waiting_send'), 'idle');
+            setPanelStatus(status, tr('frontend.connected'), 'connected');
             return;
         }
         await loadConversation(id);
@@ -719,7 +721,7 @@ function initGroups() {
         stopStream();
         if (!id) return;
         source = new EventSource(`${api.stream}/${encodeURIComponent(id)}/stream?after_id=${encodeURIComponent(lastId)}`, { withCredentials: true });
-        setPanelStatus(status, tr('frontend.connected'), 'connected');
+        source.onopen = () => setPanelStatus(status, tr('frontend.connected'), 'connected');
         source.onmessage = (event) => {
             try { appendStreamPayload(JSON.parse(event.data)); } catch { /* Ignore keep-alive or malformed events. */ }
         };
@@ -782,7 +784,14 @@ function initGroups() {
     });
 
     async function loadGroups() {
-        try { groups = collection(await apiRequest(api.index), ['groups', 'items']); renderGroups(); } catch (error) { groupList.innerHTML = `<p class="communication-error">${escapeHtml(error.message)}</p>`; }
+        try {
+            groups = collection(await apiRequest(api.index), ['groups', 'items']);
+            renderGroups();
+            setPanelStatus(status, tr('frontend.connected'), 'connected');
+        } catch (error) {
+            groupList.innerHTML = `<p class="communication-error">${escapeHtml(error.message)}</p>`;
+            setPanelStatus(status, tr('frontend.retrying'), 'retrying');
+        }
     }
 
     setPanelStatus(status, tr('frontend.loading'), 'loading');

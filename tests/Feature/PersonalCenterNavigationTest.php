@@ -10,6 +10,27 @@ class PersonalCenterNavigationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_homepage_navigation_reflects_guest_and_authenticated_states(): void
+    {
+        $guestHtml = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('href="'.route('login').'"', $guestHtml);
+        $this->assertStringContainsString('href="'.route('register').'"', $guestHtml);
+
+        $user = User::factory()->create(['role' => 'user']);
+        $authenticatedHtml = $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('data-auth-state="authenticated"', $authenticatedHtml);
+        $this->assertStringContainsString('href="'.route('dashboard').'"', $authenticatedHtml);
+        $this->assertStringNotContainsString('href="'.route('login').'"', $authenticatedHtml);
+        $this->assertStringNotContainsString('href="'.route('register').'"', $authenticatedHtml);
+    }
+
     public function test_regular_user_personal_center_has_no_submission_entry_or_author_center(): void
     {
         $user = User::factory()->create(['role' => 'user']);

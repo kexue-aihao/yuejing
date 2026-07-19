@@ -62,10 +62,10 @@
             </nav>
             <div class="nav-actions">
                 <form class="nav-search" action="{{ Route::has('novels.index') ? route('novels.index') : '#' }}" method="get" role="search">
-                    <label class="sr-only" for="global-search">{{ __('ui.nav.search_label') }}</label><input id="global-search" name="q" value="{{ request('q', '') }}" placeholder="{{ __('ui.nav.search_placeholder') }}" autocomplete="off"><button type="submit" aria-label="{{ __('ui.nav.search') }}">⌕</button>
+                    <label class="sr-only" for="global-search">{{ __('ui.nav.search_label') }}</label><button type="submit" aria-label="{{ __('ui.nav.search') }}">⌕</button><input id="global-search" name="q" value="{{ request('q', '') }}" placeholder="{{ __('ui.nav.search_placeholder') }}" autocomplete="off">
                 </form>
                 @auth
-                    <a class="profile-link" href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}" aria-label="{{ __('ui.nav.open_personal_center') }}" title="{{ __('ui.nav.personal_center') }}">
+                    <a class="profile-link" href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}" aria-label="{{ __('ui.nav.open_personal_center') }}" title="{{ __('ui.nav.personal_center') }}" data-auth-state="authenticated">
                         <svg class="profile-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 19.25c.7-3.25 3-5 6.5-5s5.8 1.75 6.5 5"></path></svg>
                         <span class="profile-link-label">{{ __('ui.nav.personal_center') }}</span>
                     </a>
