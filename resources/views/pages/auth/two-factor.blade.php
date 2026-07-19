@@ -34,8 +34,8 @@
                         </div>
                     </div>
                 @else
-                <p>{{ __('ui.two_factor.setup_notice') }}</p>
-                <p><strong>{{ __('ui.two_factor.secret') }}:</strong>{{ $setup['secret'] }}</p>
+                    <p>{{ __('ui.two_factor.setup_notice') }}</p>
+                    <p><strong>{{ __('ui.two_factor.secret') }}:</strong>{{ $setup['secret'] }}</p>
                 @endif
                 <form class="form-stack" method="POST" action="{{ route('two-factor.enable') }}">
                     @csrf
