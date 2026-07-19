@@ -1,5 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue';
+import UiButton from './ui/UiButton.vue';
+import UiPanel from './ui/UiPanel.vue';
+import UiStatus from './ui/UiStatus.vue';
 import MessageBubble from './MessageBubble.vue';
 import { entityId, entityName, translate } from './useCommunicationApi.js';
 import { useGroups } from './useGroups.js';
@@ -182,13 +185,13 @@ async function handleSend() {
         </div>
 
         <div class="communication-layout groups-layout">
-            <aside class="communication-sidebar panel">
+            <UiPanel as="aside" class="communication-sidebar panel" variant="surface">
                 <div class="panel-heading">
                     <div><p class="panel-kicker">{{ t('groups_label') }}</p><h2>{{ t('groups') }}</h2></div>
                     <span class="live-dot" :aria-label="t('live')"></span>
                 </div>
-                <div class="group-list" aria-live="polite">
-                    <p v-if="listError" class="communication-error">{{ listError }}</p>
+                <div class="group-list">
+                    <p v-if="listError" class="communication-error" role="alert" aria-live="assertive">{{ listError }}</p>
                     <p v-else-if="!groups.length" class="communication-empty">{{ t('empty_groups') }}</p>
                     <button v-for="group in groups" :key="groupId(group)" type="button" class="conversation-item" :class="{ 'is-active': groupId(group) === activeId }" @click="chooseGroup(group)">
                         <span class="avatar avatar-small">{{ initial(groupNameFor(group)) }}</span>
@@ -206,16 +209,16 @@ async function handleSend() {
                     <button class="button button-dark" type="submit" :disabled="isCreating || !groupName.trim()">{{ t('create_group_button') }} <span aria-hidden="true">→</span></button>
                 </form>
                 <noscript><p class="no-script-note">{{ t('noscript_groups_create') }}</p></noscript>
-            </aside>
+            </UiPanel>
 
-            <section class="communication-main panel" aria-labelledby="vue-group-title">
+            <UiPanel as="section" class="communication-main panel" variant="surface" aria-labelledby="vue-group-title">
                 <div class="panel-heading communication-main-heading">
                     <div>
                         <p class="panel-kicker">{{ t('group_chat') }}</p>
                         <h2 id="vue-group-title">{{ title }}</h2>
                         <p class="panel-subtitle">{{ meta }}</p>
                     </div>
-                    <span class="connection-status" :data-state="statusState" role="status" aria-live="polite">{{ status }}</span>
+                    <UiStatus class="connection-status" :state="statusState" :label="status" live />
                 </div>
 
                 <div class="group-members">
@@ -233,11 +236,11 @@ async function handleSend() {
                             <option value="">{{ t('choose_member') }}</option>
                             <option v-for="user in availableUsers" :key="entityId(user)" :value="entityId(user)">{{ entityName(user, t('unnamed_user')) }}</option>
                         </select>
-                        <button class="button button-outline button-small" type="submit" :disabled="!activeId || !memberToAdd || isAdding">{{ t('add_member') }}</button>
+                        <UiButton variant="outline" size="sm" type="submit" :disabled="!activeId || !memberToAdd" :loading="isAdding">{{ t('add_member') }}</UiButton>
                     </form>
                 </div>
 
-                <div class="message-list" aria-live="polite" :aria-label="t('group_content')">
+                <div class="message-list" :aria-label="t('group_content')">
                     <MessageBubble v-for="message in messages" :key="message.id" :message="message" :current-user-id="userId" :translations="translations" group />
                     <p v-if="!messages.length" class="communication-empty">{{ activeId ? t('empty_group_messages') : t('choose_group_hint') }}</p>
                 </div>
@@ -246,12 +249,12 @@ async function handleSend() {
                     <label class="sr-only" for="vue-group-message-body">{{ t('input_group_message') }}</label>
                     <textarea id="vue-group-message-body" v-model="messageBody" name="body" rows="3" :placeholder="t('group_placeholder')" required :disabled="isSending"></textarea>
                     <div class="compose-actions">
-                        <span class="form-help">{{ actionError || help }}</span>
+                        <span class="form-help" :class="{ 'communication-error': actionError }" :role="actionError ? 'alert' : undefined" :aria-live="actionError ? 'assertive' : undefined">{{ actionError || help }}</span>
                         <button class="button button-primary" type="submit" :disabled="!activeId || isSending || !messageBody.trim()">{{ t('send_group_message') }} <span aria-hidden="true">→</span></button>
                     </div>
                 </form>
                 <noscript><p class="no-script-note">{{ t('noscript_groups_send') }}</p></noscript>
-            </section>
+            </UiPanel>
         </div>
     </div>
 </template>

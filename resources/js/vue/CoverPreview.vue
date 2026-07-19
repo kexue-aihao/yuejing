@@ -23,6 +23,10 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    descriptionId: {
+        type: String,
+        default: '',
+    },
 });
 
 const emit = defineEmits([
@@ -71,6 +75,7 @@ function onInputChange(event) {
         :accept="accept"
         :required="required"
         :aria-invalid="invalidReason ? 'true' : undefined"
+        :aria-describedby="descriptionId || undefined"
         @change="onInputChange"
     >
     <img

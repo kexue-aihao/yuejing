@@ -1,5 +1,7 @@
 <script setup>
 import { computed } from 'vue';
+import UiButton from './ui/UiButton.vue';
+import UiPanel from './ui/UiPanel.vue';
 
 const props = defineProps({
     chapter: {
@@ -23,7 +25,7 @@ const deleteFormId = computed(() => `delete-chapter-${props.chapter.id}`);
 </script>
 
 <template>
-    <section class="panel author-chapter-card">
+    <UiPanel as="section" class="panel author-chapter-card" variant="surface">
         <form
             class="form-stack"
             method="POST"
@@ -53,13 +55,13 @@ const deleteFormId = computed(() => `delete-chapter-${props.chapter.id}`);
                 <p class="form-help">{{ translations.uploadManuscriptHelp }}</p>
             </div>
             <div class="card-actions">
-                <button class="button button-primary button-small" type="submit">{{ translations.saveChapter }}</button>
-                <button class="button button-outline button-small" type="submit" :form="deleteFormId">{{ translations.deleteChapter }}</button>
+                <UiButton variant="primary" size="sm" type="submit">{{ translations.saveChapter }}</UiButton>
+                <UiButton variant="outline" size="sm" type="submit" :form="deleteFormId">{{ translations.deleteChapter }}</UiButton>
             </div>
         </form>
         <form :id="deleteFormId" method="POST" :action="chapter.deleteUrl" class="sr-only">
             <input type="hidden" name="_token" :value="csrfToken">
             <input type="hidden" name="_method" value="DELETE">
         </form>
-    </section>
+    </UiPanel>
 </template>

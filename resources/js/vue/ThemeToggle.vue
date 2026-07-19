@@ -101,6 +101,7 @@ function handleKeydown(event, index) {
             :class="{ active: option.value === theme }"
             role="radio"
             :aria-checked="String(option.value === theme)"
+            :aria-label="option.label"
             :tabindex="option.value === theme ? 0 : -1"
             :title="option.title || undefined"
             @click="chooseTheme(option.value)"

@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import UiPanel from './ui/UiPanel.vue';
 import { formatCommunicationTime, translate } from './useCommunicationApi.js';
 
 const props = defineProps({
@@ -27,14 +28,14 @@ const createdAt = computed(() => props.review.created_at || '');
 </script>
 
 <template>
-    <article class="panel review-item">
+    <UiPanel as="article" class="panel review-item" variant="surface">
         <div class="review-item-head"><strong>{{ userName }}</strong><span>{{ rating }}<template v-if="level"> · {{ level }}</template></span></div>
         <p v-if="review.review" class="review-body">{{ review.review }}</p>
         <dl v-if="criteria.length" class="review-criteria-summary">
             <div v-for="item in criteria" :key="item.key"><dt>{{ item.label }}</dt><dd>{{ item.value }}/10</dd></div>
         </dl>
         <time v-if="createdAt" class="review-item-date" :datetime="createdAt">{{ formatCommunicationTime(createdAt) }}</time>
-    </article>
+    </UiPanel>
 </template>
 
 <style scoped>

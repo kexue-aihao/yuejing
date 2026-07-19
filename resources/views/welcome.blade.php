@@ -31,6 +31,7 @@
             'slug' => $recommendation->slug,
             'author' => $recommendation->author?->name,
             'categories' => $recommendation->categories->pluck('name')->values()->all(),
+            'cover_url' => $recommendation->cover_url,
         ])->values();
     @endphp
     <section class="site-shell section-block recommendation-section" data-recommendations-app data-api-url="{{ $recommendationApiUrl ?? url('/api/recommendations') }}" data-novel-base="{{ url('/novels') }}">

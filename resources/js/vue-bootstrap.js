@@ -276,6 +276,7 @@ async function mountCoverPreviews() {
                 accept: element.dataset.accept || 'image/jpeg,image/png,image/webp',
                 required: element.dataset.required === '1',
                 previewAlt: element.dataset.previewAlt || '',
+                descriptionId: element.dataset.descriptionId || '',
             }).mount(element);
             element.dataset.vueCoverMounted = '1';
             delete element.dataset.vueCoverHandoff;

@@ -1,5 +1,8 @@
 <script setup>
 import { computed, watch } from 'vue';
+import UiButton from './ui/UiButton.vue';
+import UiPanel from './ui/UiPanel.vue';
+import UiStatus from './ui/UiStatus.vue';
 import ReviewItem from './ReviewItem.vue';
 import { translate } from './useCommunicationApi.js';
 import { useNovelReviews } from './useNovelReviews.js';
@@ -72,9 +75,9 @@ watch(statistics, (next) => syncPageStatistics(next), { deep: true });
                 <span class="muted" data-review-rating-count>{{ t('rating_count', { count: ratingCount }) }}</span>
             </div>
         </div>
-        <p class="review-status muted" :class="{ 'is-error': statusError }" role="status" aria-live="polite">{{ status }}</p>
+        <UiStatus v-if="status" class="review-status" :state="statusError ? 'error' : 'info'" :label="status" live />
 
-        <div v-if="authenticated" class="panel review-form-panel">
+        <UiPanel v-if="authenticated" class="review-form-panel panel" variant="surface">
             <form method="POST" :action="rateUrl" @submit.prevent="submitReview">
                 <input type="hidden" name="_token" :value="csrfToken">
                 <div class="review-form-grid">
@@ -84,16 +87,16 @@ watch(statistics, (next) => syncPageStatistics(next), { deep: true });
                 <fieldset class="review-criteria"><legend>{{ t('criteria_label') }}</legend><div class="review-criteria-grid">
                     <label v-for="criterion in criteria" :key="criterion" class="form-field" :for="`vue-criteria-${criterion}`"><span>{{ t(criterion) }}</span><input :id="`vue-criteria-${criterion}`" v-model="form.criteria[criterion]" :name="`criteria[${criterion}]`" type="number" min="1" max="10" :disabled="isSubmitting"></label>
                 </div></fieldset>
-                <div class="review-actions"><button class="button button-primary" type="submit" :disabled="isSubmitting">{{ t('submit') }}</button><span v-if="hasCurrentRating" class="muted">{{ t('withdraw_hint') }}</span></div>
+                <div class="review-actions"><UiButton variant="primary" type="submit" :loading="isSubmitting">{{ t('submit') }}</UiButton><span v-if="hasCurrentRating" class="muted">{{ t('withdraw_hint') }}</span></div>
             </form>
             <form v-if="hasCurrentRating" method="POST" :action="withdrawUrl" class="review-withdraw-form" @submit.prevent="withdrawReview">
                 <input type="hidden" name="_token" :value="csrfToken"><input type="hidden" name="_method" value="DELETE">
-                <button class="button button-outline" type="submit" :disabled="isWithdrawing">{{ t('withdraw') }}</button>
+                <UiButton variant="outline" type="submit" :loading="isWithdrawing">{{ t('withdraw') }}</UiButton>
             </form>
-        </div>
+        </UiPanel>
         <p v-else class="muted"><a class="text-link" :href="loginUrl">{{ t('login') }}</a> {{ t('login_to_review') }}</p>
 
-        <div class="review-list" aria-live="polite">
+        <div class="review-list">
             <ReviewItem v-for="(review, index) in reviews" :key="review.id ?? `${review.user || 'review'}-${index}`" :review="review" :translations="translations" />
             <p v-if="!reviews.length" class="muted">{{ t('no_rating') }}</p>
         </div>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import RecommendationItem from './RecommendationItem.vue';
+import UiStatus from './ui/UiStatus.vue';
 import { useRecommendations } from './useRecommendations';
 
 const props = defineProps({
@@ -74,9 +75,7 @@ function handleOpen(item) {
 
 <template>
     <div class="recommendation-feed">
-        <span class="recommendation-status muted" role="status" aria-live="polite">
-            {{ statusText }}
-        </span>
+        <UiStatus class="recommendation-status" :state="status" :label="statusText" live />
         <div class="recommendation-grid">
             <RecommendationItem
                 v-for="item in items"

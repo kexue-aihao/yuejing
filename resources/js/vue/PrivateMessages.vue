@@ -1,5 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue';
+import UiButton from './ui/UiButton.vue';
+import UiPanel from './ui/UiPanel.vue';
+import UiStatus from './ui/UiStatus.vue';
 import MessageBubble from './MessageBubble.vue';
 import { entityId, entityName, translate } from './useCommunicationApi.js';
 import { usePrivateMessages } from './usePrivateMessages.js';
@@ -167,7 +170,7 @@ async function handleSend() {
         </div>
 
         <div class="communication-layout">
-            <aside class="communication-sidebar panel">
+            <UiPanel as="aside" class="communication-sidebar panel" variant="surface">
                 <div class="panel-heading">
                     <div><p class="panel-kicker">{{ t('conversations_label') }}</p><h2>{{ t('conversations') }}</h2></div>
                     <span class="live-dot" :aria-label="t('live')"></span>
@@ -175,18 +178,18 @@ async function handleSend() {
                 <form class="communication-search" method="get" :action="api.users" @submit.prevent="handleSearch">
                     <label class="sr-only" for="vue-message-user-search">{{ t('search_user') }}</label>
                     <input id="vue-message-user-search" v-model="searchQuery" name="q" :placeholder="t('search_placeholder')" autocomplete="off">
-                    <button class="button button-small" type="submit" :disabled="isSearching">{{ t('search') }}</button>
+                    <UiButton variant="primary" size="sm" type="submit" :loading="isSearching">{{ t('search') }}</UiButton>
                 </form>
-                <div class="search-results" aria-live="polite">
-                    <p v-if="searchError" class="communication-error">{{ searchError }}</p>
-                    <p v-else-if="isSearching" class="search-empty">{{ t('loading') }}</p>
-                    <p v-else-if="searchResults.length === 0 && searchQuery" class="search-empty">{{ t('no_users') }}</p>
+                <div class="search-results">
+                    <p v-if="searchError" class="communication-error" role="alert" aria-live="assertive">{{ searchError }}</p>
+                    <p v-else-if="isSearching" class="search-empty" role="status" aria-live="polite">{{ t('loading') }}</p>
+                    <p v-else-if="searchResults.length === 0 && searchQuery" class="search-empty" role="status" aria-live="polite">{{ t('no_users') }}</p>
                     <button v-for="user in searchResults" :key="entityId(user)" type="button" class="search-result" @click="chooseUser(user)">
                         <span class="avatar avatar-small">{{ initial(entityName(user, t('unnamed_user'))) }}</span>
                         <span><strong>{{ entityName(user, t('unnamed_user')) }}</strong><small>{{ user.email || user.username || '' }}</small></span>
                     </button>
                 </div>
-                <div class="conversation-list" aria-live="polite">
+                <div class="conversation-list">
                     <p v-if="!conversations.length" class="communication-empty">{{ t('empty_conversations') }}</p>
                     <button v-for="conversation in conversations" :key="conversationId(conversation)" type="button" class="conversation-item" :class="{ 'is-active': conversationId(conversation) === activeId }" @click="chooseConversation(conversation)">
                         <span class="avatar avatar-small">{{ initial(conversationRecipientName(conversation)) }}</span>
@@ -195,19 +198,19 @@ async function handleSend() {
                     </button>
                 </div>
                 <noscript><p class="no-script-note">{{ t('noscript_messages_search') }}</p></noscript>
-            </aside>
+            </UiPanel>
 
-            <section class="communication-main panel" aria-labelledby="vue-private-conversation-title">
+            <UiPanel as="section" class="communication-main panel" variant="surface" aria-labelledby="vue-private-conversation-title">
                 <div class="panel-heading communication-main-heading">
                     <div>
                         <p class="panel-kicker">{{ t('direct_chat') }}</p>
                         <h2 id="vue-private-conversation-title">{{ title }}</h2>
                         <p class="panel-subtitle">{{ meta }}</p>
                     </div>
-                    <span class="connection-status" :data-state="statusState" role="status" aria-live="polite">{{ statusText }}</span>
+                    <UiStatus class="connection-status" :state="statusState" :label="statusText" live />
                 </div>
 
-                <div class="message-list" aria-live="polite" :aria-label="t('message_content')">
+                <div class="message-list" :aria-label="t('message_content')">
                     <MessageBubble v-for="message in messages" :key="message.id" :message="message" :current-user-id="userId" :translations="translations" />
                     <p v-if="!messages.length" class="communication-empty">{{ activeId ? t('empty_messages') : t('choose_conversation_hint') }}</p>
                 </div>
@@ -218,12 +221,12 @@ async function handleSend() {
                     <label class="sr-only" for="vue-private-message-body">{{ t('input_message') }}</label>
                     <textarea id="vue-private-message-body" v-model="messageBody" name="body" rows="3" :placeholder="t('message_placeholder')" required :disabled="isSending"></textarea>
                     <div class="compose-actions">
-                        <span class="form-help">{{ sendError || help }}</span>
+                        <span class="form-help" :class="{ 'communication-error': sendError }" :role="sendError ? 'alert' : undefined" :aria-live="sendError ? 'assertive' : undefined">{{ sendError || help }}</span>
                         <button class="button button-primary" type="submit" :disabled="isSending || !messageBody.trim()">{{ t('send_message') }} <span aria-hidden="true">→</span></button>
                     </div>
                 </form>
                 <noscript><p class="no-script-note">{{ t('noscript_messages_send') }}</p></noscript>
-            </section>
+            </UiPanel>
         </div>
     </div>
 </template>

@@ -1,23 +1,12 @@
 <script setup>
 import { computed } from 'vue';
+import UiBookCard from './ui/UiBookCard.vue';
 
 const props = defineProps({
-    item: {
-        type: Object,
-        required: true,
-    },
-    novelBase: {
-        type: String,
-        required: true,
-    },
-    anonymousAuthor: {
-        type: String,
-        default: '',
-    },
-    unnamedTitle: {
-        type: String,
-        default: '',
-    },
+    item: { type: Object, required: true },
+    novelBase: { type: String, required: true },
+    anonymousAuthor: { type: String, default: '' },
+    unnamedTitle: { type: String, default: '' },
 });
 
 const emit = defineEmits({
@@ -28,8 +17,7 @@ const title = computed(() => String(props.item.title || props.unnamedTitle));
 const author = computed(() => props.item.author || props.anonymousAuthor);
 const categories = computed(() => {
     if (!Array.isArray(props.item.categories)) return '';
-
-    return props.item.categories.filter(Boolean).join(' · ');
+    return props.item.categories.filter(Boolean).join(', ');
 });
 const href = computed(() => {
     const base = props.novelBase.replace(/\/$/, '');
@@ -39,6 +27,7 @@ const href = computed(() => {
         ? base
         : `${base}/${encodeURIComponent(String(identifier))}`;
 });
+const initial = computed(() => title.value.slice(0, 1));
 
 function handleOpen() {
     emit('open', props.item);
@@ -46,14 +35,14 @@ function handleOpen() {
 </script>
 
 <template>
-    <a class="recommendation-item" :href="href" @click="handleOpen">
-        <span class="recommendation-mark" aria-hidden="true">Y</span>
-        <span>
-            <strong>{{ title }}</strong>
-            <small>
-                {{ author }}<template v-if="categories"> · {{ categories }}</template>
-            </small>
-        </span>
-        <span aria-hidden="true">→</span>
-    </a>
+    <UiBookCard
+        :href="href"
+        :title="title"
+        :author="author"
+        :meta="categories"
+        :initial="initial"
+        :cover-src="props.item.cover_url || ''"
+        :cover-alt="title"
+        @click="handleOpen"
+    />
 </template>
