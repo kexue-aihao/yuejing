@@ -6,7 +6,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     'locale' => ['choose' => '选择语言', 'apply' => '应用语言'],
     'nav' => [
         'home' => '首页', 'library' => '书库', 'categories' => '分类', 'main_navigation' => '主导航', 'mobile_navigation' => '移动端主导航', 'search_label' => '搜索小说',
-        'search_placeholder' => '搜索作品、作者', 'search' => '搜索', 'personal_center' => '个人中心',
+        'search_placeholder' => '搜索作品、作者', 'search' => '搜索', 'personal_center' => '个人中心', 'logged_in' => '已登录',
         'open_personal_center' => '打开个人中心', 'admin' => '管理后台', 'logout' => '退出',
         'login' => '登录', 'register' => '注册', 'open_menu' => '打开菜单', 'close_menu' => '关闭菜单',
         'explore' => '探索', 'all_books' => '全部作品', 'categories_link' => '作品分类',

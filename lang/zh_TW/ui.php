@@ -22,6 +22,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
         'search_placeholder' => '搜尋作品、作者',
         'search' => '搜尋',
         'personal_center' => '個人中心',
+        'logged_in' => '已登入',
         'open_personal_center' => '開啟個人中心',
         'admin' => '管理後台',
         'logout' => '登出',

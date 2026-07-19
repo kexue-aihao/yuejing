@@ -6,7 +6,7 @@ return [
     'locale' => ['choose' => 'Choose language', 'apply' => 'Apply language'],
     'nav' => [
         'home' => 'Home', 'library' => 'Library', 'categories' => 'Categories', 'main_navigation' => 'Main navigation', 'mobile_navigation' => 'Mobile navigation', 'search_label' => 'Search novels',
-        'search_placeholder' => 'Search works or authors', 'search' => 'Search', 'personal_center' => 'Account',
+        'search_placeholder' => 'Search works or authors', 'search' => 'Search', 'personal_center' => 'Account', 'logged_in' => 'Logged in',
         'open_personal_center' => 'Open account', 'admin' => 'Admin', 'logout' => 'Log out',
         'login' => 'Log in', 'register' => 'Register', 'open_menu' => 'Open menu', 'close_menu' => 'Close menu',
         'explore' => 'Explore', 'all_books' => 'All works', 'categories_link' => 'Categories',

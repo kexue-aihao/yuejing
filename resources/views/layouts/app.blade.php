@@ -67,7 +67,7 @@
                 @auth
                     <a class="profile-link" href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}" aria-label="{{ __('ui.nav.open_personal_center') }}" title="{{ __('ui.nav.personal_center') }}" data-auth-state="authenticated">
                         <svg class="profile-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 19.25c.7-3.25 3-5 6.5-5s5.8 1.75 6.5 5"></path></svg>
-                        <span class="profile-link-label">{{ __('ui.nav.personal_center') }}</span>
+                        <span class="profile-link-label">{{ __('ui.nav.logged_in') }}</span>
                     </a>
                     @if (auth()->user()->isRole('admin') && Route::has('admin.dashboard'))
                         <a class="login-link" href="{{ route('admin.dashboard') }}">{{ __('ui.nav.admin') }}</a>
@@ -86,7 +86,7 @@
         </div>
         <div id="mobile-menu" class="mobile-menu" data-mobile-menu hidden aria-hidden="true" inert>
             <button class="mobile-menu-close" type="button" data-menu-close aria-label="{{ __('ui.nav.close_menu') }}">✕</button>
-            <nav class="site-shell mobile-nav" aria-label="{{ __('ui.nav.mobile_navigation') }}"><a href="{{ Route::has('home') ? route('home') : url('/') }}">{{ __('ui.nav.home') }}</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">{{ __('ui.nav.library') }}</a><a href="#categories">{{ __('ui.nav.categories') }}</a>@auth <a href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}">{{ __('ui.nav.personal_center') }}</a>@if (auth()->user()->isRole('admin') && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">{{ __('ui.nav.admin') }}</a>@endif @else<a href="{{ Route::has('login') ? route('login') : '#' }}">{{ __('ui.nav.login') }} / {{ __('ui.nav.register') }}</a>@endauth</nav>
+            <nav class="site-shell mobile-nav" aria-label="{{ __('ui.nav.mobile_navigation') }}"><a href="{{ Route::has('home') ? route('home') : url('/') }}">{{ __('ui.nav.home') }}</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">{{ __('ui.nav.library') }}</a><a href="#categories">{{ __('ui.nav.categories') }}</a>@auth <a href="{{ Route::has('dashboard') ? route('dashboard') : '#' }}">{{ __('ui.nav.logged_in') }}</a>@if (auth()->user()->isRole('admin') && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">{{ __('ui.nav.admin') }}</a>@endif @if (Route::has('logout'))<form class="mobile-nav-logout" method="POST" action="{{ route('logout') }}"><button type="submit">{{ __('ui.nav.logout') }}</button>@csrf</form>@endif @else<a href="{{ Route::has('login') ? route('login') : '#' }}">{{ __('ui.nav.login') }} / {{ __('ui.nav.register') }}</a>@endauth</nav>
         </div>
     </header>
     @if (session('success'))

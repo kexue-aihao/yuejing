@@ -457,9 +457,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .mobile-menu[hidden] { display: none; }
 .mobile-nav { display: grid; gap: 0; padding-block: 8px 18px; }
-.mobile-nav a {
+.mobile-nav a, .mobile-nav-logout button {
     padding: 13px 0; border-bottom: 1px solid var(--c-mobile-menu-border);
-    color: var(--c-mobile-menu-text); font-size: 14px;
+    color: var(--c-mobile-menu-text); font-size: 14px; text-align: start;
+}
+.mobile-nav-logout {
+    display: block;
+}
+.mobile-nav-logout button {
+    width: 100%; border: 0; background: transparent; cursor: pointer;
 }
 .mobile-menu-close {
     display: block; margin: 0 0 0 auto; padding: 8px 12px;
