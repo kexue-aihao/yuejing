@@ -15,15 +15,21 @@ class SubmissionController extends Controller
 {
     public function index(Request $request)
     {
-        $submissions = $request->user()->submissions()->with('reviewer:id,name')->latest()->paginate(config('yuejing.pagination'));
-        $categories = Category::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
         if (! $this->wantsJson($request)) {
+            if ($request->routeIs('author.submissions')) {
+                return redirect()->route('dashboard', ['section' => 'submissions']);
+            }
+
+            $submissions = $request->user()->submissions()->with('reviewer:id,name')->latest()->paginate(config('yuejing.pagination'));
+            $categories = Category::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug']);
+
             return view('pages.author.submissions', compact('submissions', 'categories'));
         }
+
+        $submissions = $request->user()->submissions()->with('reviewer:id,name')->latest()->paginate(config('yuejing.pagination'));
 
         return response()->json($submissions);
     }
@@ -103,7 +109,7 @@ class SubmissionController extends Controller
         }
 
         if (! $this->wantsJson($request)) {
-            return redirect()->route('author.submissions')->with('status', __('ui.messages.submission_created'));
+            return redirect()->route('dashboard', ['section' => 'submissions'])->with('status', __('ui.messages.submission_created'));
         }
 
         return response()->json(['message' => __('ui.messages.submission_created'), 'submission' => $submission], 201);

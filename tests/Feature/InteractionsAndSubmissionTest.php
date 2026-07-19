@@ -106,7 +106,7 @@ class InteractionsAndSubmissionTest extends TestCase
         $category = Category::create(['name' => '校园', 'slug' => 'xiaoyuan']);
 
         $this->actingAs($author)
-            ->get(route('author.submissions'))
+            ->get(route('dashboard', ['section' => 'submissions']))
             ->assertOk()
             ->assertSee('新建投稿')
             ->assertSee(route('author.submissions.store'))
@@ -123,7 +123,7 @@ class InteractionsAndSubmissionTest extends TestCase
             'content' => '第一章从旧书店开始。',
         ]);
 
-        $response->assertRedirect(route('author.submissions'));
+        $response->assertRedirect(route('dashboard', ['section' => 'submissions']));
         $this->assertDatabaseHas('submissions', [
             'user_id' => $author->id,
             'title' => '潮声之后',
@@ -168,7 +168,7 @@ class InteractionsAndSubmissionTest extends TestCase
                 ->assertOk();
             $this->actingAs($account)
                 ->get(route('author.submissions'))
-                ->assertOk();
+                ->assertRedirect(route('dashboard', ['section' => 'submissions']));
         }
 
         $reader = User::factory()->create(['role' => 'user']);

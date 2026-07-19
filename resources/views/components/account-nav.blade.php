@@ -23,7 +23,7 @@
         </details>
     @endif
     @if (auth()->user()?->isRole(['author', 'editor', 'admin']))
-        <a class="{{ $active === 'submissions' ? 'is-active' : '' }}" href="{{ route('author.submissions') }}" @if($active === 'submissions') aria-current="page" @endif>{{ __('ui.account.submissions') }}</a>
+        <a class="{{ $active === 'submissions' ? 'is-active' : '' }}" href="{{ route('dashboard', ['section' => 'submissions']) }}" @if($active === 'submissions') aria-current="page" @endif>{{ __('ui.account.submissions') }}</a>
         @if (Route::has('author.novels.index'))
             <a class="{{ in_array($active, ['author-novels', 'author-novel-edit', 'author-chapters'], true) ? 'is-active' : '' }}" href="{{ route('author.novels.index') }}" @if(in_array($active, ['author-novels', 'author-novel-edit', 'author-chapters'], true)) aria-current="page" @endif>{{ __('ui.account.novels') }}</a>
         @endif

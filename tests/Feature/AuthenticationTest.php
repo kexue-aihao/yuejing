@@ -213,8 +213,7 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('author.submissions'))
-            ->assertOk()
-            ->assertViewIs('pages.author.submissions');
+            ->assertRedirect(route('dashboard', ['section' => 'submissions']));
     }
 
     public function test_verification_link_marks_an_unverified_user_as_verified(): void

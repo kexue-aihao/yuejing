@@ -20,6 +20,8 @@
                 @include('pages.messages._content', ['api' => $messagesApi, 'currentUserId' => $currentUserId, 'embedded' => true])
             @elseif ($activeSection === 'groups')
                 @include('pages.groups._content', ['api' => $groupsApi, 'currentUserId' => $currentUserId, 'embedded' => true])
+            @elseif ($activeSection === 'submissions')
+                @include('pages.author._content', ['categories' => $categories, 'submissions' => $submissionHistory, 'embedded' => true])
             @else
             @if (session('status'))<div class="alert">{{ session('status') }}</div>@endif
             <div class="metric-grid">
@@ -86,7 +88,7 @@
 
             @if (auth()->user()->isRole(['author', 'editor', 'admin']))
                 <section class="panel" id="author-summary">
-                    <div class="panel-heading"><h2>{{ __('ui.account.submissions') }}</h2><a href="{{ route('author.submissions') }}">{{ __('ui.dashboard.submission_link') }} →</a></div>
+                    <div class="panel-heading"><h2>{{ __('ui.account.submissions') }}</h2><a href="{{ route('dashboard', ['section' => 'submissions']) }}">{{ __('ui.dashboard.submission_link') }} →</a></div>
                     <div class="submission-summary">
                         <div><span>{{ __('ui.dashboard.pending') }}</span><strong>{{ $submissionCounts->get('pending', 0) }}</strong></div>
                         <div><span>{{ __('ui.dashboard.approved') }}</span><strong>{{ $submissionCounts->get('approved', 0) }}</strong></div>

@@ -188,7 +188,7 @@ class AuthorWorkManagementTest extends TestCase
         ]);
 
         $this->actingAs($author)
-            ->get(route('author.submissions'))
+            ->get(route('dashboard', ['section' => 'submissions']))
             ->assertOk()
             ->assertSee($novel->title)
             ->assertSee('href="'.route('author.novels.edit', ['novel' => $novel]).'"', false);

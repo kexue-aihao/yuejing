@@ -11,7 +11,7 @@
             <p>{{ __('ui.author.novels_intro') }}</p>
         </div>
         @if (Route::has('author.submissions'))
-            <a class="button button-primary" href="{{ route('author.submissions') }}">{{ __('ui.author.new_submission') }} <span aria-hidden="true">→</span></a>
+            <a class="button button-primary" href="{{ route('dashboard', ['section' => 'submissions']) }}">{{ __('ui.author.new_submission') }} <span aria-hidden="true">→</span></a>
         @endif
     </div>
 
@@ -45,7 +45,7 @@
                     </div>
                 </article>
             @empty
-                <div class="empty-state"><h2>{{ __('ui.author.no_novels') }}</h2><p>{{ __('ui.author.no_novels_intro') }}</p>@if (Route::has('author.submissions'))<a class="button button-primary" href="{{ route('author.submissions') }}">{{ __('ui.author.new_submission') }}</a>@endif</div>
+                <div class="empty-state"><h2>{{ __('ui.author.no_novels') }}</h2><p>{{ __('ui.author.no_novels_intro') }}</p>@if (Route::has('author.submissions'))<a class="button button-primary" href="{{ route('dashboard', ['section' => 'submissions']) }}">{{ __('ui.author.new_submission') }}</a>@endif</div>
             @endforelse
 
             @if (method_exists($novels, 'links'))<div class="pagination-wrap">{{ $novels->links() }}</div>@endif

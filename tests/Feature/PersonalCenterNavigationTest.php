@@ -59,7 +59,7 @@ class PersonalCenterNavigationTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('作品投稿')
-            ->assertSee('href="'.route('author.submissions').'"', false)
+            ->assertSee('href="'.route('dashboard', ['section' => 'submissions']).'"', false)
             ->assertDontSee('作者中心');
     }
 
@@ -177,7 +177,7 @@ class PersonalCenterNavigationTest extends TestCase
         $author = User::factory()->create(['role' => 'author']);
 
         $this->actingAs($author)
-            ->get(route('author.submissions'))
+            ->get(route('dashboard', ['section' => 'submissions']))
             ->assertOk()
             ->assertSee('enctype="multipart/form-data"', false)
             ->assertSee('name="cover"', false)

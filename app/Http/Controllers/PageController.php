@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
@@ -9,9 +10,12 @@ class PageController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user();
-        $activeSection = in_array($request->query('section'), ['messages', 'groups'], true)
-            ? $request->query('section')
-            : 'dashboard';
+        $requestedSection = $request->query('section');
+        $activeSection = in_array($requestedSection, ['messages', 'groups'], true)
+            ? $requestedSection
+            : ($user->isRole(['author', 'editor', 'admin']) && $requestedSection === 'submissions'
+                ? 'submissions'
+                : 'dashboard');
 
         $reading = $user->readingRecords()
             ->with(['novel.author:id,name', 'chapter:id,title,chapter_number'])
@@ -33,6 +37,20 @@ class PageController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
+        $submissionHistory = null;
+        $categories = collect();
+        if ($activeSection === 'submissions') {
+            $submissionHistory = $user->submissions()
+                ->with('reviewer:id,name')
+                ->latest()
+                ->paginate(config('yuejing.pagination'))
+                ->withQueryString();
+            $categories = Category::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug']);
+        }
+
         return view('pages.dashboard', [
             'reading' => $reading,
             'favorites' => $favorites,
@@ -40,6 +58,8 @@ class PageController extends Controller
             'favoriteCount' => $user->favorites()->count(),
             'readingCount' => $user->readingRecords()->count(),
             'submissionCounts' => $submissionCounts,
+            'submissionHistory' => $submissionHistory,
+            'categories' => $categories,
             'activeSection' => $activeSection,
             'messagesApi' => [
                 'users' => url('/api/messages/users'),

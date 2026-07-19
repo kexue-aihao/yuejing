@@ -31,7 +31,8 @@ class RoleAuthorizationTest extends TestCase
 
     /**
      * Ordinary readers must not receive an author-center entry point or access
-     * the author submission page directly. Authoring roles may access it.
+     * the author submission page directly. Authoring roles may access it and
+     * are redirected into the embedded dashboard section.
      */
     public function test_submission_page_is_limited_to_authoring_roles(): void
     {
@@ -42,8 +43,7 @@ class RoleAuthorizationTest extends TestCase
         foreach (['author', 'editor', 'admin'] as $role) {
             $this->actingAs(User::factory()->create(['role' => $role]))
                 ->get(route('author.submissions'))
-                ->assertOk()
-                ->assertViewIs('pages.author.submissions');
+                ->assertRedirect(route('dashboard', ['section' => 'submissions']));
 
             $this->flushSession();
         }

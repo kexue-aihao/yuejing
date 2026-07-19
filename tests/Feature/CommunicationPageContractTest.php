@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -75,6 +76,44 @@ class CommunicationPageContractTest extends TestCase
             ->assertSee('<nav class="dashboard-nav"', false)
             ->assertSee('href="'.route('dashboard', ['section' => 'groups']).'"', false);
         $this->assertMatchesRegularExpression('/<details class="dashboard-nav-group"[^>]*open/', $response->getContent());
+    }
+
+    public function test_dashboard_embeds_author_submissions_and_keeps_personal_center_navigation(): void
+    {
+        $author = User::factory()->create(['role' => 'author']);
+        $category = Category::create(['name' => 'Fiction', 'slug' => 'fiction', 'is_active' => true]);
+
+        $response = $this->actingAs($author)
+            ->get(route('dashboard', ['section' => 'submissions']))
+            ->assertOk()
+            ->assertViewIs('pages.dashboard')
+            ->assertViewHas('activeSection', 'submissions')
+            ->assertSee('author-submissions-content', false)
+            ->assertSee('author-layout', false)
+            ->assertSee('<nav class="dashboard-nav"', false)
+            ->assertSee('href="'.route('dashboard', ['section' => 'submissions']).'"', false)
+            ->assertSee('value="'.$category->id.'"', false);
+
+        $this->assertStringContainsString('enctype="multipart/form-data"', $response->getContent());
+    }
+
+    public function test_regular_users_cannot_activate_the_author_submission_dashboard_section(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'user']))
+            ->get(route('dashboard', ['section' => 'submissions']))
+            ->assertOk()
+            ->assertViewIs('pages.dashboard')
+            ->assertViewHas('activeSection', 'dashboard')
+            ->assertSee('<nav class="dashboard-nav"', false)
+            ->assertDontSee('author-submissions-content', false)
+            ->assertDontSee('name="cover"', false);
+    }
+
+    public function test_legacy_author_submission_page_redirects_to_the_embedded_dashboard_section(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'author']))
+            ->get(route('author.submissions'))
+            ->assertRedirect(route('dashboard', ['section' => 'submissions']));
     }
 
     private function extractApiConfig(string $html): array
