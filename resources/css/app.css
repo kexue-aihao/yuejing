@@ -1075,6 +1075,31 @@ h2 {
 .security-row p { margin: 7px 0 0; color: var(--c-text-muted); font-size: 11px; }
 .submission-history { margin-top: 20px; }
 
+.two-factor-setup-grid {
+    display: grid;
+    grid-template-columns: minmax(190px, .8fr) minmax(0, 1.2fr);
+    gap: 22px;
+    margin: 22px 0;
+    padding: 20px;
+    border: 1px solid var(--c-border-card);
+    background: var(--c-surface-inset);
+}
+.two-factor-qr-panel h2 { margin: 0 0 14px; color: var(--c-text-heading); font-family: var(--font-serif); font-size: 22px; font-weight: 600; }
+.two-factor-qr-shell {
+    display: grid;
+    width: min(100%, 244px);
+    aspect-ratio: 1;
+    place-items: center;
+    margin: 16px auto;
+    padding: 12px;
+    border: 1px solid var(--c-border-card);
+    background: var(--c-surface-raised);
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--c-shadow) 48%, transparent);
+}
+.two-factor-qr-canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.two-factor-manual-panel { align-self: center; color: var(--c-text-muted); font-size: 12px; line-height: 1.8; }
+.two-factor-manual-panel strong { color: var(--c-text-heading); }
+
 /* ── Author Layout ── */
 .author-layout { display: grid; grid-template-columns: 1fr 290px; gap: 30px; }
 .author-note {
@@ -2180,6 +2205,8 @@ body select { border-radius: var(--radius-sm); }
 }
 
 @media (max-width: 560px) {
+    .two-factor-setup-grid { grid-template-columns: 1fr; padding: 16px; }
+    .two-factor-qr-panel h2 { font-size: 20px; }
     .ui-panel { padding: 17px; }
     .ui-panel-flush { padding: 0; }
     .theme-toggle-btn { min-width: 38px; min-height: 38px; padding-inline: 5px; }

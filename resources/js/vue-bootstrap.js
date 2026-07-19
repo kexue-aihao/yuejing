@@ -102,6 +102,17 @@ function markCoverPreviewHandoff(element) {
     };
 }
 
+function markTwoFactorQrCodeHandoff(element) {
+    element.dataset.vueTwoFactorQrHandoff = '1';
+    return () => {
+        delete element.dataset.vueTwoFactorQrHandoff;
+        delete element.dataset.vueTwoFactorQrMounted;
+        document.dispatchEvent(new CustomEvent('yuejing:vue-two-factor-qr-failed', {
+            detail: { marker: element },
+        }));
+    };
+}
+
 function markThemeHandoff(element) {
     element.dataset.vueThemeHandoff = '1';
     return () => {
@@ -280,6 +291,34 @@ async function mountCoverPreviews() {
             }).mount(element);
             element.dataset.vueCoverMounted = '1';
             delete element.dataset.vueCoverHandoff;
+        });
+    } catch (error) {
+        rollback.forEach((restore) => restore());
+        throw error;
+    }
+}
+
+async function mountTwoFactorQrCodes() {
+    const elements = [...document.querySelectorAll('[data-vue-two-factor-qr]')]
+        .filter((element) => element.dataset.vueTwoFactorQrHandoff !== '1'
+            && element.dataset.vueTwoFactorQrMounted !== '1');
+    if (!elements.length) return;
+
+    const rollback = elements.map((element) => markTwoFactorQrCodeHandoff(element));
+
+    try {
+        const [{ createApp }, { default: TwoFactorQrCode }] = await Promise.all([
+            import('vue'),
+            import('./vue/TwoFactorQrCode.vue'),
+        ]);
+
+        elements.forEach((element) => {
+            createApp(TwoFactorQrCode, {
+                value: element.dataset.value || '',
+                label: element.dataset.label || '',
+            }).mount(element);
+            element.dataset.vueTwoFactorQrMounted = '1';
+            delete element.dataset.vueTwoFactorQrHandoff;
         });
     } catch (error) {
         rollback.forEach((restore) => restore());
@@ -582,6 +621,7 @@ document.addEventListener('yuejing:chapter-list-mounted', () => {
 void mountRecommendations().catch(() => {});
 void mountAuthStateSync().catch(() => {});
 void mountCoverPreviews().catch(() => {});
+void mountTwoFactorQrCodes().catch(() => {});
 void mountThemeToggles().catch(() => window.YuejingThemeFallback?.());
 void mountChapterLists().catch(() => {});
 void mountPrivateMessages().catch(() => {});

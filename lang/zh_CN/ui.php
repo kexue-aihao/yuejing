@@ -126,6 +126,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
     ],
     'components' => ['anonymous_user' => '匿名用户', 'anonymous_author' => '匿名作者', 'untitled_work' => '未命名作品', 'author_credit' => ':author 著', 'cover_brand' => '阅境', 'close_notification' => '关闭通知', 'current_ip' => '当前访问 IP', 'no_content' => '暂无内容'],
     'two_factor' => [
+        'scan_eyebrow' => '扫码导入', 'scan_heading' => '将阅境加入验证器', 'qr_label' => '阅境二步验证导入二维码', 'scan_notice' => '扫描二维码即可一键导入，验证器中的发行方会显示为“阅境”。',
         'title' => '二步验证 · 阅境', 'eyebrow' => 'SECURITY SETTINGS', 'heading' => '二步验证', 'intro' => '使用验证器应用保护你的阅境账号。', 'enabled_notice' => '二步验证已启用。禁用前请输入当前密码或一次性验证码。', 'current_password' => '当前密码', 'totp_code' => 'TOTP 验证码', 'disable' => '禁用二步验证', 'save_recovery' => '请保存恢复码。', 'setup_notice' => '将这个密钥添加到验证器应用，然后输入应用生成的 6 位验证码确认启用。', 'secret' => '密钥', 'confirm_enable' => '确认启用', 'generate_secret' => '生成设置密钥', 'challenge_title' => '验证登录 · 阅境', 'challenge_eyebrow' => 'SECURE SIGN IN', 'challenge_heading' => '验证你的登录', 'challenge_intro' => '请输入验证器应用生成的 6 位验证码，或使用一个恢复码。', 'code' => '验证码', 'recovery_code' => '恢复码', 'complete_login' => '完成登录', 'back_login' => '返回登录',
     ],
     'admin' => [

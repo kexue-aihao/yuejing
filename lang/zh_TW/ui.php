@@ -526,6 +526,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
         'no_content' => '沒有內容',
     ],
     'two_factor' => [
+        'scan_eyebrow' => '掃描匯入', 'scan_heading' => '將閱境加入驗證器', 'qr_label' => '閱境兩步驟驗證匯入 QR Code', 'scan_notice' => '掃描 QR Code 即可一鍵匯入，驗證器中的發行方會顯示為「閱境」。',
         'title' => '雙重驗證 · 閱境',
         'eyebrow' => '安全性設定',
         'heading' => '雙重驗證',

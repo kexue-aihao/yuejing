@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\User;
 use App\Models\UserTwoFactorSetting;
+use App\Services\TwoFactorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Concerns\CreatesYuejingData;
 use Tests\TestCase;
@@ -13,6 +14,20 @@ class TwoFactorAuthenticationTest extends TestCase
 {
     use CreatesYuejingData;
     use RefreshDatabase;
+
+    public function test_web_setup_renders_scan_import_qr_code_with_yuejing_issuer(): void
+    {
+        $user = User::factory()->create();
+        $setup = app(TwoFactorService::class)->enable($user);
+
+        $this->actingAs($user)
+            ->withSession(['two_factor_setup' => $setup])
+            ->get(route('two-factor.show'))
+            ->assertOk()
+            ->assertSee('data-vue-two-factor-qr')
+            ->assertSee('otpauth://totp/', false)
+            ->assertSee('issuer=%E9%98%85%E5%A2%83', false);
+    }
 
     public function test_setup_returns_secret_and_recovery_codes_without_enabling_two_factor(): void
     {
@@ -23,6 +38,10 @@ class TwoFactorAuthenticationTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('enabled', false)
             ->assertJsonStructure(['secret', 'recovery_codes']);
+        $response->assertJsonStructure(['otpauth_uri']);
+        $this->assertStringStartsWith('otpauth://totp/', $response->json('otpauth_uri'));
+        $this->assertStringContainsString('issuer=%E9%98%85%E5%A2%83', $response->json('otpauth_uri'));
+        $this->assertStringContainsString('secret='.$response->json('secret'), $response->json('otpauth_uri'));
         $this->assertCount(8, $response->json('recovery_codes'));
         $this->assertDatabaseHas('user_two_factor_settings', [
             'user_id' => $user->id,

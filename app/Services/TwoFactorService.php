@@ -28,7 +28,27 @@ class TwoFactorService
             ],
         );
 
-        return ['secret' => $secret, 'recovery_codes' => $recoveryCodes];
+        return [
+            'secret' => $secret,
+            'recovery_codes' => $recoveryCodes,
+            'otpauth_uri' => $this->provisioningUri($user, $secret),
+        ];
+    }
+
+    public function provisioningUri(User $user, string $secret): string
+    {
+        $issuer = (string) config('yuejing.two_factor.issuer', '阅境');
+        $account = trim((string) ($user->email ?: $user->name ?: $user->getKey()));
+        $label = rawurlencode($issuer).':'.rawurlencode($account);
+        $query = http_build_query([
+            'secret' => $secret,
+            'issuer' => $issuer,
+            'algorithm' => 'SHA1',
+            'digits' => 6,
+            'period' => max(1, (int) config('yuejing.two_factor.totp_period', 30)),
+        ], '', '&', PHP_QUERY_RFC3986);
+
+        return 'otpauth://totp/'.$label.'?'.$query;
     }
 
     public function confirmEnable(User $user, string $code): bool

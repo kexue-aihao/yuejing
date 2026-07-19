@@ -11,6 +11,7 @@ return [
     ],
     'pagination' => max(1, (int) env('YUEJING_PAGINATION', 15)),
     'two_factor' => [
+        'issuer' => '阅境',
         'totp_period' => max(1, (int) env('YUEJING_TOTP_PERIOD', 30)),
         'totp_window' => max(0, (int) env('YUEJING_TOTP_WINDOW', 1)),
         'challenge_lifetime' => max(1, (int) env('YUEJING_TOTP_CHALLENGE_LIFETIME', 10)),

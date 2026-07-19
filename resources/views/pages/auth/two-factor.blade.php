@@ -20,8 +20,23 @@
             @php($setup = session('two_factor_setup'))
             @if ($setup)
                 <div class="alert"><strong>{{ __('ui.two_factor.save_recovery') }}</strong><br>{{ implode(' · ', $setup['recovery_codes']) }}</div>
+                @if (!empty($setup['otpauth_uri']))
+                    <div class="two-factor-setup-grid">
+                        <div class="two-factor-qr-panel">
+                            <p class="panel-kicker">{{ __('ui.two_factor.scan_eyebrow') }}</p>
+                            <h2>{{ __('ui.two_factor.scan_heading') }}</h2>
+                            <div data-vue-two-factor-qr data-value="{{ $setup['otpauth_uri'] }}" data-label="{{ __('ui.two_factor.qr_label') }}"></div>
+                            <p class="form-help">{{ __('ui.two_factor.scan_notice') }}</p>
+                        </div>
+                        <div class="two-factor-manual-panel">
+                            <p>{{ __('ui.two_factor.setup_notice') }}</p>
+                            <p><strong>{{ __('ui.two_factor.secret') }}:</strong>{{ $setup['secret'] }}</p>
+                        </div>
+                    </div>
+                @else
                 <p>{{ __('ui.two_factor.setup_notice') }}</p>
                 <p><strong>{{ __('ui.two_factor.secret') }}:</strong>{{ $setup['secret'] }}</p>
+                @endif
                 <form class="form-stack" method="POST" action="{{ route('two-factor.enable') }}">
                     @csrf
                     <div class="form-field"><label for="enable_code">{{ __('ui.two_factor.totp_code') }}</label><input id="enable_code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code"></div>
