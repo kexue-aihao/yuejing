@@ -23,7 +23,7 @@ class PublicController extends Controller
 
             return response()
                 ->view('welcome', [
-                    'recommendationUrl' => url('/api/recommendations/stream'),
+                    'recommendationApiUrl' => url('/api/recommendations'),
                     'recommendations' => $recommendations->for($request->user(), $request, 6),
                     ...$editorial,
                 ])

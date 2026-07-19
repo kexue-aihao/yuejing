@@ -24,7 +24,7 @@
     <section id="categories" class="site-shell category-strip"><p class="eyebrow">{{ __('ui.home.category_eyebrow') }}</p><div class="category-links">@forelse ($categories as $category)<a href="{{ route('novels.index', ['genre' => $category->name]) }}">{{ $category->name }} <span>{{ number_format((int) $category->novels_count) }}</span></a>@empty<p class="muted">{{ __('ui.library.empty_intro') }}</p>@endforelse</div></section>
 
     @php($recommendationItems = collect($recommendations ?? []))
-    <section class="site-shell section-block recommendation-section" data-recommendations-app data-stream-url="{{ $recommendationUrl ?? url('/api/recommendations/stream') }}" data-novel-base="{{ url('/novels') }}">
+    <section class="site-shell section-block recommendation-section" data-recommendations-app data-api-url="{{ $recommendationApiUrl ?? url('/api/recommendations') }}" data-novel-base="{{ url('/novels') }}">
         <div class="section-heading"><div><p class="eyebrow">{{ __('ui.home.ranking_eyebrow') }}</p><h2>{{ __('reviews.recommendations_title') }}</h2><p class="panel-subtitle">{{ __('reviews.recommendations_intro') }}</p></div><span class="recommendation-status muted" data-recommendation-status aria-live="polite"></span></div>
         <div class="recommendation-grid" data-recommendation-list>
             @forelse ($recommendationItems as $recommendation)

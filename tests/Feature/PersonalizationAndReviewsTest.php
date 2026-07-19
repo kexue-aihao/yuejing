@@ -61,7 +61,23 @@ class PersonalizationAndReviewsTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('data-recommendations-app', false)
-            ->assertSee('/api/recommendations/stream', false);
+            ->assertSee('data-api-url="'.url('/api/recommendations').'"', false);
+    }
+
+    public function test_home_recommendations_use_json_polling_instead_of_one_shot_event_source(): void
+    {
+        $script = file_get_contents(resource_path('js/app.js'));
+        $this->assertIsString($script);
+
+        $start = strpos($script, 'function initRecommendations()');
+        $end = strpos($script, 'async function readManuscriptFile', $start === false ? 0 : $start);
+        $this->assertNotFalse($start);
+        $this->assertNotFalse($end);
+
+        $recommendationScript = substr($script, (int) $start, (int) $end - (int) $start);
+        $this->assertStringContainsString('fetch(url,', $recommendationScript);
+        $this->assertStringContainsString('schedulePoll(', $recommendationScript);
+        $this->assertStringNotContainsString('new EventSource', $recommendationScript);
     }
 
     public function test_rating_gaps_are_rejected(): void

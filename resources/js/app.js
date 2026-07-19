@@ -831,13 +831,12 @@ function initGroups() {
 function initRecommendations() {
     const app = document.querySelector('[data-recommendations-app]');
     const list = app?.querySelector('[data-recommendation-list]');
-    const streamUrl = app?.dataset.streamUrl;
+    const apiUrl = app?.dataset.apiUrl;
     const novelBase = app?.dataset.novelBase;
-    if (!app || !list || !isConfiguredApiUrl(streamUrl) || !isConfiguredApiUrl(novelBase)) return;
+    if (!app || !list || !isConfiguredApiUrl(apiUrl) || !isConfiguredApiUrl(novelBase)) return;
 
     const status = app.querySelector('[data-recommendation-status]');
-    let source = null;
-    let retryTimer = null;
+    let pollTimer = null;
 
     const render = (items) => {
         if (!items.length) {
@@ -852,30 +851,34 @@ function initRecommendations() {
         }).join('');
     };
 
-    const connect = () => {
-        if (source) source.close();
-        window.clearTimeout(retryTimer);
-        const url = new URL(streamUrl, window.location.href);
-        url.searchParams.set('limit', '6');
-        source = new EventSource(url, { withCredentials: true });
-        if (status) status.textContent = tr('frontend.connected');
-        source.addEventListener('recommendations', (event) => {
-            try {
-                const payload = JSON.parse(event.data);
-                render(Array.isArray(payload?.data) ? payload.data : []);
-            } catch {
-                // Ignore a malformed push and keep the current recommendation list.
-            }
-        });
-        source.onerror = () => {
-            source?.close();
-            source = null;
-            if (status) status.textContent = tr('frontend.retrying');
-            retryTimer = window.setTimeout(connect, 60000);
-        };
+    const schedulePoll = (delay) => {
+        window.clearTimeout(pollTimer);
+        pollTimer = window.setTimeout(loadRecommendations, delay);
     };
 
-    connect();
+    async function loadRecommendations() {
+        const url = new URL(apiUrl, window.location.href);
+        url.searchParams.set('limit', '6');
+        try {
+            const response = await fetch(url, {
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const payload = await response.json();
+            render(Array.isArray(payload?.data) ? payload.data : []);
+            if (status) status.textContent = tr('frontend.connected');
+            const nextPollAfter = Number(payload?.next_poll_after);
+            schedulePoll(Number.isFinite(nextPollAfter) && nextPollAfter > 0 ? nextPollAfter * 1000 : 60000);
+        } catch {
+            if (status) status.textContent = tr('frontend.retrying');
+            schedulePoll(60000);
+        }
+    }
+
+    if (status) status.textContent = tr('frontend.loading');
+    loadRecommendations();
 }
 
 async function readManuscriptFile(file) {
