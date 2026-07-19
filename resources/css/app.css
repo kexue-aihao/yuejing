@@ -4,10 +4,20 @@
 @source '../../storage/framework/views/*.php';
 @source '../views/**/*.blade.php';
 
+/* LXGW WenKai is OFL-1.1 licensed and self-hosted for reading typography. */
+@font-face {
+    font-family: 'LXGW WenKai';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 500;
+    src: url('@fontsource/lxgw-wenkai/files/lxgw-wenkai-latin-500-normal.woff2') format('woff2');
+}
+
 /* ── Tailwind v4 custom tokens ── */
 @theme {
     --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif;
-    --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', Georgia, serif;
+    --font-serif: 'LXGW WenKai', 'Noto Serif SC', 'Songti SC', 'STSong', Georgia, serif;
+    --font-display: 'LXGW WenKai', 'Noto Serif SC', 'Songti SC', 'STSong', Georgia, serif;
     --color-ink: #1f2a2b;
     --color-muted: #748082;
     --color-paper: #f7f6f1;
