@@ -10,12 +10,46 @@ return [
         'open_personal_center' => 'Open account', 'admin' => 'Admin', 'logout' => 'Log out',
         'login' => 'Log in', 'register' => 'Register', 'open_menu' => 'Open menu', 'close_menu' => 'Close menu',
         'explore' => 'Explore', 'all_books' => 'All works', 'categories_link' => 'Categories',
-        'join_us' => 'Join us', 'about' => 'About Yuejing', 'help' => 'Help', 'reading_guide' => 'Reading guide',
+        'join_us' => 'Join us', 'author_submission' => 'Writer submissions', 'about' => 'About Yuejing', 'help' => 'Help', 'reading_guide' => 'Reading guide',
         'contact' => 'Contact us', 'footer_copy' => 'Every opening should lead to a story worth finishing.',
         'footer_note' => 'Leave time for good stories',
     ],
     'theme' => ['choose' => 'Theme switcher', 'light' => 'Light', 'dark' => 'Dark', 'eye_care' => 'Eye care', 'system' => 'System',
         'use_light' => 'Use light theme', 'use_dark' => 'Use dark theme', 'use_eye_care' => 'Use eye-care theme', 'use_system' => 'Follow system theme'],
+    'categories' => [
+        'title' => 'Categories · Yuejing', 'eyebrow' => 'EXPLORE BY CATEGORY', 'heading' => 'Find a story by its world',
+        'intro' => 'Browse the active categories and open a shelf of published works.', 'item_intro' => 'Explore published works in this category.',
+        'work_count' => ':count works', 'empty_heading' => 'No categories yet', 'empty_intro' => 'The library categories will appear here as they are curated.',
+    ],
+    'info' => [
+        'about' => [
+            'title' => 'About Yuejing · Yuejing', 'eyebrow' => 'ABOUT YUEJING', 'heading' => 'A quiet place for good stories',
+            'intro' => 'Yuejing brings readers and writers together around stories made to be read with care.',
+            'sections' => [
+                ['title' => 'Read at your own pace', 'body' => 'Search the library, browse categories, and return to your reading history whenever a story deserves more time.'],
+                ['title' => 'Make room for original voices', 'body' => 'Writers can submit original works, receive a review, and keep published stories growing from the author workspace.'],
+                ['title' => 'A community with care', 'body' => 'Private messages and reading groups make it easier to share thoughtful reactions without losing the focus on the work.'],
+            ],
+        ],
+        'reading-guide' => [
+            'title' => 'Reading guide · Yuejing', 'eyebrow' => 'READING GUIDE', 'heading' => 'Make the reading space yours',
+            'intro' => 'A short path from finding a work to settling into its next chapter.',
+            'sections' => [
+                ['title' => 'Find your next work', 'body' => 'Use search for a title or author, or open Categories to filter the published library by genre.'],
+                ['title' => 'Open and continue reading', 'body' => 'Open a work to see its synopsis and chapters. When signed in, your reading history keeps your place available from the account center.'],
+                ['title' => 'Tune the reader', 'body' => 'While reading, adjust the font size or switch reading night mode from the reader controls.'],
+            ],
+        ],
+        'contact' => [
+            'title' => 'Contact us · Yuejing', 'eyebrow' => 'CONTACT YUEJING', 'heading' => 'Let us hear from you',
+            'intro' => 'Tell us about a problem, a suggestion, or a story you would like to bring to Yuejing.',
+            'sections' => [
+                ['title' => 'What to include', 'body' => 'For a technical issue, include the page address, what you expected to happen, and what happened instead. For a submission question, include the work title and your account email.'],
+                ['title' => 'Interested in writing?', 'body' => 'Authors can choose the author account type when registering. If you already have a reader account, contact us and tell us how you would like to contribute.'],
+            ],
+            'email_label' => 'Email us', 'email_unavailable' => 'The site contact email has not been configured yet.',
+        ],
+    ],
     'account' => [
         'navigation' => 'Account navigation', 'overview' => 'Reading overview', 'favorites' => 'My favorites',
         'reading_records' => 'Reading history', 'settings' => 'Account settings', 'social' => 'Social',

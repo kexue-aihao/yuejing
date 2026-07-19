@@ -104,6 +104,11 @@
     @endif
     <div id="main-content">@yield('content')</div>
     <x-visitor-ip />
-    <footer class="site-footer"><div class="site-shell footer-grid"><div><a class="brand" href="{{ Route::has('home') ? route('home') : url('/') }}"><span class="brand-mark" aria-hidden="true">Y</span><span>{{ __('ui.app.name') }}</span></a><p class="footer-copy">{{ __('ui.nav.footer_copy') }}</p></div><div class="footer-links"><div><strong>{{ __('ui.nav.explore') }}</strong><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">{{ __('ui.nav.all_books') }}</a><a href="{{ Route::has('novels.index') ? route('novels.index') : '#' }}">{{ __('ui.nav.categories_link') }}</a></div><div><strong>{{ __('ui.nav.join_us') }}</strong>@if ($canAccessAuthorStudio && Route::has('author.submissions'))<a href="{{ route('dashboard', ['section' => 'submissions']) }}">{{ __('ui.account.submissions') }}</a>@endif<a href="#">{{ __('ui.nav.about') }}</a></div><div><strong>{{ __('ui.nav.help') }}</strong><a href="#">{{ __('ui.nav.reading_guide') }}</a><a href="#">{{ __('ui.nav.contact') }}</a></div></div></div><div class="site-shell footer-bottom"><span>© {{ date('Y') }} {{ __('ui.app.name') }}</span><span>{{ __('ui.nav.footer_note') }}</span></div></footer>
+    @php
+        $authorEntryUrl = auth()->check() && $canAccessAuthorStudio
+            ? route('dashboard', ['section' => 'submissions'])
+            : (auth()->check() ? route('contact') : route('register', ['role' => 'author']));
+    @endphp
+    <footer class="site-footer"><div class="site-shell footer-grid"><div><a class="brand" href="{{ route('home') }}"><span class="brand-mark" aria-hidden="true">Y</span><span>{{ __('ui.app.name') }}</span></a><p class="footer-copy">{{ __('ui.nav.footer_copy') }}</p></div><div class="footer-links"><div><strong>{{ __('ui.nav.explore') }}</strong><a href="{{ route('novels.index') }}">{{ __('ui.nav.all_books') }}</a><a href="{{ route('categories.index') }}">{{ __('ui.nav.categories_link') }}</a></div><div><strong>{{ __('ui.nav.join_us') }}</strong><a href="{{ $authorEntryUrl }}">{{ __('ui.nav.author_submission') }}</a><a href="{{ route('about') }}">{{ __('ui.nav.about') }}</a></div><div><strong>{{ __('ui.nav.help') }}</strong><a href="{{ route('reading-guide') }}">{{ __('ui.nav.reading_guide') }}</a><a href="{{ route('contact') }}">{{ __('ui.nav.contact') }}</a></div></div></div><div class="site-shell footer-bottom"><span>© {{ date('Y') }} {{ __('ui.app.name') }}</span><span>{{ __('ui.nav.footer_note') }}</span></div></footer>
 </body>
 </html>

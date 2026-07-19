@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/novels', [PublicController::class, 'index'])->name('novels.index');
+Route::get('/categories', [PublicController::class, 'categories'])->name('categories.index');
+Route::get('/about', [PublicController::class, 'about'])->name('about');
+Route::get('/reading-guide', [PublicController::class, 'readingGuide'])->name('reading-guide');
+Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
 Route::get('/novels/{novel:slug}/chapters/{chapter:chapter_number}', [PublicController::class, 'chapter'])
     ->whereNumber('chapter')->scopeBindings()->name('novels.read');
 Route::get('/novels/{novel:slug}', [PublicController::class, 'novel'])->name('novels.show');

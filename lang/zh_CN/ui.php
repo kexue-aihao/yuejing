@@ -10,9 +10,43 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
         'open_personal_center' => '打开个人中心', 'admin' => '管理后台', 'logout' => '退出',
         'login' => '登录', 'register' => '注册', 'open_menu' => '打开菜单', 'close_menu' => '关闭菜单',
         'explore' => '探索', 'all_books' => '全部作品', 'categories_link' => '作品分类',
-        'join_us' => '加入我们', 'about' => '关于阅境', 'help' => '帮助', 'reading_guide' => '阅读指南',
+        'join_us' => '加入我们', 'author_submission' => '作家投稿', 'about' => '关于阅境', 'help' => '帮助', 'reading_guide' => '阅读指南',
         'contact' => '联系我们', 'footer_copy' => '让每一次打开，都遇见值得读完的故事。',
         'footer_note' => '把时间留给好故事',
+    ],
+    'categories' => [
+        'title' => '作品分类 · 阅境', 'eyebrow' => '按分类探索', 'heading' => '按故事世界找到作品',
+        'intro' => '浏览启用中的分类，打开已发布作品组成的专属书架。', 'item_intro' => '探索这个分类下的已发布作品。',
+        'work_count' => ':count 部作品', 'empty_heading' => '暂时还没有分类', 'empty_intro' => '分类完成整理后，会显示在这里。',
+    ],
+    'info' => [
+        'about' => [
+            'title' => '关于阅境 · 阅境', 'eyebrow' => '关于阅境', 'heading' => '为好故事留一处安静空间',
+            'intro' => '阅境让读者与作者围绕值得认真阅读的故事相遇。',
+            'sections' => [
+                ['title' => '按自己的节奏阅读', 'body' => '搜索书库、浏览作品分类，并在故事值得继续时从阅读记录回到上次的位置。'],
+                ['title' => '为原创声音留出空间', 'body' => '作者可以投稿原创作品，经过审核后在作者工作区持续更新已发布的故事。'],
+                ['title' => '认真交流', 'body' => '站内私信和实时交流群让读者可以分享感受，同时保持对作品本身的关注。'],
+            ],
+        ],
+        'reading-guide' => [
+            'title' => '阅读指南 · 阅境', 'eyebrow' => '阅读指南', 'heading' => '把阅读空间调成适合你的样子',
+            'intro' => '从找到作品到读完下一章，这里是一条简明的使用路径。',
+            'sections' => [
+                ['title' => '找到下一部作品', 'body' => '可以按作品名或作者搜索，也可以打开作品分类，按题材筛选已发布作品。'],
+                ['title' => '打开并继续阅读', 'body' => '打开作品查看简介和章节。登录后，个人中心的阅读记录会保留你的阅读位置。'],
+                ['title' => '调整阅读体验', 'body' => '阅读章节时，可以使用阅读设置调整字号，或切换阅读夜间模式。'],
+            ],
+        ],
+        'contact' => [
+            'title' => '联系我们 · 阅境', 'eyebrow' => '联系我们', 'heading' => '欢迎告诉我们你的想法',
+            'intro' => '无论是问题、建议，还是想带到阅境的故事，都可以联系我们。',
+            'sections' => [
+                ['title' => '联系时请尽量说明', 'body' => '反馈技术问题时，请提供页面地址、预期结果和实际结果。咨询投稿时，请提供作品名称和账号邮箱。'],
+                ['title' => '想加入作者行列？', 'body' => '注册时可以选择作者账号类型。如果你已经是读者账号，请联系我们说明想要参与的方式。'],
+            ],
+            'email_label' => '邮件联系', 'email_unavailable' => '站点暂未配置联系邮箱。',
+        ],
     ],
     'theme' => ['choose' => '主题切换', 'light' => '亮色', 'dark' => '暗色', 'eye_care' => '护眼', 'system' => '系统',
         'use_light' => '使用亮色主题', 'use_dark' => '使用暗色主题', 'use_eye_care' => '使用护眼主题', 'use_system' => '跟随系统主题'],

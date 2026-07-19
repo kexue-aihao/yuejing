@@ -669,6 +669,25 @@ h2 {
 .footer-links strong { margin-bottom: 2px; color: var(--c-text-footer-heading); font-size: 11px; letter-spacing: .1em; }
 .footer-links a { color: var(--c-text-muted); font-size: 11px; }
 .footer-links a:hover { color: var(--c-accent); }
+
+.info-page-header { padding: 56px 0 48px; }
+.info-page { padding-top: 56px; padding-bottom: 88px; }
+.info-page-heading { max-width: 720px; margin-bottom: 34px; }
+.info-page-heading h1, .info-page-header h1 { margin: 0 0 14px; color: var(--c-text-heading); font-family: var(--font-serif); font-size: clamp(38px, 5vw, 60px); font-weight: 500; }
+.info-page-heading .page-intro, .info-page-header .page-intro { max-width: 640px; margin-bottom: 0; color: var(--c-text-muted); line-height: 1.8; }
+.info-content { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.info-panel { min-height: 190px; padding: 24px; }
+.info-panel h2 { margin: 0 0 12px; color: var(--c-text-heading-soft); font-family: var(--font-serif); font-size: 23px; font-weight: 600; }
+.info-panel p { margin: 0; color: var(--c-text-body); line-height: 1.8; }
+.info-contact-card { grid-column: 1 / -1; }
+.info-contact-link { color: var(--c-accent); font-size: 18px; font-weight: 600; }
+.category-directory { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-top: 40px; padding-bottom: 88px; }
+.category-directory-item { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 104px; padding: 20px 22px; border: 1px solid var(--c-border); color: var(--c-text); background: var(--c-bg-card); transition: border-color .2s ease, transform .2s ease; }
+.category-directory-item:hover { border-color: var(--c-accent); transform: translateY(-2px); }
+.category-directory-item > span:first-child { display: grid; gap: 7px; min-width: 0; }
+.category-directory-item strong { color: var(--c-text-heading-soft); font-family: var(--font-serif); font-size: 22px; font-weight: 600; }
+.category-directory-item small { color: var(--c-text-muted); line-height: 1.6; }
+.category-directory-count { flex-shrink: 0; color: var(--c-accent); font-size: 11px; white-space: nowrap; }
 .footer-bottom {
     display: flex; justify-content: space-between; margin-top: 55px; padding-top: 16px;
     border-top: 1px solid var(--c-footer-bottom-border);
@@ -1898,4 +1917,7 @@ body input[type="radio"] {
     .review-form-grid, .recommendation-grid { grid-template-columns: 1fr; }
     .review-criteria-grid, .review-criteria-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .review-withdraw-form { margin: 0; }
+    .info-page, .info-page-header { padding-top: 34px; }
+    .info-content, .category-directory { grid-template-columns: 1fr; }
+    .info-page { padding-bottom: 55px; }
 }

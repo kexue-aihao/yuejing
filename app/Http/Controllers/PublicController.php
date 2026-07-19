@@ -10,6 +10,7 @@ use App\Models\SearchEvent;
 use App\Services\MarkdownRenderer;
 use App\Services\RatingScale;
 use App\Services\RecommendationService;
+use App\Services\AppSettingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -145,6 +146,43 @@ class PublicController extends Controller
         return view('pages.novels.index', [
             'novels' => $paginator,
             'categories' => $categories,
+        ]);
+    }
+
+    public function categories(): \Illuminate\View\View
+    {
+        $categories = Schema::hasTable('categories')
+            ? Category::query()
+                ->where('is_active', true)
+                ->withCount(['novels' => fn ($query) => $query->where('status', 'published')])
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'description'])
+            : collect();
+
+        return view('pages.categories.index', compact('categories'));
+    }
+
+    public function about(): \Illuminate\View\View
+    {
+        return view('pages.info', ['page' => 'about']);
+    }
+
+    public function readingGuide(): \Illuminate\View\View
+    {
+        return view('pages.info', ['page' => 'reading-guide']);
+    }
+
+    public function contact(AppSettingService $settings): \Illuminate\View\View
+    {
+        $contactEmail = config('mail.from.address');
+
+        if (Schema::hasTable('settings')) {
+            $contactEmail = $settings->get('contact_email', $contactEmail);
+        }
+
+        return view('pages.info', [
+            'page' => 'contact',
+            'contactEmail' => is_string($contactEmail) ? trim($contactEmail) : '',
         ]);
     }
 
