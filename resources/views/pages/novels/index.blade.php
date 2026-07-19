@@ -11,6 +11,7 @@
     $sort = (string) request('sort', 'new');
     $sortLabels = ['new' => __('ui.library.latest'), 'hot' => __('ui.library.hot')];
     $sortLabel = $sortLabels[$sort] ?? $sortLabels['new'];
+    $libraryHeading = str_replace('\\n', PHP_EOL, (string) __('ui.library.heading'));
     $baseQuery = request()->except('page');
 
     $categorySource = $categories ?? [];
@@ -65,7 +66,7 @@
     <section class="page-band library-page-header">
         <div class="site-shell">
             <p class="eyebrow">{{ __('ui.library.eyebrow') }}</p>
-            <h1 class="library-page-heading">{{ __('ui.library.heading') }}</h1>
+            <h1 class="library-page-heading">{{ $libraryHeading }}</h1>
             <p class="page-intro">{{ __('ui.library.intro') }}</p>
         </div>
     </section>

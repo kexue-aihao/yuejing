@@ -71,7 +71,7 @@ return array_replace_recursive(require __DIR__.'/../en/ui.php', [
         'category_eyebrow' => '按心情找书', 'categories' => ['urban' => '都市情感', 'ancient' => '古风言情', 'mystery' => '悬疑推理', 'scifi' => '科幻世界', 'youth' => '青春成长'],
     ],
     'library' => [
-        'title' => '书库 · 阅境', 'eyebrow' => 'THE LIBRARY', 'heading' => '找到下一本\n想读完的书。', 'intro' => '从不同的世界、情绪和人生里，挑一段现在的你刚好需要的故事。',
+        'title' => '书库 · 阅境', 'eyebrow' => '书库', 'heading' => '找到下一本\n想读完的书。', 'intro' => '从不同的世界、情绪和人生里，挑一段现在的你刚好需要的故事。',
         'filters' => '作品筛选', 'all' => '全部', 'urban' => '都市', 'ancient' => '古言', 'mystery' => '悬疑', 'scifi' => '科幻', 'youth' => '青春', 'sort_label' => '排序方式',
         'latest' => '按最新更新', 'hot' => '按热度排序', 'finished' => '只看完结', 'chapters' => ':count 章', 'ongoing' => '连载中', 'empty_heading' => '书架还是空的', 'empty_intro' => '新故事很快就会来到这里，先去首页看看编辑精选吧。', 'back_home' => '返回首页', 'anonymous_author' => '匿名作者', 'untitled' => '未命名作品',
     ],

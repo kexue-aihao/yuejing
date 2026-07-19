@@ -39,6 +39,32 @@ class LocalizationTest extends TestCase
             ->assertSee('>ライブラリ<', false);
     }
 
+    public function test_library_heading_does_not_render_a_literal_newline_escape(): void
+    {
+        foreach (['zh_CN', 'zh_TW', 'en', 'ja', 'ko', 'ru', 'uk'] as $locale) {
+            $response = $this->withSession(['locale' => $locale])->get(route('novels.index'));
+
+            $response->assertOk();
+
+            $content = $response->getContent();
+            $this->assertIsString($content);
+            $this->assertMatchesRegularExpression(
+                '/<h1 class="library-page-heading">(.*?)<\/h1>/s',
+                $content,
+                "The library heading must be rendered for {$locale}."
+            );
+
+            preg_match('/<h1 class="library-page-heading">(.*?)<\/h1>/s', $content, $matches);
+            $heading = html_entity_decode((string) ($matches[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            $this->assertStringNotContainsString(
+                '\\n',
+                $heading,
+                "The library heading must not contain a literal \\n escape for {$locale}."
+            );
+        }
+    }
+
     public function test_invalid_locale_is_rejected(): void
     {
         $token = bin2hex(random_bytes(16));
