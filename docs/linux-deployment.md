@@ -1,6 +1,6 @@
 # 标准 Linux 部署
 
-本文提供一套不依赖 aaPanel 的生产部署流程，目标环境为 **Ubuntu 24.04 LTS + Nginx + PHP-FPM + MySQL + Node.js**。Debian 12/13 或其他 Debian 系发行版可以参考执行，但 PHP、Node.js 软件源和 PHP-FPM socket 需要按实际版本调整。
+本文面向不使用 aaPanel 的 Linux 运维人员，提供一套生产部署流程，目标环境为 **Ubuntu 24.04 LTS + Nginx + PHP-FPM + MySQL + Node.js**。Debian 12/13 或其他 Debian 系发行版可以参考执行，但 PHP、Node.js 软件源和 PHP-FPM socket 需要按实际版本调整。安全基线请配合 [`生产安全部署规范`](production-security.md)；接口和功能行为分别参阅 [`API 接口大全`](api-reference.md) 与 [`项目使用手册`](project-usage-manual.md)。
 
 项目是 Laravel 13，`composer.json` 要求 PHP `^8.3`。当前前端依赖使用 Vite 8，Node.js 需要满足 `^20.19.0` 或 `>=22.12.0`。本文使用 PHP 8.3 和 Node.js 22。
 
@@ -108,12 +108,13 @@ EXIT;
 
 ## 5. 获取代码
 
-推荐使用 Git 克隆。生产环境部署固定分支或具体提交，不要直接跟随不受控的开发分支：
+推荐使用 Git 克隆。生产环境部署固定分支或具体提交，不要直接跟随不受控的开发分支。下面使用变量表示实际线上分支；`master` 只能作为示例，不能直接假定为线上分支：
 
 ```bash
 sudo mkdir -p /var/www
 sudo chown "$DEPLOY_USER":www-data /var/www
-sudo git clone --branch master https://你的代码仓库地址.git "$PROJECT_DIR"
+export DEPLOY_BRANCH="<实际线上分支>"
+sudo git clone --branch "$DEPLOY_BRANCH" https://你的代码仓库地址.git "$PROJECT_DIR"
 cd "$PROJECT_DIR"
 ```
 
@@ -195,6 +196,7 @@ YUEJING_ADMIN_PASSWORD="至少12位随机强密码"
 
 ```bash
 cd "$PROJECT_DIR"
+test -f composer.lock && test -f package-lock.json || { echo "缺少 Composer/npm 锁文件，停止生产部署" >&2; exit 1; }
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 composer check-platform-reqs --no-dev
 npm ci
@@ -341,10 +343,17 @@ server {
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/yuejing /etc/nginx/sites-enabled/yuejing
-sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl reload nginx
 ```
+
+如果 `default` 站点与本项目的域名或监听端口冲突，先查看其内容并确认已有配置已备份，再按系统维护流程停用它；不要把删除默认站点作为无条件的部署步骤：
+
+```bash
+sudo nginx -T 2>&1 | grep -nE 'sites-enabled/default|server_name|listen '
+```
+
+确认不再需要该站点后，可使用发行版提供的停用方式（例如将 `default` 的链接移出 `sites-enabled`），然后再次执行 `sudo nginx -t`。不要在未核对目标的情况下直接删除配置文件。
 
 验证 PHP-FPM socket 与服务状态：
 
@@ -555,15 +564,16 @@ journalctl -u yuejing-queue
 
 ## 16. 更新发布
 
-更新前先备份数据库、`.env`、`storage/` 和当前可用提交。一个基本的人工发布流程如下：
+更新前先备份数据库、`.env`、`storage/` 和当前可用提交。一个基本的人工发布流程如下；先设置实际线上分支：
 
 ```bash
 cd "$PROJECT_DIR"
+export DEPLOY_BRANCH="<实际线上分支>"
 php artisan down --retry=60
 
-git fetch origin
-git checkout master
-git pull --ff-only origin master
+git fetch origin "$DEPLOY_BRANCH"
+git checkout "$DEPLOY_BRANCH"
+git pull --ff-only origin "$DEPLOY_BRANCH"
 
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 composer check-platform-reqs --no-dev

@@ -1,6 +1,6 @@
 # aaPanel 部署检查清单
 
-这份清单用于阅境上线前、更新后和故障排查。命令中的 `/www/wwwroot/yuejing`、域名、PHP-FPM 服务名和运行用户请替换为实际值。
+这份清单面向 aaPanel 管理员，用于阅境上线前、更新后和故障排查。它是验收清单，不替代 [`aaPanel 完整部署教程`](aapanel-deployment.md) 或 [`生产安全部署规范`](production-security.md)。命令中的 `/www/wwwroot/yuejing`、域名、PHP-FPM 服务名和运行用户请替换为实际值。
 
 ## 1. PHP 版本和扩展
 
@@ -38,26 +38,36 @@ composer check-platform-reqs --no-dev
 php -r 'echo "CLI disable_functions: ", (ini_get("disable_functions") ?: "(none)"), PHP_EOL;'
 ```
 
-- [ ] Laravel 的 `storage:link` 可能调用 `exec()` 创建符号链接；若 PHP-FPM 禁用 `exec()`，应使用上面的 `ln -s` 方式手工创建并验证 `public/storage`，而不是把 `exec()` 当作应用请求的必需函数。
-- [ ] 禁用 `exec()` 时，手工创建公共存储软链接并确认权限：
+- [ ] Laravel 的 `storage:link` 可能调用 `exec()` 创建符号链接；若 PHP-FPM 禁用 `exec()`，应使用手工方式创建并验证 `public/storage`，不要据此要求全局解除函数禁用。Composer/Artisan 的其他函数要求以实际命令结果核验。
+- [ ] 禁用 `exec()` 时，先确认 `public/storage` 不是实体目录或错误链接，再按实际运行用户手工创建公共存储软链接并确认权限。以下示例中的 `www:www` 必须替换为实际用户和组；已有正确软链接时不要重复执行 `ln -s`：
 
 ```bash
 cd /www/wwwroot/yuejing
-ln -s ../storage/app/public public/storage
+if [ -L public/storage ]; then
+    [ "$(readlink public/storage)" = "../storage/app/public" ] || {
+        echo "public/storage 是错误的软链接，请先人工核对" >&2
+        exit 1
+    }
+elif [ -e public/storage ]; then
+    echo "public/storage 已是实体路径，停止以免覆盖" >&2
+    exit 1
+else
+    ln -s ../storage/app/public public/storage
+fi
 chown -h www:www public/storage
 ```
 
 ## 3. 站点和 PHP-FPM
 
 - [ ] 网站根目录为 `/www/wwwroot/yuejing/public`，不是项目根目录。
-- [ ] aaPanel「防跨站攻击（open_basedir）」已关闭，或添加了 `storage/` 和 `bootstrap/cache/` 路径例外。
+- [ ] aaPanel「防跨站攻击（open_basedir）」已关闭，或允许列表覆盖项目根目录及 `vendor`、`public`、`storage`、`bootstrap/cache`；只添加两个写目录不足以支持 Laravel 读取代码和依赖。
 - [ ] 如果从 Git 或源码包部署，已安装 Node.js `^20.19.0` 或 `>=22.12.0` 并执行 `npm ci` 和 `npm run build`。
 - [ ] `public/build/manifest.json` 存在；只有使用已包含构建产物的正式发布包时，才可以跳过前端构建。
 - [ ] Nginx 配置包含 `try_files $uri $uri/ /index.php?$query_string;`，并将 PHP 请求转发到正确的 PHP-FPM socket。
 - [ ] Apache 的 `DocumentRoot` 指向 `public`，且 `public/.htaccess` 生效；需要 `AllowOverride All` 时已配置。
 - [ ] Nginx 配置检查通过并已重载；Apache 配置检查通过并已重载。
 - [ ] PHP-FPM 进程运行正常，站点配置的 socket 存在且 Web 服务器用户有权限访问。
-- [ ] `/up` 和首页均返回 HTTP 200：
+- [ ] `/up` 和首页均返回预期的 `2xx` 状态；仓库健康检查脚本接受任意 `2xx`，不应把脚本事实写成只接受 `200`：
 
 ```bash
 curl -fsS -o /dev/null -w '%{http_code}\n' https://example.com/up
@@ -69,14 +79,15 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://example.com/up
 ## 4. 环境变量、数据库和存储
 
 - [ ] `.env` 存在且未提交到 Git，`APP_KEY` 已生成，生产环境 `APP_DEBUG=false`，`APP_URL` 使用最终 HTTPS 地址。
-- [ ] Before running `scripts/aapanel-update.sh`, confirm the effective values are `APP_ENV=production` and `APP_DEBUG=false`; the script stops before backups, database backups, or maintenance mode when either value is unsafe, and it never modifies `.env`.
+- [ ] 运行 `scripts/aapanel-update.sh` 前，确认生效值为 `APP_ENV=production` 和 `APP_DEBUG=false`；任一值不安全时，脚本会在备份、数据库备份和维护模式之前停止，并且不会修改 `.env`。
+- [ ] 已确认脚本默认 `DEPLOY_BRANCH=main`；若线上是其他分支，显式设置 `DEPLOY_BRANCH`。脚本默认备份到项目父目录下的 `yuejing-backups/<时间戳>`，不是固定的 `/www/backup/yuejing`。
 - [ ] `APP_LOCALE=zh_CN` 和 `APP_FALLBACK_LOCALE=zh_CN` 已配置。
 - [ ] `VITE_APP_NAME="${APP_NAME}"` 已配置。
 - [ ] `DB_CONNECTION=mysql` 时，数据库、用户、密码、端口和 `utf8mb4` 配置正确。
 - [ ] **MySQL 用户 host 匹配**：如果 `DB_HOST=127.0.0.1`，确认 MySQL 用户有 `'user'@'127.0.0.1'` 权限（不只是 `'user'@'localhost'`）。或把 `DB_HOST` 改为 `localhost`，走 Unix socket。
 - [ ] `SESSION_SECURE_COOKIE=true` 时网站已配置 HTTPS；暂未配置 SSL 时临时改为 `false`（上线前必须改回）。
 - [ ] `SESSION_ENCRYPT=true` 依赖 `APP_KEY`；`APP_KEY` 生成后不要再变更，否则所有用户 Session 立即失效。
-- [ ] 已执行迁移并确认应用可以读写数据库：
+- [ ] 已执行迁移并确认数据库连接可用：
 
 ```bash
 php artisan migrate --force
@@ -122,6 +133,8 @@ php artisan view:cache
 ```
 
 - [ ] 更新失败时先保留日志和备份，再回滚代码；代码回滚不等于数据库回滚，不要未经评估直接执行 `migrate:rollback`。
+- [ ] 已知更新脚本执行 `git pull --ff-only`、迁移和 Laravel 缓存，但不执行 `npm ci`/`npm run build`；涉及前端资源时使用完整发布流程。
+- [ ] 已知更新脚本的 `composer check-platform-reqs` 实际不带 `--no-dev`；清单中的 `--no-dev` 是手工生产核验命令。
 - [ ] 更新完成后重新访问 `/up`、首页、登录、数据库读写、邮件测试和后台权限页面。
 
 ## 7. 常见日志位置

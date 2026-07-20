@@ -2,6 +2,8 @@
 
 > 本文依据当前项目的 `routes/web.php`、`routes/api.php`、控制器校验规则和中间件整理。项目当前使用 **Laravel Session + Cookie** 认证，没有配置 Bearer Token、OAuth 或 Sanctum Token。
 
+> 本文是旧版管理端专项补充，不是完整 API 清单。公开接口、Web JSON 变体、管理员接口、状态码、幂等性和未确认事项请以 [`API 接口大全`](api-reference.md) 为准。
+
 ## 1. API 范围和地址
 
 生产环境将 `https://example.com` 替换为实际域名：

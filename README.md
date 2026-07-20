@@ -4,10 +4,14 @@
 
 ## 项目文档
 
+- [项目使用手册](docs/project-usage-manual.md) — 用户、作者、编辑和管理员的功能操作说明
+- [API 接口大全](docs/api-reference.md) — 完整 API/Web JSON 总览、Session/CSRF、权限、字段和错误码
+- [安全审计说明](docs/security-audit.md) — 代码安全控制、潜在风险、证据路径和上线前验证项
+- [生产安全部署规范](docs/production-security.md) — HTTPS、权限、密钥、数据库、队列、SSE 和发布安全基线
 - [aaPanel 完整部署教程](docs/aapanel-deployment.md) — **推荐**：从零到可用的完整流程，含所有常见错误速查
 - [标准 Linux 生产部署](docs/linux-deployment.md) — 适用于 Ubuntu/Debian，不依赖 aaPanel
 - [aaPanel 部署检查清单](docs/aapanel-deployment-checklist.md)
-- [API 管理文档](docs/api-management.md)
+- [API 管理文档](docs/api-management.md) — 旧的管理端专项补充；完整接口清单、Web JSON 变体和未确认事项以 [API 接口大全](docs/api-reference.md) 为准
 - [Nginx 站点配置示例](docs/aapanel-nginx.conf.example)
 - [Apache 虚拟主机配置示例](docs/aapanel-apache-vhost.conf.example)
 
@@ -50,7 +54,7 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 ## aaPanel 最简生产部署
 
-本方案面向一台 aaPanel 服务器，默认不要求 Redis 或 Docker，以 PHP 8.5、MySQL/MariaDB，以及 aaPanel 的 Nginx 或 Apache 为示例。项目当前 `composer.json` 要求 PHP `^8.3`、Laravel `^13.8`，因此也可以使用满足 Composer 平台约束的其他 PHP 8.x 版本。不要把 `.env` 提交到 Git，也不要把站点根目录指向项目根目录。
+本方案面向一台 aaPanel 服务器，默认不要求 Redis 或 Docker，使用满足 `composer.json` 的 PHP `^8.3`、MySQL/MariaDB，以及 aaPanel 的 Nginx 或 Apache。项目当前要求 Laravel `^13.8`；PHP 8.3、8.4 或 8.5 仅在实际 Composer 平台检查通过时使用。不要把 `.env` 提交到 Git，也不要把站点根目录指向项目根目录。
 
 如果服务器没有 aaPanel，请使用[标准 Linux 生产部署文档](docs/linux-deployment.md)。该文档按 Ubuntu/Debian + Nginx + PHP-FPM + MySQL 写成，包含系统依赖安装、Node/Vite 构建、Composer、数据库、HTTPS 和 systemd 配置；不要把 aaPanel 专用的 `/tmp/php-cgi-85.sock` 直接用于标准 Linux。
 
@@ -58,7 +62,7 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 在 aaPanel 中安装并确认以下组件：
 
-- PHP 8.5，并将站点和 CLI 都切换到 PHP 8.5。
+- 满足 PHP `^8.3` 的 PHP 版本，并将站点 PHP-FPM 和 CLI 对齐到同一版本、扩展和关键 `php.ini` 设置。
 - MySQL 或 MariaDB，创建独立数据库、用户和强密码，字符集使用 `utf8mb4`。
 - Nginx 或 Apache，二选一。
 - Composer 2。
@@ -67,7 +71,7 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 - **部署命令行工具**：`aapanel-healthcheck.sh` 和 `aapanel-update.sh` 需要系统命令 `curl`、`tar`，数据库备份还需要 `mysqldump` 或 `mariadb-dump`；这不是 PHP 的 `ext-curl` 扩展。PHP `ext-curl` 只有在应用或 Composer 包实际选择 cURL 网络处理器时才需要。
 - **按功能启用的扩展**：使用 Redis 缓存、Session 或队列时启用 `redis`（phpredis），使用 Memcached 时启用 `memcached`；本方案默认使用 database 驱动，不要求这两个扩展。`zip` 可帮助 Composer 和发布工具处理压缩包，但不是本项目生产代码的硬性运行时要求。
 - **开发/测试扩展**：`xml`、`xmlwriter`、`phar` 以及 `pcov`/`xdebug` 主要由 PHPUnit、Pint 或其他开发工具使用；`intl`、`gd`、`gmp`、`pcntl`、`posix` 只有在对应功能、开发工具或队列管理方案实际使用时才启用，不要将 Composer 的 `suggest` 项当作生产硬要求。
-- 若从源码部署且发布包不包含 `public/build`，需要安装 Node.js 20 LTS 或更高版本，用于构建前端资源；如果发布包已经经过构建并包含 `public/build`，可以跳过 Node.js 安装和构建步骤。本项目的 `public/build` 已加入 `.gitignore`，不能假设 Git 克隆后仍然存在。
+- 若从源码部署且发布包不包含 `public/build`，需要安装满足 Vite 8 要求的 Node.js `^20.19.0` 或 `>=22.12.0`，用于构建前端资源；如果发布包已经经过构建并包含 `public/build`，可以跳过 Node.js 安装和构建步骤。本项目的 `public/build` 已加入 `.gitignore`，不能假设 Git 克隆后仍然存在。
 
 建议先在 aaPanel 的终端执行：
 
@@ -83,7 +87,7 @@ composer check-platform-reqs --no-dev
 
 ### 2. 创建站点和上传代码
 
-1. 在 aaPanel 创建站点，例如 `example.com`，PHP 版本选择 `8.5`。
+1. 在 aaPanel 创建站点，例如 `example.com`，PHP 版本选择满足 `composer.json` 中 `^8.3` 约束的版本，并让站点 PHP-FPM 与 CLI、扩展和关键 `php.ini` 设置保持一致。
 2. 创建 MySQL/MariaDB 数据库，并记下数据库名、用户名、密码、主机和端口。
 3. 将代码放到例如 `/www/wwwroot/yuejing`。可以使用 Git 克隆，也可以上传发行包；生产环境不要上传 `.env`、`vendor/` 和本地测试数据。
 4. 在站点设置中把**运行目录/网站根目录**设置为：
@@ -182,6 +186,7 @@ server {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param DOCUMENT_ROOT $document_root;
+        # 仅为 aaPanel PHP-FPM 的示例，必须替换为实际 socket
         fastcgi_pass unix:/tmp/php-cgi-85.sock;
     }
 
@@ -205,7 +210,7 @@ nginx -T 2>&1 | grep -nE \
   'server_name online.eepzau.org|listen .*443|ssl_certificate|ssl_certificate_key'
 ```
 
-Cloudflare 的 SSL/TLS 模式建议使用 `Full (strict)`。如果证书由 aaPanel 自动续期，续期后应确认 Nginx 已重新加载证书。
+Cloudflare 的 SSL/TLS 模式通常可使用 `Full (strict)`，但应按证书链路和实际代理配置核验。若证书由 aaPanel 自动续期，续期后应确认 Nginx 已重新加载证书。
 
 ### 3. 配置环境变量
 
@@ -376,11 +381,11 @@ php artisan config:cache
 
 ### 9. 从 GitHub 更新 aaPanel 站点
 
-站点已经通过 Git 克隆后，后续更新应在**原项目目录**执行 `git pull`，不要重新克隆，也不要用文件管理器覆盖项目目录。当前仓库线上分支是 `master`，不是 `main`。
+站点已经通过 Git 克隆后，后续更新应在**原项目目录**执行 `git pull`，不要重新克隆，也不要用文件管理器覆盖项目目录。以下命令以 `master` 为示例，请先确认实际线上分支；`scripts/aapanel-update.sh` 当前默认分支是 `main`，使用其他分支时必须显式设置 `DEPLOY_BRANCH`。
 
 #### 稳定更新原则
 
-- 更新前必须让项目工作区保持干净：`git status --short` 不应有输出，当前分支必须是 `master`。
+- 更新前必须让项目工作区保持干净：`git status --short` 不应有输出，当前分支必须与实际线上分支一致。
 - 服务器上不要在 Git 管理的目录中手工创建或覆盖 Blade、CSS、JS、组件等文件；临时文件、备份文件应放在项目目录之外。
 - 如果 `git pull` 提示 `untracked working tree files would be overwritten by merge`，说明服务器存在未跟踪文件与远程同名。先将文件复制到项目外的备份目录，再用 `mv` 移出项目目录；单纯 `cp` 不会解决冲突，因为原文件仍然存在。
 - 不要未经确认执行 `git clean -fd`、`git reset --hard` 或覆盖式解压；这些操作可能删除服务器上的本地文件和配置。
@@ -388,18 +393,19 @@ php artisan config:cache
 - 数据库迁移成功后不要自动执行 `php artisan migrate:rollback`。代码回滚和数据库回滚是两个独立操作，必须结合数据库备份和迁移影响人工判断。
 - 更新完成后必须同时检查 Laravel 路由、数据库迁移状态、`public/build/manifest.json`、健康检查 `/up`，并在浏览器实际访问首页、登录页和本次新增功能页面。
 
-更新前必须备份数据库、`.env` 和 `storage/`，并确认工作区没有 aaPanel 上的手工修改：
+更新前必须备份数据库、`.env` 和 `storage/`，并确认工作区没有 aaPanel 上的手工修改。下面的 `DEPLOY_BRANCH` 只是变量，请替换为实际线上分支：
 
 ```bash
 cd /www/wwwroot/你的域名
+export DEPLOY_BRANCH="<实际线上分支>"
 
 git status --short
 test -z "$(git status --porcelain)" || { echo "工作区有未提交修改，停止更新"; exit 1; }
-test "$(git branch --show-current)" = master || { echo "当前不是 master 分支，停止更新"; exit 1; }
+test "$(git branch --show-current)" = "$DEPLOY_BRANCH" || { echo "当前分支不是 $DEPLOY_BRANCH"; exit 1; }
 
 php artisan down --retry=60 --secret="临时维护口令"
-git fetch origin master
-git pull --ff-only origin master
+git fetch origin "$DEPLOY_BRANCH"
+git pull --ff-only origin "$DEPLOY_BRANCH"
 
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 npm ci
@@ -428,12 +434,12 @@ test -f resources/views/components/visitor-ip.blade.php
 **不要执行以下危险操作：**
 
 ```bash
-git reset --hard origin/master  # 会删除服务器未提交修改
+git reset --hard "origin/$DEPLOY_BRANCH"  # 仅在确认未提交修改已备份且明确需要代码回退时使用
 composer update                 # 会改变锁定依赖版本
 php artisan migrate:rollback    # 未确认迁移影响和备份前不要回滚数据库
 ```
 
-完整的备份、固定 PHP/Node 路径、回滚和 Cloudflare 处理步骤见 [aaPanel 完整部署教程第 13 节](docs/aapanel-deployment.md#13-更新和维护)。
+完整的备份、固定 PHP/Node 路径、回滚和 Cloudflare 处理步骤见 [aaPanel 完整部署教程](docs/aapanel-deployment.md) 第 13 节。
 
 健康检查每 5 分钟：
 
@@ -444,10 +450,10 @@ HEALTHCHECK_URL=https://example.com/up /bin/bash /www/wwwroot/yuejing/scripts/aa
 数据库和文件备份由 aaPanel「计划任务」或「数据库」备份功能完成，建议至少每日一次，并把备份保留在站点目录之外。`aapanel-update.sh` 还会在更新前备份 `.env`、`storage/` 和数据库；脚本需要 `curl`、`tar` 以及 `mysqldump` 或 `mariadb-dump`。更新脚本不要高频自动运行，建议由人工确认后执行：
 
 ```bash
-DEPLOY_BRANCH=master /bin/bash /www/wwwroot/yuejing/scripts/aapanel-update.sh >> /www/server/cron/yuejing-update.log 2>&1
+DEPLOY_BRANCH="<实际线上分支>" /bin/bash /www/wwwroot/yuejing/scripts/aapanel-update.sh >> /www/server/cron/yuejing-update.log 2>&1
 ```
 
-更新脚本默认要求 Git 工作区干净且当前分支为 `master`（可用 `DEPLOY_BRANCH` 覆盖），会在更新前备份 `.env`、`storage` 和数据库，使用 `git pull --ff-only`，执行依赖安装、平台检查、迁移、缓存构建和 `/up` 健康检查。**它不会执行 `npm ci` 或 `npm run build`**；如果本次更新包含 CSS、JS 或 Blade 组件，使用上面的完整更新流程，或手动补做前端构建和视图缓存。失败时只回滚代码提交，不会自动执行 `migrate:rollback`，以避免破坏数据；请根据备份和迁移记录人工处理数据库回退。只有在已有独立数据库备份并明确接受风险时，才设置 `SKIP_DB_BACKUP=1`。
+更新脚本默认要求 Git 工作区干净且当前分支为 `main`；如果线上使用 `master` 或其他分支，必须通过 `DEPLOY_BRANCH` 覆盖。脚本会在更新前备份 `.env`、`storage` 和数据库，使用 `git pull --ff-only`，执行依赖安装、平台检查、迁移、缓存构建和 `/up` 健康检查。**它不会执行 `npm ci` 或 `npm run build`**；如果本次更新包含 CSS、JS 或 Blade 组件，使用上面的完整更新流程，或手动补做前端构建和视图缓存。失败时只回滚代码提交，不会自动执行 `migrate:rollback`，以避免破坏数据；请根据备份和迁移记录人工处理数据库回退。只有在已有独立数据库备份并明确接受风险时，才设置 `SKIP_DB_BACKUP=1`。
 
 ### 10. 备份、更新和回滚
 
@@ -495,7 +501,7 @@ php artisan up
 curl -fsS -o /dev/null -w '%{http_code}\n' https://example.com/up
 ```
 
-正常应返回 `200`。也可以使用仓库内脚本：
+`/up` 通常应返回 `200`。仓库健康检查脚本按任意 `2xx` 判定成功，也可以直接使用：
 
 ```bash
 HEALTHCHECK_URL=https://example.com/up /bin/bash scripts/aapanel-healthcheck.sh
@@ -503,16 +509,16 @@ HEALTHCHECK_URL=https://example.com/up /bin/bash scripts/aapanel-healthcheck.sh
 
 常见检查顺序：
 
-1. `php -v`、`php -m` 和 `composer check-platform-reqs --no-dev` 是否使用 PHP 8.5。
+1. `php -v`、`php -m` 和 `composer check-platform-reqs --no-dev` 是否满足 PHP `^8.3`，并与 PHP-FPM 的版本、扩展和关键 `php.ini` 设置一致。
 2. 站点根目录是否确实为 `public`，Nginx/Apache 是否把请求交给 `public/index.php`。
 3. `.env` 的 `APP_KEY`、数据库连接、`APP_DEBUG=false` 和 `APP_URL` 是否正确。
 4. `storage`、`bootstrap/cache` 是否可写，`public/storage` 是否存在。
 5. `storage/logs/laravel.log`、PHP-FPM、Nginx/Apache 日志是否有权限或扩展错误。
 6. 更新配置后是否重新执行 `php artisan config:cache`。
 
-## API 管理
+## API 文档
 
-认证、Session/CSRF 约定、管理端点、请求字段、响应码和投稿审核流程请参阅 [API 管理文档](docs/api-management.md)。当前管理 API 是基于 Session Cookie 的有状态接口，不提供 Bearer Token；接入脚本或前端时不要省略 CSRF Token。
+完整的认证、Session/CSRF 约定、公开接口、管理端点、请求字段、响应码、投稿审核流程和未确认事项请参阅 [API 接口大全](docs/api-reference.md)。[API 管理文档](docs/api-management.md) 仅保留为旧的管理端专项补充。当前接口基于 Session Cookie 的有状态会话，不提供 Bearer Token；接入脚本或前端时不要省略 CSRF Token。
 
 ## Agentic Development
 
